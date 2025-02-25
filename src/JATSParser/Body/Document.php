@@ -1,5 +1,8 @@
 <?php namespace JATSParser\Body;
 
+require_once __DIR__ . '/CitationStyles/CitationStyleManager.php';
+
+use JATSParser\CitationStyles\CitationStyleManager;
 use JATSParser\Body\Section as Section;
 use JATSParser\Back\Journal as Journal;
 use JATSParser\Back\Book as Book;
@@ -28,10 +31,17 @@ class Document {
 		$document = new \DOMDocument;
 		$this->document = $document->load($documentPath);
 		self::$xpath = new \DOMXPath($document);
+		
+		$this->modifyxRef();
 
 		$this->extractContent();
 		$this->extractReferences();
 	}
+
+	//modify xref element of the document with a specific citation style
+    public static function modifyxRef() {
+        CitationStyleManager::styleManagerSelector(self::$xpath);
+    }
 
 	public static function getXpath() : \DOMXPath {
 		return self::$xpath;

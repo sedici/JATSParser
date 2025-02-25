@@ -1,5 +1,7 @@
 <?php namespace JATSParser\HTML;
 
+require_once __DIR__ . '/../PDF/PDFConfig/Translations.php';
+
 use JATSParser\Body\DispQuote;
 use JATSParser\Body\Document as JATSDocument;
 use JATSParser\HTML\Par as  Par;
@@ -239,11 +241,11 @@ class Document extends \DOMDocument {
 
 		$citeProc = new CiteProc($style, $this->citationLang, $additionalMarkup);
 		$htmlString = $citeProc->render($data, 'bibliography');
-
+		
 		if ($this->styleInTextLinks) {
 			$this->setInTextLinks($citeProc, $data);
 		}
-
+		$htmlString = str_replace(['<i>', '</i>'], '', $htmlString);
 		$this->getCiteBody($htmlString, $rawData);
 	}
 
