@@ -4,7 +4,8 @@ namespace JATSParser\PDF\PDFConfig;
 
 class Configuration {
     private $config = [];
-    private static $citationStyle = 'Apa';
+
+    public static $supportedCustomCitationStyles = ['apa']; //make sure to add the supported citation styles here in LOWERCASE.
 
     public function __construct($metadata) {
         $this->config = [
@@ -74,6 +75,7 @@ class Configuration {
                     'width' => 30,
                 ],
                 'journal_logo' => [
+                    'journal_logo_public_path' => $metadata['journal_thumbnail_path'],
                     'journal_logo_path' => "/var/www/files/journals/" . $metadata['journal_id'] . "/",
                     'x_pos' => 25,
                     'y_pos' => 20,
@@ -200,6 +202,10 @@ class Configuration {
         return $this->config['metadata'];
     }
 
+    public function getPublicationId() {
+        return $this->config['metadata']['publication_id'];
+    }
+
     public function getPluginPath(){
         return $this->config['metadata']['plugin_path'];
     }
@@ -214,6 +220,14 @@ class Configuration {
 
     public function getTranslationsConfig() {
         return $this->config['metadata']['translations_config'];
+    }
+
+    public function getCitationStyle() {
+        return $this->config['citation_style'];
+    }
+
+    public static function getSupportedCustomCitationStyles() {
+        return self::$supportedCustomCitationStyles;
     }
 
     public function getLicenseUrlConfig() {
@@ -289,10 +303,6 @@ class Configuration {
 			'dates_font' => $this->config['template_body']['dates']['dates_font'],
 			'dates_color' => $this->config['template_body']['dates']['dates_color']
         ];
-    }
- 
-    public static function getCitationStyle() {
-        return self::$citationStyle;
     }
 
 }

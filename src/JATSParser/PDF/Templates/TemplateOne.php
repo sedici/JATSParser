@@ -1,10 +1,13 @@
-<?php namespace JATSParser\PDF;
+<?php namespace JATSParser\PDF\Templates;
+
+require_once(__DIR__ .'/../../../../vendor/tecnickcom/tcpdf/tcpdf.php');
 
 use JATSParser\Body\Document as JATSDocument;
 use JATSParser\HTML\Document as HTMLDocument;
-require_once(__DIR__ .'/../../../vendor/tecnickcom/tcpdf/tcpdf.php');
-require_once __DIR__ . '/PDFConfig/Configuration.php';
-require_once __DIR__ . '/PDFBodyHelper.php'; 
+use JATSParser\PDF\PDFBodyHelper;
+
+require_once __DIR__ . '/../PDFConfig/Configuration.php';
+require_once __DIR__ . '/../PDFConfig/Translations.php'; 
 
 
 class TemplateOne extends \TCPDF {
@@ -252,7 +255,7 @@ class TemplateOne extends \TCPDF {
 		$this->SetFont($bodyConfig['config']['font']['family'], $bodyConfig['config']['font']['style'], $bodyConfig['config']['font']['size']);
 
 		$htmlString .= "\n" . '<style>' . "\n" . file_get_contents($pluginPath . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'styles' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'pdfGalley.css') . '</style>';
-		$htmlString = PDFBodyHelper::_prepareForPdfGalley($htmlString);
+		$htmlString = PDFBodyHelper::_prepareForPdfGalley($htmlString, $this->config);
 		$this->writeHTML($htmlString, true, false, true, false, 'J');
 	}
 
@@ -516,23 +519,9 @@ class TemplateOne extends \TCPDF {
 	}
 
 	public function printJournalLogo(Array $journalLogoConfig): void {
-		//Verify if a journal logo exists in a specific directory:
-		$logoPath = null;
-		$logoFile = glob($journalLogoConfig['journal_logo_path'] . "logo.*");
-		if (!empty($logoFile)) {
-			$logoPath = $logoFile[0];
-		}
-				
-		// If the specific journal logo exists in the "/var/www/files/journals/{journal_id}" directory, process that logo
-		if ($logoPath && file_exists($logoPath)) {
-			$imgtype = \TCPDF_IMAGES::getImageFileType($logoPath);
-			if (($imgtype === 'eps') OR ($imgtype === 'ai')) {
-				$this->ImageEps($logoPath, $journalLogoConfig['x_pos'], $journalLogoConfig['y_pos'], $journalLogoConfig['width']);
-			} elseif ($imgtype === 'svg') {
-				$this->ImageSVG($logoPath, $journalLogoConfig['x_pos'], $journalLogoConfig['y_pos'], $journalLogoConfig['width']);
-			} else {
-				$this->Image($logoPath, $journalLogoConfig['x_pos'], $journalLogoConfig['y_pos'], $journalLogoConfig['width']);
-			}
+		$path = $journalLogoConfig['journal_logo_public_path'];
+		if ($path && file_exists($path)) {
+			$this->Image($path, $journalLogoConfig['x_pos'], $journalLogoConfig['y_pos'], $journalLogoConfig['width']);
 		}
 	}
 
