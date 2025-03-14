@@ -527,7 +527,7 @@ class TemplateOne extends \TCPDF {
 			$logoPath = $logoFile[0];
 		}
 				
-		// If the specific journal logo exists in the "/var/www/files/journals/{journal_id}" directory, process that logo
+		// If the specific journal logo exists in the private files of a journal, process that logo
 		if ($logoPath && file_exists($logoPath)) {
 			$imgtype = \TCPDF_IMAGES::getImageFileType($logoPath);
 			if (($imgtype === 'eps') OR ($imgtype === 'ai')) {
@@ -538,5 +538,5 @@ class TemplateOne extends \TCPDF {
 				$this->Image($logoPath, $journalLogoConfig['x_pos'], $journalLogoConfig['y_pos'], $journalLogoConfig['width']);
 			}
 		}
-
+	}
 }
