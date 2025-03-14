@@ -5,6 +5,8 @@ require_once(__DIR__ .'/../../../../vendor/tecnickcom/tcpdf/tcpdf.php');
 use JATSParser\Body\Document as JATSDocument;
 use JATSParser\HTML\Document as HTMLDocument;
 use JATSParser\PDF\PDFBodyHelper;
+use JATSParser\PDF\PDFConfig\Configuration;
+use JATSParser\PDF\PDFConfig\Translations;
 
 require_once __DIR__ . '/../PDFConfig/Configuration.php';
 require_once __DIR__ . '/../PDFConfig/Translations.php'; 
@@ -96,7 +98,6 @@ class TemplateOne extends \TCPDF {
 
 		$this->SetLeftMargin(25);
 		$this->printLicense($footerConfig, $translationsConfig, $localeKey, $licenseUrl);
-
     }
 
 	public function TemplateBody() {

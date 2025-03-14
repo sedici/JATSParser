@@ -6,6 +6,7 @@ class Configuration {
     private $config = [];
 
     public static $supportedCustomCitationStyles = ['apa']; //make sure to add the supported citation styles here in LOWERCASE.
+    public static $numberedReferencesCitationStyles = ['ieee'];
 
     public function __construct($metadata) {
         $this->config = [
@@ -228,6 +229,10 @@ class Configuration {
 
     public static function getSupportedCustomCitationStyles() {
         return self::$supportedCustomCitationStyles;
+    }
+
+    public static function getNumberedReferences() {
+        return self::$numberedReferencesCitationStyles;
     }
 
     public function getLicenseUrlConfig() {
