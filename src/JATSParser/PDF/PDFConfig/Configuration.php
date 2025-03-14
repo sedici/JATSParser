@@ -6,6 +6,7 @@ class Configuration {
     private $config = [];
 
     public static $supportedCustomCitationStyles = ['apa']; //make sure to add the supported citation styles here in LOWERCASE.
+    public static $numberedReferencesCitationStyles = ['ieee'];
 
     public function __construct($metadata) {
         $this->config = [
@@ -69,14 +70,14 @@ class Configuration {
                 'left_margin' => 25,
                 'template_body_font' => ['family' => 'helvetica', 'style' => '', 'size' => 10],
                 'institution_logo' => [
-                    'institution_logo_path' => '/var/www/files/journals/' . $metadata['journal_id'] . '/',
+                    'institution_logo_path' => $metadata['journal_logos_path'],
                     'x_pos' => 158,
                     'y_pos' => 38,
                     'width' => 30,
                 ],
                 'journal_logo' => [
                     'journal_logo_public_path' => $metadata['journal_thumbnail_path'],
-                    'journal_logo_path' => "/var/www/files/journals/" . $metadata['journal_id'] . "/",
+                    'journal_logo_path' => $metadata['journal_logos_path'],
                     'x_pos' => 25,
                     'y_pos' => 20,
                     'width' => 35,
@@ -228,6 +229,10 @@ class Configuration {
 
     public static function getSupportedCustomCitationStyles() {
         return self::$supportedCustomCitationStyles;
+    }
+
+    public static function getNumberedReferences() {
+        return self::$numberedReferencesCitationStyles;
     }
 
     public function getLicenseUrlConfig() {

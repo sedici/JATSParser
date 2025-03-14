@@ -5,6 +5,8 @@ require_once(__DIR__ .'/../../../../vendor/tecnickcom/tcpdf/tcpdf.php');
 use JATSParser\Body\Document as JATSDocument;
 use JATSParser\HTML\Document as HTMLDocument;
 use JATSParser\PDF\PDFBodyHelper;
+use JATSParser\PDF\PDFConfig\Configuration;
+use JATSParser\PDF\PDFConfig\Translations;
 
 require_once __DIR__ . '/../PDFConfig/Configuration.php';
 require_once __DIR__ . '/../PDFConfig/Translations.php'; 
@@ -96,7 +98,6 @@ class TemplateOne extends \TCPDF {
 
 		$this->SetLeftMargin(25);
 		$this->printLicense($footerConfig, $translationsConfig, $localeKey, $licenseUrl);
-
     }
 
 	public function TemplateBody() {
@@ -519,10 +520,23 @@ class TemplateOne extends \TCPDF {
 	}
 
 	public function printJournalLogo(Array $journalLogoConfig): void {
-		$path = $journalLogoConfig['journal_logo_public_path'];
-		if ($path && file_exists($path)) {
-			$this->Image($path, $journalLogoConfig['x_pos'], $journalLogoConfig['y_pos'], $journalLogoConfig['width']);
+		//Verify if a journal logo exists in a specific directory:
+		$logoPath = null;
+		$logoFile = glob($journalLogoConfig['journal_logo_path'] . "logo.*");
+		if (!empty($logoFile)) {
+			$logoPath = $logoFile[0];
+		}
+				
+		// If the specific journal logo exists in the private files of a journal, process that logo
+		if ($logoPath && file_exists($logoPath)) {
+			$imgtype = \TCPDF_IMAGES::getImageFileType($logoPath);
+			if (($imgtype === 'eps') OR ($imgtype === 'ai')) {
+				$this->ImageEps($logoPath, $journalLogoConfig['x_pos'], $journalLogoConfig['y_pos'], $journalLogoConfig['width']);
+			} elseif ($imgtype === 'svg') {
+				$this->ImageSVG($logoPath, $journalLogoConfig['x_pos'], $journalLogoConfig['y_pos'], $journalLogoConfig['width']);
+			} else {
+				$this->Image($logoPath, $journalLogoConfig['x_pos'], $journalLogoConfig['y_pos'], $journalLogoConfig['width']);
+			}
 		}
 	}
-
 }
