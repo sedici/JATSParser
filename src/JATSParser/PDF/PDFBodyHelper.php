@@ -50,7 +50,6 @@ class PDFBodyHelper {
 			$divNode->appendChild($tableCaption);
 		}
 
-
 		$supportedCitationStyles = $config::getSupportedCustomCitationStyles();
 		$actualCitationStyle = $config->getCitationStyle();
 		if ($supportedCitationStyles && in_array(strtolower($actualCitationStyle), $supportedCitationStyles)) {
