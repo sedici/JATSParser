@@ -1,7 +1,5 @@
 <?php namespace JATSParser\HTML;
 
-require_once __DIR__ . '/../PDF/PDFConfig/Translations.php';
-
 use JATSParser\Body\DispQuote;
 use JATSParser\Body\Document as JATSDocument;
 use JATSParser\HTML\Par as  Par;

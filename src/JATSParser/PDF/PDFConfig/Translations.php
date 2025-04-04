@@ -1,6 +1,4 @@
-<?php
-
-namespace JATSParser\PDF\PDFConfig;
+<?php namespace JATSParser\PDF\PDFConfig;
 
     class Translations {
         private static $translationsConfig = [
