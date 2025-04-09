@@ -1,6 +1,5 @@
 <?php namespace JATSParser\PDF\Templates;
 
-use JATSParser\PDF\Templates\Renderers\Renderer;
 use JATSParser\PDF\PDFConfig\Configuration;
 
     abstract class GenericComponent {
@@ -11,7 +10,6 @@ use JATSParser\PDF\PDFConfig\Configuration;
         public function __construct($pdfTemplate, Configuration $config) {
             $this->config = $config;
             $this->pdfTemplate = $pdfTemplate;
-
         }
 
         abstract public function render();

@@ -2,6 +2,15 @@
 
 use JATSParser\PDF\Templates\GenericComponent;
 
+use JATSParser\PDF\Templates\Renderers\SingleRenderer\JournalLogo;
+use JATSParser\PDF\Templates\Renderers\SingleRenderer\InstitutionLogo;
+use JATSParser\PDF\Templates\Renderers\SingleRenderer\NoLinkableText;
+use JATSParser\PDF\Templates\Renderers\SingleRenderer\LinkableText;
+use JATSParser\PDF\Templates\Renderers\GroupRenderer\TitlesAndSubtitles;
+use JATSParser\PDF\Templates\Renderers\GroupRenderer\AuthorsData;
+use JATSParser\PDF\Templates\Renderers\GroupRenderer\AbstractAndKeywords;
+use JATSParser\PDF\Templates\Renderers\SingleRenderer\Dates;
+
     class TemplateBody extends GenericComponent {
 
         public function render() {
@@ -10,19 +19,18 @@ use JATSParser\PDF\Templates\GenericComponent;
 
             // ---------------------------------------------------------------------------------------------------------------------------------- //
 
-            //Print institution LOGO
-            $this->pdfTemplate->printInstitutionLogo($templateBodyConfig['config']['institution_logo']);
-            
-            //Print journal LOGO
-            $this->pdfTemplate->printJournalLogo($templateBodyConfig['config']['journal_logo']);
+            InstitutionLogo::renderInstitutionLogo($this->config, $this->pdfTemplate);
+
+            JournalLogo::renderJournalLogo($this->config, $this->pdfTemplate);
 
             $xPos = $this->pdfTemplate->getImageRBX();
             $xPos = $xPos + 5;
             $yPos = 18;
 
-            //CREATE JOURNAL TITLE
+            //RENDER JOURNAL TITLE TEXT
             if ($templateBodyConfig['metadata']['journal_title']) {
-                $this->pdfTemplate->createNoClickableText(
+                NoLinkableText::renderNoLinkableText(
+                    $this->pdfTemplate, 
                     $templateBodyConfig['metadata']['journal_title'], 
                     $xPos, 
                     $yPos, 
@@ -32,24 +40,26 @@ use JATSParser\PDF\Templates\GenericComponent;
                 $yPos = $yPos + 4;
             }
 
-            // CREATE JOURNAL ISSUE
+            //RENDER COMPLETE JOURNAL DATA TEXT. INCLUDES VOLUME, ISSUE, YEAR AND TITLE
             if ($templateBodyConfig['metadata']['journal_data']) {
-                $this->pdfTemplate->createNoClickableText(
-                    $templateBodyConfig['metadata']['journal_data'], 
-                    $xPos, 
-                    $yPos, 
-                    $templateBodyConfig['config']['journal_issue']['text_color'], 
+                NoLinkableText::renderNoLinkableText(
+                    $this->pdfTemplate,
+                    $templateBodyConfig['metadata']['journal_data'],
+                    $xPos,
+                    $yPos,
+                    $templateBodyConfig['config']['journal_issue']['text_color'],
                     $templateBodyConfig['config']['journal_issue']['font']
                 );
                 $yPos = $yPos + 4;
             }
 
-            //CREATE DOI
+            //RENDER DOI TEXT
             if ($templateBodyConfig['metadata']['doi']) {
                 $doiUrl = 'https://doi.org/' . $templateBodyConfig['metadata']['doi']; // Construct complete doi URL.
-                $this->pdfTemplate->createClickableText(
+                LinkableText::renderLinkableText(
+                    $this->pdfTemplate, 
                     $doiUrl, 
-                    $doiUrl,
+                    $doiUrl, 
                     $xPos, 
                     $yPos, 
                     $templateBodyConfig['config']['doi']['text_color'], 
@@ -58,36 +68,38 @@ use JATSParser\PDF\Templates\GenericComponent;
                 $yPos = $yPos + 4;
             }
 
-            //CREATE ONLINE ISSN
+            //RENDER ONLINE ISSN TEXT
             if ($templateBodyConfig['metadata']['online_issn']) {
                 $text = "ISSN " . $templateBodyConfig['metadata']['online_issn'] . ' | ';
-                $this->pdfTemplate->createNoClickableText(
-                    $text, 
-                    $xPos, 
-                    $yPos, 
-                    $templateBodyConfig['config']['online_issn']['text_color'], 
+                NoLinkableText::renderNoLinkableText(
+                    $this->pdfTemplate,
+                    $text,
+                    $xPos,
+                    $yPos,
+                    $templateBodyConfig['config']['online_issn']['text_color'],
                     $templateBodyConfig['config']['online_issn']['font']
                 );
-
-                $xPos += $this->pdfTemplate->getStringWidth($text);
+                $yPos = $yPos + 4;
             }
 
             //CREATE JOURNAL URL
             if ($templateBodyConfig['metadata']['journal_url']){
-                $this->pdfTemplate->createClickableText(
-                    $templateBodyConfig['metadata']['journal_url'],
-                    $templateBodyConfig['metadata']['journal_url'],
-                    $xPos,
-                    $yPos,
-                    $templateBodyConfig['config']['journal_url']['text_color'],
+                LinkableText::renderLinkableText(
+                    $this->pdfTemplate, 
+                    $templateBodyConfig['metadata']['journal_url'], 
+                    $templateBodyConfig['metadata']['journal_url'], 
+                    $xPos, 
+                    $yPos, 
+                    $templateBodyConfig['config']['journal_url']['text_color'], 
                     $templateBodyConfig['config']['journal_url']['font']
                 );
                 $yPos = $yPos + 4;
             }
 
             if ($templateBodyConfig['metadata']['editorial']) {
-                $this->pdfTemplate->createNoClickableText(
-                    $templateBodyConfig['metadata']['editorial'],
+                NoLinkableText::renderNoLinkableText(
+                    $this->pdfTemplate, 
+                    $templateBodyConfig['metadata']['editorial'], 
                     $xPos, 
                     $yPos, 
                     $templateBodyConfig['config']['editorial']['text_color'], 
@@ -101,8 +113,9 @@ use JATSParser\PDF\Templates\GenericComponent;
             $this->pdfTemplate->SetLeftMargin(25);
             $this->pdfTemplate->Ln(30);
 
-            // Article titles
-            $this->pdfTemplate->createTitlesAndSubtitles(
+            //Render article titles and subtitles
+            TitlesAndSubtitles::renderTitlesAndSubtitles(
+                $this->pdfTemplate, 
                 $this->pdfTemplate->GetX(), 
                 $this->pdfTemplate->GetY(), 
                 $this->config->getTitlesConfig(),
@@ -110,12 +123,14 @@ use JATSParser\PDF\Templates\GenericComponent;
                 $templateBodyConfig['metadata']['locale_key']
             );
 
+
             $this->pdfTemplate->SetFillColor(0, 0, 0); 
-            
-            $this->pdfTemplate->createAuthorsData(
-                $this->config->getAuthorsConfig(), 
-                $this->pdfTemplate->GetX(),
-                $this->pdfTemplate->GetY(),
+
+            AuthorsData::renderAuthorsData(
+                $this->pdfTemplate, 
+                $this->pdfTemplate->GetX(), 
+                $this->pdfTemplate->GetY(), 
+                $this->config->getAuthorsConfig(),
                 $templateBodyConfig['metadata']['locale_key']
             );
 
@@ -131,16 +146,18 @@ use JATSParser\PDF\Templates\GenericComponent;
             $this->pdfTemplate->SetRightMargin(30);
             $this->pdfTemplate->Ln(5);
 
-            $this->pdfTemplate->createAbstractsAndKeywords(
-                $this->config->getKeywordsConfig(),
-                $this->config->getAbstractConfig(),
-                $templateBodyConfig['metadata']['translations_config'],
-                $this->pdfTemplate->GetX(),
-                $this->pdfTemplate->GetY(),
+            AbstractAndKeywords::renderAbstractsAndKeywords(
+                $this->pdfTemplate, 
+                $this->config->getKeywordsConfig(), 
+                $this->config->getAbstractConfig(), 
+                $templateBodyConfig['metadata']['translations_config'], 
+                $this->pdfTemplate->GetX(), 
+                $this->pdfTemplate->GetY(), 
                 $templateBodyConfig['metadata']['locale_key']
             );
 
-            $this->pdfTemplate->createDates(
+            Dates::renderDates(
+                $this->pdfTemplate, 
                 $this->config->getDatesConfig(), 
                 $templateBodyConfig['metadata']['translations_config'], 
                 $templateBodyConfig['metadata']['locale_key'], 

@@ -1,0 +1,250 @@
+[33mcommit 31e4e6f309b727337c4c06d28fb3c64999fdfb18[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mhotfix/templates-refactoring[m[33m)[m
+Author: Tomas Messineo <tomasnahuelmessineo@gmail.com>
+Date:   Fri Apr 4 14:11:53 2025 -0300
+
+    refactor: Redesign template system for scalability
+    
+    - Extract common template logic to BaseTemplate
+    - Standardize component structure and initialization
+    - Implement namespace-based component discovery
+    - Simplify creation of new templates with minimal code
+
+[33mcommit bcadec6db66ff5038e7eddab5e67cb9cab71f55c[m[33m ([m[1;31morigin/dev[m[33m, [m[1;32mfix[m[33m, [m[1;32mdev[m[33m)[m
+Merge: 5f50be0 382d3af
+Author: Tomas Messineo <164123461+TomasMessineo@users.noreply.github.com>
+Date:   Fri Mar 28 08:17:42 2025 -0300
+
+    Merge pull request #4 from sedici/fix
+    
+    Fixed bug with fonts
+
+[33mcommit 382d3afb29d68b38ba4c526412415c65859738c8[m[33m ([m[1;31morigin/fix[m[33m)[m
+Author: Tomas Messineo <tomasnahuelmessineo@gmail.com>
+Date:   Fri Mar 28 08:14:10 2025 -0300
+
+    Fixed bug with fonts
+
+[33mcommit 5f50be07978a44fd220ac7965896d0ab79eaecd0[m
+Merge: cf3da73 e075270
+Author: Tomas Messineo <164123461+TomasMessineo@users.noreply.github.com>
+Date:   Fri Mar 14 14:18:36 2025 -0300
+
+    Merge pull request #3 from sedici/hotfix/pdfBodyHelper-modification
+    
+    Hotfix/metadata modification
+
+[33mcommit e07527082aaaeace7ebf365f2a354476de6164a3[m[33m ([m[1;31morigin/hotfix/pdfBodyHelper-modification[m[33m)[m
+Author: Tomas Messineo <tomasnahuelmessineo@gmail.com>
+Date:   Fri Mar 14 14:15:11 2025 -0300
+
+    modification: added journal_logos_path to  array in Configuration class
+
+[33mcommit b5899db4aa4c24148294961b6cc039f8c79b679c[m
+Author: Tomas Messineo <tomasnahuelmessineo@gmail.com>
+Date:   Fri Mar 14 12:08:50 2025 -0300
+
+    save changes
+
+[33mcommit 3aeeec07b01250f96020fbdc6ce521dfc71ae3b6[m
+Author: Tomas Messineo <tomasnahuelmessineo@gmail.com>
+Date:   Fri Mar 14 12:04:56 2025 -0300
+
+    save changes
+
+[33mcommit cf3da735744ddf80e0c3932c885d3b5f90d0b7d2[m
+Merge: ae8e869 95121d9
+Author: Tomas Messineo <164123461+TomasMessineo@users.noreply.github.com>
+Date:   Wed Mar 12 09:20:14 2025 -0300
+
+    Merge pull request #2 from sedici/hotfix/pdfBodyHelper-modification
+    
+    hotfix/pdfBodyHelper-modification
+
+[33mcommit 95121d91d779b2694add1ec44f42bbd40f7762fb[m
+Author: Tomas Messineo <tomasnahuelmessineo@gmail.com>
+Date:   Wed Mar 12 09:13:57 2025 -0300
+
+    hotfix/pdfBodyHelper-modification
+
+[33mcommit ae8e869fe82a65aef69ea4ec17085fa4315b14c7[m
+Author: Tomas Messineo <tomasnahuelmessineo@gmail.com>
+Date:   Tue Feb 25 11:32:12 2025 -0300
+
+    new/pdf-template
+
+[33mcommit fb756f9983286bf10e43f1e0dbad706d964e891f[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Sat Dec 11 17:18:53 2021 +0200
+
+    Update dependencies
+
+[33mcommit de4a9a180bf59c08ba30cec1ce4a354191ea22de[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Sun Sep 5 18:52:29 2021 +0300
+
+    Vitaliy-1/JATSParserPlugin#63 Don't pass DOI URL to CSL
+
+[33mcommit e1a9604135db80c37913a171783e34c0652be1a3[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Thu Mar 11 19:19:01 2021 +0200
+
+    Dependencies update
+
+[33mcommit 27e11eb646b08560d48f93b9647e19e6dee5ddd3[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Wed Dec 9 17:49:43 2020 +0200
+
+    Vitaliy-1/JATSParserPlugin#40 use rawurlencode
+
+[33mcommit 4db988f075340923972f4c4d77f21b1594217069[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Wed Dec 9 17:41:42 2020 +0200
+
+    Vitaliy-1/JATSParserPlugin#40 Escape image URL
+
+[33mcommit 2579251e65538f303131406269d20bae028b00b7[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Wed Nov 4 20:03:33 2020 +0200
+
+    #37 Pass reference to CSL only if has data
+
+[33mcommit 7b6c3167f8d1e87c7054b7546ece99c0027631c9[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Wed Oct 21 20:15:32 2020 +0300
+
+    #24 check if year is valid
+
+[33mcommit e49ddd769fbfa9f73abcfd23781ea59ba64c53a1[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Thu Aug 27 12:43:55 2020 +0300
+
+    Escape simple properties in references
+
+[33mcommit 1e1e944451e21309c5b38d26116fccca01e016b1[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Thu Aug 6 21:23:49 2020 +0300
+
+    Retrieve raw references
+
+[33mcommit 965f875fe887feef7b6398f143cef4594d5775bc[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Tue Jul 21 17:47:54 2020 +0300
+
+    Add id to the reference list
+
+[33mcommit 87a8d0efc5c2e56bc7bd69118b2de30249a311e1[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Wed Jul 8 18:34:31 2020 +0300
+
+    allow nullable Media properties
+
+[33mcommit 717da533bbf2643fbc63e096f5ba1a4b4888dc89[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Sun Jul 5 18:05:30 2020 +0300
+
+    Save as UTF-8 HTML string
+
+[33mcommit 6400eb650393811af53c0c352ced53072f9b602d[m
+Merge: 79638c1 7e8c5bf
+Author: Vitaliy <vitaliybezsh@gmail.com>
+Date:   Fri Jun 26 19:37:26 2020 +0300
+
+    Merge pull request #22 from Vitaliy-1/i21_citeproc_references
+    
+    I21 citeproc references
+
+[33mcommit 7e8c5bfe058ca023d727b4b00f6d826387a6f840[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Fri Jun 26 19:32:54 2020 +0300
+
+    #21 style in-text links to references
+
+[33mcommit 5010e0bf280339aff7fde1cc71d7069abc8b8b54[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Fri Jun 26 18:12:29 2020 +0300
+
+    #21 citeproc-php integration to support different citation styles
+
+[33mcommit 46fcf98b67e5a62545bbfb342483183041d86caa[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Wed Jun 24 17:21:09 2020 +0300
+
+    Dependencies update
+
+[33mcommit 79638c1593c7f2c6e26b2d36d9a56f229d6fedf6[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Tue Jun 23 16:09:23 2020 +0300
+
+    Dependencies update
+
+[33mcommit d30d3ae03d3fd77ad748c1c6793e5456f1fafc0a[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Fri Jun 19 19:45:46 2020 +0300
+
+    #19 parse block elements inside paragraphs
+
+[33mcommit 2e2a8aeddc4a2423e8afcb642cf6e836e6eeaa11[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Tue May 5 20:54:59 2020 +0300
+
+    Remove special treatment for text inside table's cells
+
+[33mcommit ce1090947fb674f57d9928d2e527c13f4775018d[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Wed Apr 8 17:41:08 2020 +0300
+
+    default image
+
+[33mcommit 16bb61b7cdb4b23ba2be9cd554dd5b30296bded5[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Wed Mar 11 18:58:02 2020 +0200
+
+    Escape html special characters
+
+[33mcommit a311c76ccea892112ec66ddee97c4d444b8441f3[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Tue Jan 21 16:57:35 2020 +0200
+
+    #15 verse content cannot be null
+
+[33mcommit 7b134d06149989571a710710a15a0370fda4b5b1[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Thu Jan 16 17:01:35 2020 +0200
+
+    #15 support for poems
+
+[33mcommit be56ba78e6786f73baa23ec6476620118b713041[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Thu Jan 16 13:25:20 2020 +0200
+
+    Refactoring
+
+[33mcommit 0bf452c964ad49c3d6d4c170499c80f3c9c46c12[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Tue Jan 14 12:51:01 2020 +0200
+
+    #13 Support for disp-quote
+
+[33mcommit f6fac2322c9af913a4872bd85d7ad86e1ae93a34[m
+Author: Vitaliy Bezsheiko <vitaliybezsh@gmail.com>
+Date:   Mon Jan 13 17:54:45 2020 +0200
+
+    #16 Support for hyperlinks in text
+
+[33mcommit 8005c73b5eaac95253330c5da4b3b9b24989c477[m
+Merge: 89cee0c f08e661
+Author: Vitaliy <vitaliybezsh@gmail.com>
+Date:   Wed Dec 4 12:47:02 2019 +0200
+
+    Merge pull request #14 from marcellagreca/master
+    
+    Set id for tables and figures references
+
+[33mcommit f08e661a605b8a273fa5bffb8dcfc06dfb8bcf22[m
+Author: marcellagreca <greca@archicoop.it>
+Date:   Wed Dec 4 10:42:19 2019 +0100
+
+    Set id for tables and figures references
+
+[33mcommit 89cee0cec464f1a8f9e33f7d59afe7e8a36d3df7[m
+Author: Vitaliy Bezsheiko

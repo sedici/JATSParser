@@ -1,9 +1,22 @@
 <?php namespace JATSParser\PDF\Templates\Renderers\SingleRenderer;
 
+/**
+ * @param string $config -> Configuration object containing template body configuration.
+ * @param string $pdfTemplate -> PDF template object used for rendering.
+ * @return void
+ 
+ *  This class is responsible for rendering the journal logo in the PDF template.
+ *  It checks if a journal logo exists in a specific directory and processes it accordingly.
+ *  If the logo is in EPS or SVG format, it uses the appropriate method to render it.
+ */
+
 class JournalLogo {
-    
-    public static function renderJournalLogo(Array $journalLogoConfig, $pdfTemplate): void {
+
+    public static function renderJournalLogo($config, $pdfTemplate): void {
         
+        $templateBodyConfig = $config->getTemplateBodyConfig();
+        $journalLogoConfig = $templateBodyConfig['config']['journal_logo'];
+
         //Verify if a journal logo exists in a specific directory:
         $logoPath = null;
         $logoFile = glob($journalLogoConfig['journal_logo_path'] . "logo.*");
@@ -23,4 +36,5 @@ class JournalLogo {
             }
         }
     }
+
 }
