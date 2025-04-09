@@ -56,13 +56,13 @@ class Configuration {
                         'CC-ZERO' => 'https://creativecommons.org/publicdomain/zero/1.0/'
                     ],
                     'logos' => [
-                        'CC-BY' => '/var/www/html/plugins/generic/jatsParser/JATSParser/logo/creativecommons/cc-by.png',
-                        'CC-BY-NC' => '/var/www/html/plugins/generic/jatsParser/JATSParser/logo/creativecommons/cc-by-nc.png',
-                        'CC-BY-ND' => '/var/www/html/plugins/generic/jatsParser/JATSParser/logo/creativecommons/cc-by-nd.png',
-                        'CC-BY-SA' => '/var/www/html/plugins/generic/jatsParser/JATSParser/logo/creativecommons/cc-by-sa.png',
-                        'CC-BY-NC-ND' => '/var/www/html/plugins/generic/jatsParser/JATSParser/logo/creativecommons/cc-by-nc-nd.png',
-                        'CC-BY-NC-SA' => '/var/www/html/plugins/generic/jatsParser/JATSParser/logo/creativecommons/cc-by-nc-sa.png',
-                        'CC-ZERO' => '/var/www/html/plugins/generic/jatsParser/JATSParser/logo/creativecommons/cc0.png'
+                        'CC-BY' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by.png',
+                        'CC-BY-NC' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nc.png',
+                        'CC-BY-ND' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nd.png',
+                        'CC-BY-SA' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-sa.png',
+                        'CC-BY-NC-ND' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nc-nd.png',
+                        'CC-BY-NC-SA' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nc-sa.png',
+                        'CC-ZERO' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc0.png'
                     ]
                 ]
             ],
@@ -76,7 +76,6 @@ class Configuration {
                     'width' => 30,
                 ],
                 'journal_logo' => [
-                    'journal_logo_public_path' => $metadata['journal_thumbnail_path'],
                     'journal_logo_path' => $metadata['journal_logos_path'],
                     'x_pos' => 25,
                     'y_pos' => 20,
