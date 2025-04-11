@@ -12,7 +12,7 @@ class TitlesAndSubtitles {
         unset($titlesConfig['titles_texts'][$localeKey]);
 
         $pdfTemplate->Ln(7);
-
+ 
         $pdfTemplate->SetFont($subtitlesConfig['subtitles_config']['principal_subtitle_font']['family'], $subtitlesConfig['subtitles_config']['principal_subtitle_font']['style'], $subtitlesConfig['subtitles_config']['principal_subtitle_font']['size']);
         $pdfTemplate->SetTextColor($subtitlesConfig['subtitles_config']['principal_subtitle_color'][0], $subtitlesConfig['subtitles_config']['principal_subtitle_color'][1], $subtitlesConfig['subtitles_config']['principal_subtitle_color'][2]);
         $pdfTemplate->Write(5, $subtitlesConfig['subtitles_texts'][$localeKey]);
