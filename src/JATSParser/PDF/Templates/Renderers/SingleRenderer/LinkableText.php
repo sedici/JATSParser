@@ -19,7 +19,7 @@
 */
 
 class LinkableText{
-    public static function renderLinkableText($pdfTemplate, String $url, String $visibleText, float $xPosition, float $yPosition, Array $textColor, Array $textFont, $align = '') {
+    public static function renderLinkableText($pdfTemplate, $url, $visibleText, float $xPosition, float $yPosition, Array $textColor, Array $textFont, $align = '') {
         $pdfTemplate->SetXY($xPosition, $yPosition);
         $pdfTemplate->SetTextColor($textColor[0], $textColor[1], $textColor[2]);
         $pdfTemplate->SetFont($textFont['family'], $textFont['style'], $textFont['size']);
