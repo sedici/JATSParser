@@ -17,7 +17,7 @@ class License{
                     '', 
                     $licenseLink, 
                     'L'
-                );
+                ); 
 
                 $xPosition = $pdfTemplate->getImageRBX() + 2;
                 $translationText = TranslationsByKey::getTranslationByKey($translationsConfig, $localeKey, 'license_text') . ' ' . $license;
