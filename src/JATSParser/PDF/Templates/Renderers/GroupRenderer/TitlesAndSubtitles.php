@@ -1,5 +1,7 @@
 <?php namespace JATSParser\PDF\Templates\Renderers\GroupRenderer;
 
+use JATSParser\PDF\Templates\Renderers\SingleRenderer\NoLinkableText;
+
 class TitlesAndSubtitles {
     public static function renderTitlesAndSubtitles($pdfTemplate, float $x, float $y, Array $titlesConfig, Array $subtitlesConfig, $localeKey) {
         $pdfTemplate->SetXY($x, $y);
@@ -20,7 +22,7 @@ class TitlesAndSubtitles {
 
         foreach ($titlesConfig['titles_texts'] as $language => $title) {
             $text = $title . '. ' . $subtitlesConfig['subtitles_texts'][$language];
-            $pdfTemplate->createNoClickableText($text, $pdfTemplate->GetX(), $pdfTemplate->GetY(), $titlesConfig['titles_config']['text_color'], $titlesConfig['titles_config']['font']);
+            NoLinkableText::renderNoLinkableText($pdfTemplate, $text, $pdfTemplate->GetX(), $pdfTemplate->GetY(), $titlesConfig['titles_config']['text_color'], $titlesConfig['titles_config']['font']);
             $pdfTemplate->Ln(3);
         }
 
