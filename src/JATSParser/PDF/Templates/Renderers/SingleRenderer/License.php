@@ -3,7 +3,7 @@
 use JATSParser\PDF\Templates\Renderers\Utils\TranslationsByKey;
 use JATSParser\PDF\Templates\Renderers\SingleRenderer\LinkableText;
 
-class License{
+class License{ 
     public static function renderLicense($pdfTemplate, Array $footerConfig, Array $translationsConfig, $localeKey, $licenseUrl): void {
         foreach ($footerConfig['config']['licenses']['links'] as $license => $licenseLink) {
             if ($licenseUrl === $licenseLink) {
