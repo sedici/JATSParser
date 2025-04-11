@@ -13,7 +13,9 @@ class Footer extends GenericComponent{
             $licenseUrl = $this->config->getLicenseUrlConfig();
                 
             $this->pdfTemplate->SetLeftMargin(25);
-            License::renderLicense($this->pdfTemplate, $footerConfig, $translationsConfig, $localeKey, $licenseUrl);
+            if ($licenseUrl) {
+                License::renderLicense($this->pdfTemplate, $footerConfig, $translationsConfig, $localeKey, $licenseUrl);
+            }
         }
 
     }
