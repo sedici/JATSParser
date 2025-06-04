@@ -20,7 +20,6 @@ class Dates {
 
         $pdfTemplate->SetFont($datesConfig['dates_font']['family'], $datesConfig['dates_font']['style'], $datesConfig['dates_font']['size']);
         $pdfTemplate->SetTextColor($datesConfig['dates_color'][0], $datesConfig['dates_color'][1], $datesConfig['dates_color'][2]);
-        $pdfTemplate->Ln(10);
         $pdfTemplate->Cell(0, 10, $datesText, 0, 1, 'L');
         $pdfTemplate->SetTextColor(0, 0, 0);
     }

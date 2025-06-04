@@ -22,9 +22,16 @@ class Figure extends AbstractElement {
 	public function __construct(\DOMElement $figureElement) {
 		parent::__construct($figureElement);
 
-		$this->label = $this->extractFromElement(".//label", $figureElement);
-		$this->link = $this->extractFromElement(".//graphic/@xlink:href", $figureElement);
 		$this->id = $this->extractFromElement( "./@id", $figureElement);
+	
+		$this->label = "";
+		/* 
+		$this->label = $this->extractFromElement(".//label", $figureElement);
+		$figureNumber = $this->getFigureNumber(); 
+		$this->label = __('plugins.generic.jatsParser.figure.title') . ' ' . $figureNumber; // Translate the label if needed (e.g., "Figure 1" for english or "Figura 1" for spanish)
+		*/
+
+		$this->link = $this->extractFromElement(".//graphic/@xlink:href", $figureElement);
 		$this->title = $this->extractTitleOrCaption($figureElement, self::JATS_EXTRACT_TITLE);
 		$this->content = $this->extractTitleOrCaption($figureElement, self::JATS_EXTRACT_CAPTION);
 
@@ -49,4 +56,14 @@ class Figure extends AbstractElement {
 	public function getLabel(): ?string {
 		return $this->label;
 	}
+
+	public function getFigureNumber(): ?string {
+    if ($this->label) {
+        // Extract one or more digits from the label string
+        if (preg_match('/\d+/', $this->label, $matches)) {
+            return $matches[0];
+        }
+    }
+    return null;
+}
 }

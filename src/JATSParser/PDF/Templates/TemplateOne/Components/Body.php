@@ -17,6 +17,7 @@ class Body extends GenericComponent{
 
 		$htmlString .= "\n" . '<style>' . "\n" . file_get_contents($pluginPath . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'styles' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'pdfGalley.css') . '</style>';
 		$htmlString = PDFBodyHelper::_prepareForPdfGalley($htmlString, $this->config);
+		error_log($htmlString);
 		$this->pdfTemplate->writeHTML($htmlString, true, false, true, false, 'J');
 	}
 }
