@@ -9,26 +9,34 @@ class AuthorsData {
             if (count($authorsConfig['authors_data']) > 0) {
                 foreach ($authorsConfig['authors_data'] as $author) {
                     
-                    // Author's bold name
+                    // Author's bold name - set font first
                     $pdfTemplate->SetFont(
                         $authorsConfig['authors_config']['fullname_font']['family'], 
                         $authorsConfig['authors_config']['fullname_font']['style'], 
                         $authorsConfig['authors_config']['fullname_font']['size']
-                    ); 
+                    );
+
                     $pdfTemplate->SetTextColor(
                         $authorsConfig['authors_config']['fullname_text_color'][0],
                         $authorsConfig['authors_config']['fullname_text_color'][1], 
                         $authorsConfig['authors_config']['fullname_text_color'][2]
                     );
+
                     $authorName = htmlspecialchars($author->getGivenName($localeKey)) . ' ' . htmlspecialchars($author->getFamilyName($localeKey));
-                    $pdfTemplate->MultiCell(0, 0, $authorName, 0, 'L', false, 1, '', '', true);
-    
-                    // ORCID CLICKABLE LOGO
+                    
+                    // Store current position
+                    $currentX = $pdfTemplate->GetX();
+                    $currentY = $pdfTemplate->GetY();
+                    
+                    // ORCID CLICKABLE LOGO (before author name)
                     if (htmlspecialchars($author->getOrcid())) {
-                        $xLogo = $pdfTemplate->GetX() + $pdfTemplate->GetStringWidth($authorName) + 2;
-                        $yLogo = $pdfTemplate->GetY() - 3.65;
-                        ClickableOrcidLogo::renderClickableOrcidLogo($pdfTemplate, $xLogo, $yLogo, 3, $author->getOrcid());	
+                        ClickableOrcidLogo::renderClickableOrcidLogo($pdfTemplate, $currentX, $currentY, 5, $author->getOrcid());
+                        // Move position to the right of the logo for the author name
+                        $pdfTemplate->SetXY($currentX + 5, $currentY); // Adjust the 5 value as needed for spacing
                     }
+                    
+                    // Now render the author name
+                    $pdfTemplate->MultiCell(0, 0, $authorName, 0, 'L', false, 1, '', '', true);
     
                     // Email
                     if ($author->getEmail()) {
@@ -47,9 +55,16 @@ class AuthorsData {
                         $pdfTemplate->Ln(5);
                     }
     
-                    // Affiliation
+                    // Affiliation with Country
                     if ($author->getAffiliation($localeKey)) {
-                        $affiliation = htmlspecialchars($author->getAffiliation($localeKey));
+                        $affiliationText = htmlspecialchars($author->getAffiliation($localeKey));
+                        
+                        // Append country if available
+                        if ($author->getCountryLocalized($localeKey)) {
+                            $country = htmlspecialchars($author->getCountryLocalized($localeKey));
+                            $affiliationText .= ', ' . $country;
+                        }
+                        
                         $pdfTemplate->SetFont(
                             $authorsConfig['authors_config']['affiliation_font']['family'], 
                             $authorsConfig['authors_config']['affiliation_font']['style'], 
@@ -60,9 +75,9 @@ class AuthorsData {
                             $authorsConfig['authors_config']['affiliation_text_color'][1], 
                             $authorsConfig['authors_config']['affiliation_text_color'][2]
                         );
-                        $pdfTemplate->MultiCell(0, 0, $affiliation, 0, 'L', false, 1, '', '', true);
+                        $pdfTemplate->MultiCell(0, 0, $affiliationText, 0, 'L', false, 1, '', '', true);
                     }
-    
+                    
                     // Space between authors
                     $pdfTemplate->SetTextColor(0, 0, 0);
                     $pdfTemplate->Ln(3); 

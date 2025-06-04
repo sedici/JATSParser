@@ -129,13 +129,13 @@ class Configuration {
                     'principal_title_font' => ['family' => 'helvetica', 'style' => 'B', 'size' => 15],
                     'principal_title_color' => [49, 132, 155],
                     'text_color' => [49, 132, 155],
-                    'font' => ['family' => 'helvetica', 'style' => '', 'size' => 9]
+                    'font' => ['family' => 'helvetica', 'style' => '', 'size' => 10]
                 ],
                 'subtitles' => [
                     'principal_subtitle_font' => ['family' => 'helvetica', 'style' => 'B', 'size' => 12],
                     'principal_subtitle_color' => [49, 132, 155],
                     'text_color' => [0, 0, 0],
-                    'font' => ['family' => 'helvetica', 'style' => '', 'size' => 9]
+                    'font' => ['family' => 'helvetica', 'style' => '', 'size' => 10]
                 ],
                 'abstract' => [
                     'abstract_title_color' => [49, 132, 155],

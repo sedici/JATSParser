@@ -24,29 +24,45 @@ class AbstractAndKeywords {
 
     // Prints the abstract and keywords in one language.
     public static function printAbstractAndKeywords($pdfTemplate, Array $keywordsConfig, Array $abstractConfig, Array $translationsConfig, float $xPosition, $language) {
-        $abstractTitle = TranslationsByKey::getTranslationByKey($translationsConfig, $language, 'abstract') . ':';
-        $abstractText = strip_tags($abstractConfig['abstract_texts'][$language]); //Delete HTML tags of abstract
-        $keywordsTitle = TranslationsByKey::getTranslationByKey($translationsConfig, $language, 'keywords') . ':';
-        $keywords = is_array($keywordsConfig['keywords_texts'][$language]) ? implode(', ', $keywordsConfig['keywords_texts'][$language]) : "";
-
-        $pdfTemplate->SetFont($abstractConfig['abstract_title_font']['family'], $abstractConfig['abstract_title_font']['style'], $abstractConfig['abstract_title_font']['size']);
-        $pdfTemplate->SetTextColor($abstractConfig['abstract_title_color'][0], $abstractConfig['abstract_title_color'][1], $abstractConfig['abstract_title_color'][2]);
-        $pdfTemplate->Write(5, $abstractTitle);
-
-        $pdfTemplate->SetFont($abstractConfig['abstract_text_font']['family'], $abstractConfig['abstract_text_font']['style'], $abstractConfig['abstract_text_font']['size']);
-        $pdfTemplate->SetTextColor($abstractConfig['abstract_text_color'][0], $abstractConfig['abstract_text_color'][1], $abstractConfig['abstract_text_color'][2]);
-        $pdfTemplate->SetX($xPosition + $pdfTemplate->GetStringWidth($abstractTitle) + 3);
-        $pdfTemplate->Write(5, $abstractText, '', false, 'L');
+        // Check if abstract exists and is not empty
+        $hasAbstractContent = isset($abstractConfig['abstract_texts'][$language]) && !empty(trim(strip_tags($abstractConfig['abstract_texts'][$language])));
+        
+        // Check if keywords exist and are not empty
+        $hasKeywordsContent = isset($keywordsConfig['keywords_texts'][$language]) && 
+                             is_array($keywordsConfig['keywords_texts'][$language]) && 
+                             !empty($keywordsConfig['keywords_texts'][$language]);
+        
+        // Render abstract section if content exists
+        if ($hasAbstractContent) {
+            $abstractTitle = trim(TranslationsByKey::getTranslationByKey($translationsConfig, $language, 'abstract')) . ' | ';
+            $abstractText = trim(strip_tags($abstractConfig['abstract_texts'][$language]));
             
-        $pdfTemplate->Ln(7);
+            $pdfTemplate->SetFont($abstractConfig['abstract_title_font']['family'], $abstractConfig['abstract_title_font']['style'], $abstractConfig['abstract_title_font']['size']);
+            $pdfTemplate->SetTextColor($abstractConfig['abstract_title_color'][0], $abstractConfig['abstract_title_color'][1], $abstractConfig['abstract_title_color'][2]);
+            $pdfTemplate->Write(5, $abstractTitle);
 
-        $pdfTemplate->SetFont($keywordsConfig['keywords_title_font']['family'], $keywordsConfig['keywords_title_font']['style'], $keywordsConfig['keywords_title_font']['size']);
-        $pdfTemplate->SetTextColor($keywordsConfig['keywords_title_color'][0], $keywordsConfig['keywords_title_color'][1], $keywordsConfig['keywords_title_color'][2]);
-        $pdfTemplate->Write(5, $keywordsTitle);
+            $pdfTemplate->SetFont($abstractConfig['abstract_text_font']['family'], $abstractConfig['abstract_text_font']['style'], $abstractConfig['abstract_text_font']['size']);
+            $pdfTemplate->SetTextColor($abstractConfig['abstract_text_color'][0], $abstractConfig['abstract_text_color'][1], $abstractConfig['abstract_text_color'][2]);
+            $pdfTemplate->Write(5, $abstractText, '', false, 'L');
+            
+            // Only add line break if we're going to render keywords next
+            if ($hasKeywordsContent) {
+                $pdfTemplate->Ln(7);
+            }
+        }
+        
+        // Render keywords section if content exists
+        if ($hasKeywordsContent) {
+            $keywordsTitle = trim(TranslationsByKey::getTranslationByKey($translationsConfig, $language, 'keywords')) . ' | ';
+            $keywords = trim(implode(', ', $keywordsConfig['keywords_texts'][$language]));
 
-        $pdfTemplate->SetFont($keywordsConfig['keywords_font']['family'], $keywordsConfig['keywords_font']['style'], $keywordsConfig['keywords_font']['size']);
-        $pdfTemplate->SetTextColor($keywordsConfig['keywords_color'][0], $keywordsConfig['keywords_color'][1], $keywordsConfig['keywords_color'][2]);
-        $pdfTemplate->SetX($xPosition + $pdfTemplate->GetStringWidth($keywordsTitle) + 4);
-        $pdfTemplate->Write(5, $keywords);
+            $pdfTemplate->SetFont($keywordsConfig['keywords_title_font']['family'], $keywordsConfig['keywords_title_font']['style'], $keywordsConfig['keywords_title_font']['size']);
+            $pdfTemplate->SetTextColor($keywordsConfig['keywords_title_color'][0], $keywordsConfig['keywords_title_color'][1], $keywordsConfig['keywords_title_color'][2]);
+            $pdfTemplate->Write(5, $keywordsTitle);
+
+            $pdfTemplate->SetFont($keywordsConfig['keywords_font']['family'], $keywordsConfig['keywords_font']['style'], $keywordsConfig['keywords_font']['size']);
+            $pdfTemplate->SetTextColor($keywordsConfig['keywords_color'][0], $keywordsConfig['keywords_color'][1], $keywordsConfig['keywords_color'][2]);
+            $pdfTemplate->Write(5, $keywords);
+        }
     }
 }
