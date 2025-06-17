@@ -10,6 +10,7 @@ use JATSParser\PDF\Templates\Renderers\GroupRenderer\TitlesAndSubtitles;
 use JATSParser\PDF\Templates\Renderers\GroupRenderer\AuthorsData;
 use JATSParser\PDF\Templates\Renderers\GroupRenderer\AbstractAndKeywords;
 use JATSParser\PDF\Templates\Renderers\SingleRenderer\Dates;
+use JATSParser\PDF\Templates\Renderers\SingleRenderer\License;
 
     class TemplateBody extends GenericComponent {
 
@@ -93,10 +94,11 @@ use JATSParser\PDF\Templates\Renderers\SingleRenderer\Dates;
                     $templateBodyConfig['config']['journal_url']['text_color'], 
                     $templateBodyConfig['config']['journal_url']['font']
                 );
-                $yPos = $yPos + 4;
+                $yPos = $yPos + 1;
             }
 
-            if ($templateBodyConfig['metadata']['editorial']) {
+            /*
+             if ($templateBodyConfig['metadata']['editorial']) {
                 NoLinkableText::renderNoLinkableText(
                     $this->pdfTemplate, 
                     $templateBodyConfig['metadata']['editorial'], 
@@ -105,11 +107,23 @@ use JATSParser\PDF\Templates\Renderers\SingleRenderer\Dates;
                     $templateBodyConfig['config']['editorial']['text_color'], 
                     $templateBodyConfig['config']['editorial']['font']
                 );
+                $yPos = $yPos + 4;
             }
+            */
 
+            if ($templateBodyConfig['metadata']['date_submitted'] || $templateBodyConfig['metadata']['date_accepted'] || $templateBodyConfig['metadata']['date_published']) {
+                Dates::renderDates(
+                    $this->pdfTemplate, 
+                    $this->config->getDatesConfig(), 
+                    $templateBodyConfig['metadata']['translations_config'], 
+                    $templateBodyConfig['metadata']['locale_key'], 
+                    $xPos, 
+                    $yPos
+                );
+            }
+ 
             //Print first line
             $this->pdfTemplate->Line(0, 45, 150, 45);
-            
             $this->pdfTemplate->SetLeftMargin(25);
             $this->pdfTemplate->Ln(30);
 
@@ -122,7 +136,6 @@ use JATSParser\PDF\Templates\Renderers\SingleRenderer\Dates;
                 $this->config->getSubtitlesConfig(),
                 $templateBodyConfig['metadata']['locale_key']
             );
-
 
             $this->pdfTemplate->SetFillColor(0, 0, 0); 
 
@@ -156,14 +169,23 @@ use JATSParser\PDF\Templates\Renderers\SingleRenderer\Dates;
                 $templateBodyConfig['metadata']['locale_key']
             );
 
-            Dates::renderDates(
-                $this->pdfTemplate, 
-                $this->config->getDatesConfig(), 
+            $this->pdfTemplate->Ln(5);
+
+            License::renderLicense(
+                $this->pdfTemplate,
+                $templateBodyConfig,
                 $templateBodyConfig['metadata']['translations_config'], 
                 $templateBodyConfig['metadata']['locale_key'], 
-                $this->pdfTemplate->GetX(), 
-                $this->pdfTemplate->GetY()
+                $templateBodyConfig['metadata']['license_url']
             );
+
+            $this->pdfTemplate->Ln(5);
+
+            /*
+            if ($licenseUrl) {
+                License::renderLicense($this->pdfTemplate, $footerConfig, $translationsConfig, $localeKey, $licenseUrl);
+            }
+            */
 
             $this->pdfTemplate->Ln(25);
 

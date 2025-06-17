@@ -41,30 +41,14 @@ class Configuration {
                     'default' => ['family' => 'helvetica', 'style' => '', 'size' => 10],
                     'bold' => ['family' => 'helvetica', 'style' => 'B', 'size' => 10],
                 ],
-                'licenses' => [
-                    'font' => ['family' => 'philosopher', 'style' => '', 'size' => 7.5],
+                'section_title' => [
+                    'font' => ['family' => 'helvetica', 'style' => '', 'size' => 10],
                     'text_color' => [49, 132, 155],
-                    'logo_height' => 6,
-                    'logo_width' => 17,
-                    'links' => [
-                        'CC-BY' => 'https://creativecommons.org/licenses/by/4.0/',
-                        'CC-BY-NC' => 'https://creativecommons.org/licenses/by-nc/4.0/',
-                        'CC-BY-ND' => 'https://creativecommons.org/licenses/by-nd/4.0/',
-                        'CC-BY-SA' => 'https://creativecommons.org/licenses/by-sa/4.0/',
-                        'CC-BY-NC-ND' => 'https://creativecommons.org/licenses/by-nc-nd/4.0/',
-                        'CC-BY-NC-SA' => 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
-                        'CC-ZERO' => 'https://creativecommons.org/publicdomain/zero/1.0/'
-                    ],
-                    'logos' => [
-                        'CC-BY' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by.png',
-                        'CC-BY-NC' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nc.png',
-                        'CC-BY-ND' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nd.png',
-                        'CC-BY-SA' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-sa.png',
-                        'CC-BY-NC-ND' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nc-nd.png',
-                        'CC-BY-NC-SA' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nc-sa.png',
-                        'CC-ZERO' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc0.png'
-                    ]
-                ]
+                ],
+                'page_number' => [
+                    'font' => ['family' => 'helvetica', 'style' => '', 'size' => 10],
+                    'text_color' => [0, 0, 0],
+                ],
             ],
             'template_body' => [
                 'left_margin' => 25,
@@ -144,7 +128,7 @@ class Configuration {
                     'abstract_text_font' => ['family' => 'philosopher', 'style' => '', 'size' => 10]
                 ],
                 'dates' => [
-                    'dates_font' => ['family' => 'philosopher', 'style' => '', 'size' => 9],
+                    'dates_font' => ['family' => 'calibri400', 'style' => '', 'size' => 7.5],
                     'dates_color' => [0, 0, 0]
                 ],
                 'keywords' => [
@@ -155,7 +139,31 @@ class Configuration {
                 ],
                 'issue' => [
                     'issue_color' => [0, 0, 0]
-                ]
+                ],
+                'licenses' => [
+                    'font' => ['family' => 'philosopher', 'style' => '', 'size' => 7.5],
+                    'text_color' => [49, 132, 155],
+                    'logo_height' => 6,
+                    'logo_width' => 17,
+                    'links' => [
+                        'CC-BY' => 'https://creativecommons.org/licenses/by/4.0/',
+                        'CC-BY-NC' => 'https://creativecommons.org/licenses/by-nc/4.0/',
+                        'CC-BY-ND' => 'https://creativecommons.org/licenses/by-nd/4.0/',
+                        'CC-BY-SA' => 'https://creativecommons.org/licenses/by-sa/4.0/',
+                        'CC-BY-NC-ND' => 'https://creativecommons.org/licenses/by-nc-nd/4.0/',
+                        'CC-BY-NC-SA' => 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+                        'CC-ZERO' => 'https://creativecommons.org/publicdomain/zero/1.0/'
+                    ],
+                    'logos' => [
+                        'CC-BY' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by.png',
+                        'CC-BY-NC' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nc.png',
+                        'CC-BY-ND' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nd.png',
+                        'CC-BY-SA' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-sa.png',
+                        'CC-BY-NC-ND' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nc-nd.png',
+                        'CC-BY-NC-SA' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nc-sa.png',
+                        'CC-ZERO' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc0.png'
+                    ]
+                ],
             ],
             'body' => [
                 'font' => ['family' => 'philosopher', 'style' => '', 'size' => 11],
@@ -208,6 +216,10 @@ class Configuration {
 
     public function getPluginPath(){
         return $this->config['metadata']['plugin_path'];
+    }
+
+    public function getSectionTitle(){
+        return $this->config['metadata']['section_title'];
     }
     
     public function getOrcidUrl() {

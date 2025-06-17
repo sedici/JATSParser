@@ -21,12 +21,15 @@ class PDFBodyHelper {
 		// set style for figures and table
 		$xpath = new \DOMXPath($dom);
 
-		self::styleTables($xpath);
+		self::processTables($xpath);
 		self::formatCaptions($dom, $xpath);
 		self::moveCaptionsForTCPDF($dom, $xpath);
 		self::processCitations($dom, $xpath, $config);
+		self::processFootnotes($dom, $xpath); 
+		self::processReferences($dom, $xpath);
 		self::processFiguresCitations($dom, $xpath);
-		self::processBlockquotes($dom, $xpath); // Add this line to process blockquotes
+		self::processTableCitations($dom, $xpath);
+		self::processBlockquotes($dom, $xpath); 
 		self::addHrefAttributes($xpath);
 
 		// Remove redundant whitespaces before caption label
@@ -38,15 +41,61 @@ class PDFBodyHelper {
 	}
 	
 	/**
-	 * Apply styling to tables
+	 * Processing tables for styles and translations.
 	 * 
 	 * @param \DOMXPath $xpath The XPath object for DOM traversal
 	 */
-	private static function styleTables(\DOMXPath $xpath): void {
+	private static function processTables(\DOMXPath $xpath): void {
 		$tableNodes = $xpath->evaluate('//table');
 		foreach ($tableNodes as $tableNode) {
 			$tableNode->setAttribute('border', '1');
 			$tableNode->setAttribute('cellpadding', '2');
+			// Buscar span con clase 'label' dentro de la tabla y cambiar su contenido a 'Tabla'
+			$labelSpans = $xpath->evaluate('.//span[@class="label"]', $tableNode);
+			foreach ($labelSpans as $span) {
+				$spanContent = $span->textContent;
+				if (preg_match('/\d+/', $spanContent, $matches)) {
+					$tableNumber = $matches[0]; // Get the table number
+					$translatedTableText = __('plugins.generic.jatsParser.table.title'); // Translate the table text if needed (e.g., "Table 1" for english or "Tabla 1" for spanish)
+					$span->textContent = $translatedTableText . ' ' . $tableNumber; // Set the new content
+ 				}
+			}
+		}
+	}
+
+	/**
+	 * Process figure citations in the document to translate them. For example, "Figure 1" to "Figura 1" in Spanish. 
+	 * 
+	 * @param \DOMDocument $dom The DOM document
+	 * @param \DOMXPath $xpath The XPath object for DOM traversal
+	 */
+	private static function processFiguresCitations(\DOMDocument $dom, \DOMXPath $xpath): void {
+		$figureCitationNodes = $xpath->evaluate('//a[@class="fig"]');
+		foreach ($figureCitationNodes as $node) {
+			$nodeContent = $node->textContent;
+			if (preg_match('/\d+/', $nodeContent, $matches)) { //extract the figure number from the content
+				$translatedFigureText = __('plugins.generic.jatsParser.figure.title'); // Translate the figure text if needed (e.g., "Figure 1" for english or "Figura 1" for spanish)
+				$figureNumber = $matches[0]; // Get the figure number
+				$node->textContent = $translatedFigureText . ' ' . $figureNumber;
+			}
+		}
+	}
+
+	/** 
+	 * Process table citations in the document to translate them. For example, "Table 1" to "Tabla 1" in Spanish.
+	 * 
+	 * @param \DOMDocument $dom The DOM document
+	 * @param \DOMXPath $xpath The XPath object for DOM traversal
+	 */
+	private static function processTableCitations(\DOMDocument $dom, \DOMXPath $xpath): void {
+		$tableCitationNodes = $xpath->evaluate('//a[@class="table"]');
+		foreach ($tableCitationNodes as $node) {
+			$nodeContent = $node->textContent;
+			if (preg_match('/\d+/', $nodeContent, $matches)) { //extract the table number from the content
+				$translatedTableText = __('plugins.generic.jatsParser.table.title'); // Translate the table text if needed (e.g., "Table 1" for english or "Tabla 1" for spanish)
+				$tableNumber = $matches[0]; // Get the table number
+				$node->textContent = $translatedTableText . ' ' . $tableNumber;
+			}
 		}
 	}
 	
@@ -120,24 +169,6 @@ class PDFBodyHelper {
 						}
 					}
 				}
-			}
-		}
-	}
-
-	/**
-	 * Process figure citations in the document to translate them. For example, "Figure 1" to "Figura 1" in Spanish. 
-	 * 
-	 * @param \DOMDocument $dom The DOM document
-	 * @param \DOMXPath $xpath The XPath object for DOM traversal
-	 */
-	private static function processFiguresCitations(\DOMDocument $dom, \DOMXPath $xpath): void {
-		$figureCitationNodes = $xpath->evaluate('//a[@class="fig"]');
-		foreach ($figureCitationNodes as $node) {
-			$nodeContent = $node->textContent;
-			if (preg_match('/\d+/', $nodeContent, $matches)) { //extract the figure number from the content
-				$translatedFigureText = __('plugins.generic.jatsParser.figure.title'); // Translate the figure text if needed (e.g., "Figure 1" for english or "Figura 1" for spanish)
-				$figureNumber = $matches[0]; // Get the figure number
-				$node->textContent = $translatedFigureText . ' ' . $figureNumber;
 			}
 		}
 	}
@@ -239,6 +270,99 @@ class PDFBodyHelper {
 			
 			// Replace the original blockquote with our table structure
 			$blockquote->parentNode->replaceChild($table, $blockquote);
+		}
+	}
+
+	/**
+	 * Process footnotes to apply styles and improve layout in PDF
+	 * 
+	 * @param \DOMDocument $dom The DOM document
+	 * @param \DOMXPath $xpath The XPath object for DOM traversal
+	 */
+	private static function processFootnotes(\DOMDocument $dom, \DOMXPath $xpath): void {
+		// Find the footnotes container
+		$footnoteContainers = $xpath->evaluate('//div[@class="footnotes-container"]');
+		if ($footnoteContainers->length === 0) {
+			return; // No footnotes to process
+		}
+		
+		// Style the container
+		foreach ($footnoteContainers as $container) {
+			$container->setAttribute('style', 'margin-top: 3em; border-top: 1px solid #ddd; padding-top: 1em;');
+		}
+		
+		// Style individual footnotes
+		$footnoteItems = $xpath->evaluate('//div[@class="footnote-item"]');
+		foreach ($footnoteItems as $item) {
+			$item->setAttribute('style', 'display: flex; flex-direction: row; margin-bottom: 1em; font-size: 1.05em; align-items: flex-start;');
+			
+			// Style the footnote label
+			$labelNodes = $xpath->evaluate('.//span[@class="footnote-label"]', $item);
+			if ($labelNodes->length > 0) {
+				$labelNode = $labelNodes->item(0);
+				$labelNode->setAttribute('style', 'display: inline-block; color: #31849b; font-weight: bold; margin-right: 0.8em; min-width: 1.5em; text-align: left;');
+			}
+			
+			// Style the footnote content
+			$contentNodes = $xpath->evaluate('.//span[@class="footnote-content"]', $item);
+			if ($contentNodes->length > 0) {
+				$contentNode = $contentNodes->item(0);
+				$contentNode->setAttribute('style', 'display: inline-block; flex: 1; text-align: left;');
+			}
+		}
+	}
+
+	/**
+	 * Process references list to apply styles and improve layout in PDF
+	 * 
+	 * @param \DOMDocument $dom The DOM document
+	 * @param \DOMXPath $xpath The XPath object for DOM traversal
+	 */
+	private static function processReferences(\DOMDocument $dom, \DOMXPath $xpath): void {
+		// Find reference containers
+		$referenceContainers = $xpath->evaluate('//div[@class="references-section"]');
+		if ($referenceContainers->length === 0) {
+			return; // No references to process
+		}
+		
+		// Style the reference section container
+		foreach ($referenceContainers as $container) {
+			$container->setAttribute('style', 'margin-top: 3em; border-top: 1px solid #ddd; padding-top: 1em;');
+		}
+		
+		// Process the citation list container
+		$citationLists = $xpath->evaluate('//ol[@class="citation-list"]|//div[@class="citation-list"]');
+		foreach ($citationLists as $list) {
+			$citationStyle = $list->getAttribute('data-style');
+			
+			if ($list->nodeName === 'ol') {
+				$list->setAttribute('style', 'margin-top: 2em; padding-left: 2em;');
+			} else {
+				$list->setAttribute('style', 'margin-top: 2em;');
+			}
+			
+			// Style individual citation items based on citation style
+			$items = $xpath->evaluate('./li[@class="citation-item"]|./div[@class="citation-item"]', $list);
+			foreach ($items as $item) {
+				// Apply different styles based on citation style
+				switch($citationStyle) {
+					case 'apa':
+						$item->setAttribute('style', 'margin-left: 0; padding-left: 7em; margin-bottom: 2.5em; line-height: 1.1; text-align: left; padding-bottom: 0.5em;');
+						break;
+					case 'ieee':
+					case 'vancouver':
+						$item->setAttribute('style', 'margin-bottom: 1.5em; line-height: 1.1; text-align: left;');
+						break;
+					default:
+						$item->setAttribute('style', 'margin-bottom: 1.5em; line-height: 1.1; text-align: left;');
+				}
+				
+				// Style URLs within the citations
+				$urlSpans = $xpath->evaluate('.//span[@class="citation-url"]', $item);
+				foreach ($urlSpans as $url) {
+					$url->setAttribute('style', 'color: #31849b; word-wrap: break-word;');
+				}
+			}
 		}
 	}
 
