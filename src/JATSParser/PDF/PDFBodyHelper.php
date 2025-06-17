@@ -37,6 +37,8 @@ class PDFBodyHelper {
 		$modifiedHtmlString = preg_replace('/<caption>\s*/', '<br>' . '<caption>', $modifiedHtmlString);
 		$modifiedHtmlString = preg_replace('/<p class="caption">\s*/', '<p class="caption">', $modifiedHtmlString);
 
+		error_log($modifiedHtmlString);
+
 		return $modifiedHtmlString;
 	}
 	
@@ -180,7 +182,7 @@ class PDFBodyHelper {
 	 * @param \DOMXPath $xpath The XPath object for DOM traversal
 	 */
 	private static function addHrefAttributes(\DOMXPath $xpath): void {
-		$refs = $xpath->evaluate('//a[@href]');
+		$refs = $xpath->evaluate('//a');
 		foreach ($refs as $ref) {
 			$ref->setAttribute('style', 'color: #0066CC; text-decoration: none;'); 
 		}
