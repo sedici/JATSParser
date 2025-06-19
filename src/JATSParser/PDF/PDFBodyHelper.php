@@ -37,8 +37,6 @@ class PDFBodyHelper {
 		$modifiedHtmlString = preg_replace('/<caption>\s*/', '<br>' . '<caption>', $modifiedHtmlString);
 		$modifiedHtmlString = preg_replace('/<p class="caption">\s*/', '<p class="caption">', $modifiedHtmlString);
 
-		error_log($modifiedHtmlString);
-
 		return $modifiedHtmlString;
 	}
 	
@@ -52,7 +50,7 @@ class PDFBodyHelper {
 		foreach ($tableNodes as $tableNode) {
 			$tableNode->setAttribute('border', '1');
 			$tableNode->setAttribute('cellpadding', '2');
-			// Buscar span con clase 'label' dentro de la tabla y cambiar su contenido a 'Tabla'
+			// Search span elements with class "label" inside the table
 			$labelSpans = $xpath->evaluate('.//span[@class="label"]', $tableNode);
 			foreach ($labelSpans as $span) {
 				$spanContent = $span->textContent;
