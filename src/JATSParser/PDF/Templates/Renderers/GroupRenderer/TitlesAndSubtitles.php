@@ -22,7 +22,10 @@ class TitlesAndSubtitles {
 
         foreach ($titlesConfig['titles_texts'] as $language => $title) {
             $text = $title . '. ' . $subtitlesConfig['subtitles_texts'][$language];
-            NoLinkableText::renderNoLinkableText($pdfTemplate, $text, $pdfTemplate->GetX(), $pdfTemplate->GetY(), $titlesConfig['titles_config']['text_color'], $titlesConfig['titles_config']['font']);
+            $font = $titlesConfig['titles_config']['font']; 
+            $pdfTemplate->SetFont($font['family'], $font['style'], $font['size']);
+            $pdfTemplate->SetTextColor($titlesConfig['titles_config']['text_color'][0], $titlesConfig['titles_config']['text_color'][1], $titlesConfig['titles_config']['text_color'][2]);
+            NoLinkableText::renderNoLinkableText($pdfTemplate, $text, $pdfTemplate->GetX(), $pdfTemplate->GetY(), $titlesConfig['titles_config']['text_color'], $font);
             $pdfTemplate->Ln(3);
         }
 

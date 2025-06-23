@@ -13,18 +13,13 @@
 class JournalLogo {
 
     public static function renderJournalLogo($config, $pdfTemplate): void {
-        
-        $templateBodyConfig = $config->getTemplateBodyConfig();
-        $journalLogoConfig = $templateBodyConfig['config']['journal_logo'];
+        $journalLogoConfig = $config->getLogoConfig('journal_logo');
 
-        //Verify if a journal logo exists in a specific directory:
         $logoPath = null;
-        $logoFile = glob($journalLogoConfig['journal_logo_path'] . "logo.*");
+        $logoFile = glob($journalLogoConfig['path'] . "logo.*");
         if (!empty($logoFile)) {
             $logoPath = $logoFile[0];
         }
-                
-        // If the specific journal logo exists in the private files of a journal, process that logo
         if ($logoPath && file_exists($logoPath)) {
             $imgtype = \TCPDF_IMAGES::getImageFileType($logoPath);
             if (($imgtype === 'eps') OR ($imgtype === 'ai')) {

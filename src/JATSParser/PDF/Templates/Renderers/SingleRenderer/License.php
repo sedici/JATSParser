@@ -5,19 +5,19 @@ use JATSParser\PDF\Templates\Renderers\SingleRenderer\LinkableText;
 
 class License{ 
     public static function renderLicense($pdfTemplate, Array $licenseConfig, Array $translationsConfig, $localeKey, $licenseUrl): void {
-        foreach ($licenseConfig['config']['licenses']['links'] as $license => $licenseLink) {
+        foreach ($licenseConfig['links'] as $license => $licenseLink) {
             if ($licenseUrl === $licenseLink) {
-                $licenseLogoPath = $licenseConfig['config']['licenses']['logos'][$license]; 
+                $licenseLogoPath = $licenseConfig['logos'][$license]; 
                 $pdfTemplate->Image(
                     $licenseLogoPath, 
                     $pdfTemplate->GetX(), 
                     $pdfTemplate->GetY() - 1, 
-                    $licenseConfig['config']['licenses']['logo_width'], 
-                    $licenseConfig['config']['licenses']['logo_height'], 
+                    $licenseConfig['logo_width'], 
+                    $licenseConfig['logo_height'], 
                     '', 
                     $licenseLink, 
                     'L'
-                ); 
+                );
 
                 $xPosition = $pdfTemplate->getImageRBX() + 2;
                 $translationText = TranslationsByKey::getTranslationByKey($translationsConfig, $localeKey, 'license_text') . ' ' . $license;
@@ -28,8 +28,8 @@ class License{
                     $translationText, 
                     $xPosition, 
                     $pdfTemplate->GetY() + 0.5, 
-                    $licenseConfig['config']['licenses']['text_color'], 
-                    $licenseConfig['config']['licenses']['font']
+                    $licenseConfig['text_color'], 
+                    $licenseConfig['font']
                 );
             }
         }

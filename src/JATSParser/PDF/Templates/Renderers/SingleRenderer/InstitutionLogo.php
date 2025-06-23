@@ -13,23 +13,22 @@
 class InstitutionLogo {
 
     public static function renderInstitutionLogo($config, $pdfTemplate): void {
-        $templateBodyConfig = $config->getTemplateBodyConfig();
+        // Usar el nuevo método para obtener la configuración del logo
+        $institutionLogoConfig = $config->getLogoConfig('institution_logo');
 
-        $institutionLogoConfig = $templateBodyConfig['config']['institution_logo'];
-
-        $logoFile = glob($institutionLogoConfig['institution_logo_path'] . "institution.*");
+        $logoFile = glob($institutionLogoConfig['path'] . "institution.*");
+        $logoPath = null;
         if (!empty($logoFile)) {
             $logoPath = $logoFile[0];
         }
 
         if ($logoPath && file_exists($logoPath)) {
             $pdfTemplate->Image(
-                $logoPath, 
-                $institutionLogoConfig['x_pos'], 
-                $institutionLogoConfig['y_pos'], 
+                $logoPath,
+                $institutionLogoConfig['x_pos'],
+                $institutionLogoConfig['y_pos'],
                 $institutionLogoConfig['width']
             );
         }
     }
-
 }

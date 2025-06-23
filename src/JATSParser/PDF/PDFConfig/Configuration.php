@@ -3,239 +3,100 @@
 namespace JATSParser\PDF\PDFConfig;
 
 class Configuration {
+    private $metadata = [];
     private $config = [];
 
-    public static $supportedCustomCitationStyles = ['apa']; //make sure to add the supported citation styles here in LOWERCASE.
+    public static $supportedCustomCitationStyles = ['apa'];
     public static $numberedReferencesCitationStyles = ['ieee'];
 
     public function __construct($metadata) {
+        $this->metadata = $metadata;
         $this->config = [
-            'font' => [
+            'fonts' => [
                 'default' => ['family' => 'helvetica', 'style' => '', 'size' => 10],
                 'bold' => ['family' => 'helvetica', 'style' => 'B', 'size' => 10],
                 'title' => ['family' => 'helvetica', 'style' => 'BI', 'size' => 12],
+                'calibri' => ['family' => 'calibri400', 'style' => '', 'size' => 7.5],
+                'philosopher' => ['family' => 'philosopher', 'style' => '', 'size' => 10],
             ],
-            'color' => [
+            'colors' => [
                 'primary' => [0, 64, 53],
                 'black' => [0, 0, 0],
                 'white' => [255, 255, 255],
+                'accent' => [49, 132, 155],
             ],
-            'metadata' => $metadata,
-            'header' => [
-                'end_line' => [
-                    'color' => [0, 64, 53],
-                    'width' => 0.85,
-                ],
-                'header_data' => [
-                    'font' => ['family' => 'helvetica', 'style' => 'B', 'size' => 8],
-                    'text_color' => [49, 132, 155],
-                ],
-                'doi' => [
-                    'font' => ['family' => 'helvetica', 'style' => '', 'size' => 8],
-                    'text_color' => [49, 132, 155],
-                ]
+            'margins' => [
+                'footer_left' => 25,
+                'body_left' => 25,
             ],
-            'footer' => [
-                'left_margin' => 25,
-                'footer_font' => [
-                    'default' => ['family' => 'helvetica', 'style' => '', 'size' => 10],
-                    'bold' => ['family' => 'helvetica', 'style' => 'B', 'size' => 10],
-                ],
-                'section_title' => [
-                    'font' => ['family' => 'helvetica', 'style' => '', 'size' => 10],
-                    'text_color' => [49, 132, 155],
-                ],
-                'page_number' => [
-                    'font' => ['family' => 'helvetica', 'style' => '', 'size' => 10],
-                    'text_color' => [0, 0, 0],
-                ],
-            ],
-            'template_body' => [
-                'left_margin' => 25,
-                'template_body_font' => ['family' => 'helvetica', 'style' => '', 'size' => 10],
+            'logos' => [
                 'institution_logo' => [
-                    'institution_logo_path' => $metadata['journal_logos_path'],
+                    'path' => $metadata['journal_logos_path'] ?? '',
                     'x_pos' => 158,
                     'y_pos' => 38,
                     'width' => 30,
                 ],
                 'journal_logo' => [
-                    'journal_logo_path' => $metadata['journal_logos_path'],
+                    'path' => $metadata['journal_logos_path'] ?? '',
                     'x_pos' => 25,
                     'y_pos' => 20,
                     'width' => 35,
                 ],
-                'authors' => [
-                    'text_color' => [0, 0, 0],
-                    'fullname_font' => ['family' => 'helvetica', 'style' => 'B', 'size' => 11],
-                    'fullname_text_color' => [123, 128, 127],
-                    'email_font' => ['family' => 'philosopher', 'style' => '', 'size' => 10],
-                    'email_text_color' => [61, 145, 191],
-                    'affiliation_font' => ['family' => 'philosopher', 'style' => '', 'size' => 10],
-                    'affiliation_text_color' => [0, 0, 0]
-                ],
-                'journal_and_issue' => [
-                    'text_color' => [0, 0, 0]
-                ],
-                'online_issn' => [
-                    'text_color' => [0, 0, 0],
-                    'font' => ['family' => 'calibri400', 'style' => '', 'size' => 7.5]
-                ],
-                'journal_title' => [
-                    'text_color' => [0, 0, 0],
-                    'font' => ['family' => 'calibri400', 'style' => '', 'size' => 7.5]
-                ],
-                'doi' => [
-                    'text_color' => [0, 64, 53],
-                    'font' => ['family' => 'calibri400', 'style' => '', 'size' => 7.5]
-                ],
-                'journal_issue' => [
-                    'text_color' => [0, 0, 0],
-                    'font' => ['family' => 'calibri400', 'style' => '', 'size' => 7.5]
-                ],
-                'journal_affiliation' => [
-                    'text_color' => [0, 0, 0],
-                    'font' => ['family' => 'calibri400', 'style' => '', 'size' => 7.5]
-                ],
-                'journal_url' => [
-                    'text_color' => [0, 64, 53],
-                    'font' => ['family' => 'calibri400', 'style' => 'I', 'size' => 7.5]
-                ],
-                'editorial' => [
-                    'text_color' => [0, 0, 0],
-                    'font' => ['family' => 'calibri400', 'style' => '', 'size' => 7.5]
-                ],
-                'full_title' => [
-                    'text_color' => [49, 132, 155],
-                    'bold_font' => ['family' => 'helvetica', 'style' => 'B', 'size' => 15]
-                ],
-                'titles' => [
-                    'principal_title_font' => ['family' => 'helvetica', 'style' => 'B', 'size' => 15],
-                    'principal_title_color' => [49, 132, 155],
-                    'text_color' => [49, 132, 155],
-                    'font' => ['family' => 'helvetica', 'style' => '', 'size' => 10]
-                ],
-                'subtitles' => [
-                    'principal_subtitle_font' => ['family' => 'helvetica', 'style' => 'B', 'size' => 12],
-                    'principal_subtitle_color' => [49, 132, 155],
-                    'text_color' => [0, 0, 0],
-                    'font' => ['family' => 'helvetica', 'style' => '', 'size' => 10]
-                ],
-                'abstract' => [
-                    'abstract_title_color' => [49, 132, 155],
-                    'abstract_title_font' => ['family' => 'helvetica', 'style' => 'B', 'size' => 9.5],
-                    'abstract_text_color' => [0, 0, 0],
-                    'abstract_text_font' => ['family' => 'philosopher', 'style' => '', 'size' => 10]
-                ],
-                'dates' => [
-                    'dates_font' => ['family' => 'calibri400', 'style' => '', 'size' => 7.5],
-                    'dates_color' => [0, 0, 0]
-                ],
-                'keywords' => [
-                    'keywords_title_font' => ['family' => 'helvetica', 'style' => 'B', 'size' => 9.5],
-                    'keywords_title_color' => [49, 132, 155],
-                    'keywords_font' => ['family' => 'philosopher', 'style' => '', 'size' => 10],
-                    'keywords_color' => [0, 0, 0]
-                ],
-                'issue' => [
-                    'issue_color' => [0, 0, 0]
-                ],
-                'licenses' => [
-                    'font' => ['family' => 'philosopher', 'style' => '', 'size' => 7.5],
-                    'text_color' => [49, 132, 155],
-                    'logo_height' => 6,
-                    'logo_width' => 17,
-                    'links' => [
-                        'CC-BY' => 'https://creativecommons.org/licenses/by/4.0/',
-                        'CC-BY-NC' => 'https://creativecommons.org/licenses/by-nc/4.0/',
-                        'CC-BY-ND' => 'https://creativecommons.org/licenses/by-nd/4.0/',
-                        'CC-BY-SA' => 'https://creativecommons.org/licenses/by-sa/4.0/',
-                        'CC-BY-NC-ND' => 'https://creativecommons.org/licenses/by-nc-nd/4.0/',
-                        'CC-BY-NC-SA' => 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
-                        'CC-ZERO' => 'https://creativecommons.org/publicdomain/zero/1.0/'
-                    ],
-                    'logos' => [
-                        'CC-BY' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by.png',
-                        'CC-BY-NC' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nc.png',
-                        'CC-BY-ND' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nd.png',
-                        'CC-BY-SA' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-sa.png',
-                        'CC-BY-NC-ND' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nc-nd.png',
-                        'CC-BY-NC-SA' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nc-sa.png',
-                        'CC-ZERO' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc0.png'
-                    ]
-                ],
             ],
-            'body' => [
-                'font' => ['family' => 'philosopher', 'style' => '', 'size' => 11],
+            'licenses' => [
+                'font' => ['family' => 'philosopher', 'style' => '', 'size' => 7.5],
+                'text_color' => [49, 132, 155],
+                'logo_height' => 6,
+                'logo_width' => 17,
+                'links' => [
+                    'CC-BY' => 'https://creativecommons.org/licenses/by/4.0/',
+                    'CC-BY-NC' => 'https://creativecommons.org/licenses/by-nc/4.0/',
+                    'CC-BY-ND' => 'https://creativecommons.org/licenses/by-nd/4.0/',
+                    'CC-BY-SA' => 'https://creativecommons.org/licenses/by-sa/4.0/',
+                    'CC-BY-NC-ND' => 'https://creativecommons.org/licenses/by-nc-nd/4.0/',
+                    'CC-BY-NC-SA' => 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+                    'CC-ZERO' => 'https://creativecommons.org/publicdomain/zero/1.0/'
+                ],
+                'logos' => [
+                    'CC-BY' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by.png',
+                    'CC-BY-NC' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nc.png',
+                    'CC-BY-ND' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nd.png',
+                    'CC-BY-SA' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-sa.png',
+                    'CC-BY-NC-ND' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nc-nd.png',
+                    'CC-BY-NC-SA' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by-nc-sa.png',
+                    'CC-ZERO' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc0.png'
+                ]
             ],
-            'citation_style' => 'Apa'
         ];
     }
 
-    //GETTERS
-
-    public function getHeaderConfig() {
-        return ['config' => $this->config['header'],
-                'metadata' => $this->getMetadata()];
+    public function getMetadata($key = null) {
+        if ($key === null) return $this->metadata;
+        return $this->metadata[$key] ?? null;
     }
 
-    public function getFooterConfig() {
-        return ['config' => $this->config['footer'],
-                'metadata' => $this->getMetadata()];
+    public function getFontConfig($type = 'default', $size = null) {
+        $font = $this->config['fonts'][$type] ?? $this->config['fonts']['default'];
+        if ($size !== null) {
+            $font['size'] = $size;
+        }
+        return $font;
     }
 
-    public function getTemplateBodyConfig() {
-        return ['config' => $this->config['template_body'],
-                'metadata' => $this->getMetadata()];
+    public function getColorConfig($type = 'primary') {
+        return $this->config['colors'][$type] ?? null;
     }
 
-    public function getBodyConfig() {
-        return ['config' => $this->config['body'],
-                'metadata' => $this->getMetadata()];
+    public function getMargin($type = 'footer_left') {
+        return $this->config['margins'][$type] ?? null;
     }
 
-    public function getPrimaryColor() {
-        return $this->config['color']['primary'];
+    public function getLogoConfig($type = 'institution_logo') {
+        return $this->config['logos'][$type] ?? null;
     }
 
-    public function getBlackColor() {
-        return $this->config['color']['black'];
-    }
-
-    public function getConfig() {
-        return $this->config;
-    }
-
-    public function getMetadata() {
-        return $this->config['metadata'];
-    }
-
-    public function getPublicationId() {
-        return $this->config['metadata']['publication_id'];
-    }
-
-    public function getPluginPath(){
-        return $this->config['metadata']['plugin_path'];
-    }
-
-    public function getSectionTitle(){
-        return $this->config['metadata']['section_title'];
-    }
-    
-    public function getOrcidUrl() {
-        return $this->config['metadata']['orcid_url'];
-    }
-
-    public function getHtmlString() {
-        return $this->config['metadata']['html_string'];
-    }
-
-    public function getTranslationsConfig() {
-        return $this->config['metadata']['translations_config'];
-    }
-
-    public function getCitationStyle() {
-        return $this->config['citation_style'];
+    public function getLicenseConfig() {
+        return $this->config['licenses'];
     }
 
     public static function getSupportedCustomCitationStyles() {
@@ -246,79 +107,98 @@ class Configuration {
         return self::$numberedReferencesCitationStyles;
     }
 
-    public function getLicenseUrlConfig() {
-        return $this->config['metadata']['license_url'];
-    }
-
-    public function getLocaleKeyConfig() {
-        return $this->config['metadata']['locale_key'];
-    }
-
-    public function getFormConfig() {
-        return $this->config['template_body']['form'];
-    }
-
-    public function getContributors() {
-        return $this->config['metadata']['contributors'];
-    }
-
-    public function getSubject() {
-        return $this->config['metadata']['subject'];
-    }
-
-    public function getFullTitle() {
-        return $this->config['metadata']['full_title'];
-    }
-
-    public function getTitlesConfig(){
+    public function getDatesConfig() {
         return [
-            'titles_texts' => $this->config['metadata']['titles'],
-            'titles_config' => $this->config['template_body']['titles']
+            'date_submitted' => $this->getMetadata('date_submitted'),
+            'date_published' => $this->getMetadata('date_published'),
+            'date_accepted' => $this->getMetadata('date_accepted'),
+            'dates_font' => $this->getFontConfig('calibri'),
+            'dates_color' => $this->getColorConfig('black')
         ];
     }
 
-    public function getSubtitlesConfig(){
+    public function getTitlesConfig() {
         return [
-            'subtitles_texts' => $this->config['metadata']['subtitles'],
-            'subtitles_config' => $this->config['template_body']['subtitles']
+            'titles_texts' => $this->getMetadata('titles'),
+            'titles_config' => [
+                'principal_title_font' => $this->getFontConfig('bold', 15),
+                'principal_title_color' => $this->getColorConfig('accent'),
+                'text_color' => $this->getColorConfig('accent'),
+                'font' => $this->getFontConfig('default', 10)
+            ]
+        ];
+    }
+
+    public function getSubtitlesConfig() {
+        return [
+            'subtitles_texts' => $this->getMetadata('subtitles'),
+            'subtitles_config' => [
+                'principal_subtitle_font' => $this->getFontConfig('bold', 12),
+                'principal_subtitle_color' => $this->getColorConfig('accent'),
+                'text_color' => $this->getColorConfig('black'),
+                'font' => $this->getFontConfig('default', 10)
+            ]
         ];
     }
 
     public function getAuthorsConfig() {
         return [
-            'authors_data' => $this->config['metadata']['authors'],
-			'authors_config' => $this->config['template_body']['authors']
+            'authors_data' => $this->getMetadata('authors'),
+            'authors_config' => [
+                'text_color' => $this->getColorConfig('black'),
+                'fullname_font' => $this->getFontConfig('bold'),
+                'fullname_text_color' => [123, 128, 127],
+                'email_font' => $this->getFontConfig('philosopher'),
+                'email_text_color' => [61, 145, 191],
+                'affiliation_font' => $this->getFontConfig('philosopher'),
+                'affiliation_text_color' => $this->getColorConfig('black')
+            ]
         ];
     }
 
-    public function getAbstractConfig(){
+    public function getAbstractConfig() {
         return [
-            'abstract_texts' => $this->config['metadata']['abstract_texts'],
-			'abstract_title_font' => $this->config['template_body']['abstract']['abstract_title_font'],
-			'abstract_title_color' => $this->config['template_body']['abstract']['abstract_title_color'],
-			'abstract_text_font' => $this->config['template_body']['abstract']['abstract_text_font'],
-			'abstract_text_color' => $this->config['template_body']['abstract']['abstract_text_color']
+            'abstract_texts' => $this->getMetadata('abstract_texts'),
+            'abstract_title_font' => $this->getFontConfig('bold'),
+            'abstract_title_color' => $this->getColorConfig('accent'),
+            'abstract_text_font' => $this->getFontConfig('philosopher'),
+            'abstract_text_color' => $this->getColorConfig('black')
         ];
     }
 
-    public function getKeywordsConfig(){
+    public function getKeywordsConfig() {
         return [
-            'keywords_texts' => $this->config['metadata']['keywords_texts'],
-            'keywords_title_font' => $this->config['template_body']['keywords']['keywords_title_font'],
-            'keywords_title_color' => $this->config['template_body']['keywords']['keywords_title_color'],
-            'keywords_font' => $this->config['template_body']['keywords']['keywords_font'],
-            'keywords_color' => $this->config['template_body']['keywords']['keywords_color']
+            'keywords_texts' => $this->getMetadata('keywords_texts'),
+            'keywords_title_font' => $this->getFontConfig('bold'),
+            'keywords_title_color' => $this->getColorConfig('accent'),
+            'keywords_font' => $this->getFontConfig('philosopher'),
+            'keywords_color' => $this->getColorConfig('black')
         ];
     }
 
-    public function getDatesConfig(){
-        return [
-            'date_submitted' => $this->config['metadata']['date_submitted'],
-			'date_published' => $this->config['metadata']['date_published'],
-			'date_accepted' => $this->config['metadata']['date_accepted'],
-			'dates_font' => $this->config['template_body']['dates']['dates_font'],
-			'dates_color' => $this->config['template_body']['dates']['dates_color']
-        ];
+    public function getContributors() {
+        return $this->getMetadata('contributors');
     }
 
+    public function getSubject() {
+        return $this->getMetadata('subject');
+    }
+
+    public function getFullTitle() {
+        return $this->getMetadata('full_title');
+    }
+
+    public function getCitationStyle() {
+        return $this->getMetadata('citation_style') ?? '';
+    }
+
+    public function getPublicationId() {
+        return $this->getMetadata('publication_id');
+    }
+
+    public function getLocaleKeyConfig() {
+        return $this->getMetadata('locale_key');
+    }
+
+    // Here you can add more methods to retrieve other configurations or metadata as needed.
 }
