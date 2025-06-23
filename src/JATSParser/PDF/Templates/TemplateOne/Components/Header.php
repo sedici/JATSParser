@@ -1,52 +1,56 @@
 <?php namespace JATSParser\PDF\Templates\TemplateOne\Components;
 
 use JATSParser\PDF\Templates\GenericComponent;
-
 use JATSParser\PDF\Templates\Renderers\SingleRenderer\LinkableText;
 use JATSParser\PDF\Templates\Renderers\SingleRenderer\NoLinkableText;
 
-    class Header extends GenericComponent {
+class Header extends GenericComponent {
 
-        public function render(){
-            //GET HEADER CONFIGURATION
-            $headerConfig = $this->config->getHeaderConfig();
-    
-            $journalData = $headerConfig['metadata']['journal_title'] . ', ' . $headerConfig['metadata']['journal_data'];
-            $doiUrl = 'https://doi.org/' . $headerConfig['metadata']['doi'];
-            $journalAffiliation = $headerConfig['metadata']['journal_affiliation'];
+    public function render(){
+        // Obtener metadatos y configuración visual
+        $journalTitle = $this->config->getMetadata('journal_title');
+        $journalData = $this->config->getMetadata('journal_data');
+        $doi = $this->config->getMetadata('doi');
+        $journalAffiliation = $this->config->getMetadata('journal_affiliation');
+        $headerFont = $this->config->getFontConfig('bold');
+        $headerColor = $this->config->getColorConfig('accent');
+        $doiFont = $this->config->getFontConfig('default');
+        $doiColor = $this->config->getColorConfig('accent');
 
+        $journalDataText = $journalTitle . ', ' . $journalData;
+        $doiUrl = 'https://doi.org/' . $doi;
 
-            NoLinkableText::renderNoLinkableText(
-                $this->pdfTemplate,
-                $journalData,
-                10, 
-                10,
-                $headerConfig['config']['header_data']['text_color'],
-                $headerConfig['config']['header_data']['font'], 
-                'C'
-            );
+        NoLinkableText::renderNoLinkableText(
+            $this->pdfTemplate,
+            $journalDataText,
+            10,
+            10,
+            $headerColor,
+            $headerFont,
+            'C'
+        );
 
-            LinkableText::renderLinkableText(
-                $this->pdfTemplate,
-                $doiUrl,
-                $doiUrl,
-                10,
-                $this->pdfTemplate->GetY(),
-                $headerConfig['config']['doi']['text_color'],
-                $headerConfig['config']['doi']['font'], 
-                'C'
-            );
+        LinkableText::renderLinkableText(
+            $this->pdfTemplate,
+            $doiUrl,
+            $doiUrl,
+            10,
+            $this->pdfTemplate->GetY(),
+            $doiColor,
+            $doiFont,
+            'C'
+        );
 
-        /*             
-            NoLinkableText::renderNoLinkableText(
-                $this->pdfTemplate,
-                $journalAffiliation,
-                10,
-                $this->pdfTemplate->GetY(),
-                $headerConfig['config']['journal_affiliation']['text_color'],
-                $headerConfig['config']['journal_affiliation']['font'],
-                'C'
-            );
+        /*
+        NoLinkableText::renderNoLinkableText(
+            $this->pdfTemplate,
+            $journalAffiliation,
+            10,
+            $this->pdfTemplate->GetY(),
+            $headerColor,
+            $headerFont,
+            'C'
+        );
         */
-        }
     }
+}
