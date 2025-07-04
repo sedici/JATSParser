@@ -4,17 +4,90 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "110e17a3055198014949fa1dde1c82f4",
+    "content-hash": "5b9018cb8febaa8a44767a78bd8bdd2e",
     "packages": [
         {
             "name": "citation-style-language/locales",
-            "version": "1.0.0",
+            "version": "v0.0.27",
             "source": {
                 "type": "git",
                 "url": "https://github.com/citation-style-language/locales.git",
-                "reference": "master"
+                "reference": "e27762505af6bfeedb68e0fb02c444b5f310b4e2"
             },
-            "type": "library"
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/citation-style-language/locales/zipball/e27762505af6bfeedb68e0fb02c444b5f310b4e2",
+                "reference": "e27762505af6bfeedb68e0fb02c444b5f310b4e2",
+                "shasum": ""
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "CC-BY-SA-3.0"
+            ],
+            "authors": [
+                {
+                    "name": "Citation Style Language (CSL) Team",
+                    "homepage": "http://citationstyles.org/about/#Credits"
+                }
+            ],
+            "description": "Citation Style Language (CSL) Locales",
+            "homepage": "http://citationstyles.org/",
+            "support": {
+                "issues": "https://github.com/citation-style-language/locales/issues",
+                "source": "https://github.com/citation-style-language/locales/tree/v0.0.27"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/adam3smith",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-05-01T06:34:23+00:00"
+        },
+        {
+            "name": "citation-style-language/styles",
+            "version": "v0.0.669",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/citation-style-language/styles.git",
+                "reference": "589c4d5d1b37b432ac75506c03b00520a604e761"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/citation-style-language/styles/zipball/589c4d5d1b37b432ac75506c03b00520a604e761",
+                "reference": "589c4d5d1b37b432ac75506c03b00520a604e761",
+                "shasum": ""
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "CC-BY-SA-3.0"
+            ],
+            "authors": [
+                {
+                    "name": "Citation Style Language (CSL) Team",
+                    "homepage": "http://citationstyles.org/about/#Credits"
+                }
+            ],
+            "description": "Citation Style Language (CSL) Styless",
+            "homepage": "http://citationstyles.org/",
+            "support": {
+                "issues": "https://github.com/citation-style-language/styles/issues",
+                "source": "https://github.com/citation-style-language/styles/tree/v0.0.669"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/adam3smith",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-06-24T19:46:07+00:00"
         },
         {
             "name": "citation-style-language/styles-distribution",
@@ -91,31 +164,45 @@
         },
         {
             "name": "seboettg/citeproc-php",
-            "version": "v2.1.4",
+            "version": "v2.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/seboettg/citeproc-php.git",
-                "reference": "a618e139d04ee78075b6da0393b2a15cf77a7196"
+                "reference": "cfef942fb7d5d8b82a8e24b6a15e85b5a7a8b603"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/seboettg/citeproc-php/zipball/a618e139d04ee78075b6da0393b2a15cf77a7196",
-                "reference": "a618e139d04ee78075b6da0393b2a15cf77a7196",
+                "url": "https://api.github.com/repos/seboettg/citeproc-php/zipball/cfef942fb7d5d8b82a8e24b6a15e85b5a7a8b603",
+                "reference": "cfef942fb7d5d8b82a8e24b6a15e85b5a7a8b603",
                 "shasum": ""
             },
             "require": {
-                "myclabs/php-enum": "^1.5",
-                "seboettg/collection": "^1.2",
-                "symfony/polyfill-mbstring": "^1.3"
+                "citation-style-language/locales": "v0.0.*",
+                "citation-style-language/styles": "v0.0.*",
+                "ext-intl": "*",
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "ext-simplexml": "*",
+                "myclabs/php-enum": "^1.8",
+                "php": ">=7.3",
+                "seboettg/collection": "^3.1"
             },
             "require-dev": {
-                "phpunit/phpunit": "6.0.13",
-                "satooshi/php-coveralls": "^1"
+                "php-coveralls/php-coveralls": "^1",
+                "phpmd/phpmd": "^2.8",
+                "phpunit/phpunit": "^8.5",
+                "squizlabs/php_codesniffer": "^3.5"
+            },
+            "suggest": {
+                "symfony/polyfill-mbstring": "^1.10"
             },
             "type": "library",
             "autoload": {
+                "files": [
+                    "src/functions.php"
+                ],
                 "psr-4": {
-                    "": "src/"
+                    "Seboettg\\CiteProc\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -126,39 +213,45 @@
                 {
                     "name": "Sebastian Böttger",
                     "email": "seboettg@gmail.com",
-                    "homepage": "http://sebastianboettger.net",
+                    "homepage": "https://sebastianboettger.net",
                     "role": "Developer"
                 }
             ],
             "description": "Full-featured CSL processor (https://citationstyles.org)",
             "support": {
                 "issues": "https://github.com/seboettg/citeproc-php/issues",
-                "source": "https://github.com/seboettg/citeproc-php/tree/master"
+                "source": "https://github.com/seboettg/citeproc-php/tree/v2.7.0"
             },
-            "time": "2018-07-30T18:24:29+00:00"
+            "time": "2025-06-14T18:49:24+00:00"
         },
         {
             "name": "seboettg/collection",
-            "version": "v1.3.1",
+            "version": "v3.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/seboettg/Collection.git",
-                "reference": "7f0bbf93dba9b261f6d8c725a4f1583f4402162a"
+                "reference": "6f753aef75923965173dcb11696e5dece0533f45"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/seboettg/Collection/zipball/7f0bbf93dba9b261f6d8c725a4f1583f4402162a",
-                "reference": "7f0bbf93dba9b261f6d8c725a4f1583f4402162a",
+                "url": "https://api.github.com/repos/seboettg/Collection/zipball/6f753aef75923965173dcb11696e5dece0533f45",
+                "reference": "6f753aef75923965173dcb11696e5dece0533f45",
                 "shasum": ""
             },
+            "require": {
+                "php": ">=7.3"
+            },
             "require-dev": {
-                "phpunit/phpunit": "6.5.*",
-                "satooshi/php-coveralls": "^v2.0"
+                "php-coveralls/php-coveralls": "^1",
+                "phpunit/phpunit": "8.5.*"
             },
             "type": "library",
             "autoload": {
+                "files": [
+                    "src/ArrayList/Functions.php"
+                ],
                 "psr-4": {
-                    "Seboettg\\Collection\\": "src/Seboettg/Collection"
+                    "Seboettg\\Collection\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -171,94 +264,28 @@
                     "email": "seboettg@gmail.com"
                 }
             ],
-            "description": "Simple PHP ArrayList collection",
+            "description": "Collection is a set of useful PHP wrapper classes for arrays, similar to Java Collection. Contains ArrayList, Stack, Queue.",
+            "keywords": [
+                "OOP",
+                "array",
+                "arraylist",
+                "basic-data-structures",
+                "collections",
+                "comparable",
+                "comparable-interface",
+                "comparator",
+                "datastructures",
+                "filter",
+                "map",
+                "queue",
+                "sort",
+                "stack"
+            ],
             "support": {
                 "issues": "https://github.com/seboettg/Collection/issues",
-                "source": "https://github.com/seboettg/Collection/tree/v1.3.1"
+                "source": "https://github.com/seboettg/Collection/tree/v3.1.0"
             },
-            "time": "2019-02-13T07:13:15+00:00"
-        },
-        {
-            "name": "symfony/polyfill-mbstring",
-            "version": "1.x-dev",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "6d857f4d76bd4b343eac26d6b539585d2bc56493"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/6d857f4d76bd4b343eac26d6b539585d2bc56493",
-                "reference": "6d857f4d76bd4b343eac26d6b539585d2bc56493",
-                "shasum": ""
-            },
-            "require": {
-                "ext-iconv": "*",
-                "php": ">=7.2"
-            },
-            "provide": {
-                "ext-mbstring": "*"
-            },
-            "suggest": {
-                "ext-mbstring": "For best performance"
-            },
-            "default-branch": true,
-            "type": "library",
-            "extra": {
-                "thanks": {
-                    "url": "https://github.com/symfony/polyfill",
-                    "name": "symfony/polyfill"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "bootstrap.php"
-                ],
-                "psr-4": {
-                    "Symfony\\Polyfill\\Mbstring\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Nicolas Grekas",
-                    "email": "p@tchwork.com"
-                },
-                {
-                    "name": "Symfony Community",
-                    "homepage": "https://symfony.com/contributors"
-                }
-            ],
-            "description": "Symfony polyfill for the Mbstring extension",
-            "homepage": "https://symfony.com",
-            "keywords": [
-                "compatibility",
-                "mbstring",
-                "polyfill",
-                "portable",
-                "shim"
-            ],
-            "support": {
-                "source": "https://github.com/symfony/polyfill-mbstring/tree/1.x"
-            },
-            "funding": [
-                {
-                    "url": "https://symfony.com/sponsor",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/fabpot",
-                    "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
-                    "type": "tidelift"
-                }
-            ],
-            "time": "2024-12-23T08:48:59+00:00"
+            "time": "2022-07-09T19:47:27+00:00"
         },
         {
             "name": "tecnickcom/tcpdf",
@@ -338,7 +365,6 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "citation-style-language/locales": 20,
         "citation-style-language/styles-distribution": 20
     },
     "prefer-stable": false,
