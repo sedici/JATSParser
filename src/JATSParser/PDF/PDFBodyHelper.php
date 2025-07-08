@@ -18,6 +18,7 @@ class PDFBodyHelper {
 		$htmlHead .= '</head>';
 		$dom->loadHTML($htmlHead . $htmlString);
 
+		
 		// set style for figures and table
 		$xpath = new \DOMXPath($dom);
 
