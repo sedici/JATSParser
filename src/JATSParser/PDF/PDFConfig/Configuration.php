@@ -144,6 +144,7 @@ class Configuration {
     public function getAuthorsConfig() {
         return [
             'authors_data' => $this->getMetadata('authors'),
+            'plugin_path' => $this->getMetadata('plugin_path'),
             'authors_config' => [
                 'text_color' => $this->getColorConfig('black'),
                 'fullname_font' => $this->getFontConfig('bold'),
