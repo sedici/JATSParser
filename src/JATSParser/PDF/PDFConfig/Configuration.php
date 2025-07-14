@@ -77,10 +77,43 @@ class Configuration {
 
     public function getFontConfig($type = 'default', $size = null) {
         $font = $this->config['fonts'][$type] ?? $this->config['fonts']['default'];
+        $fontFamily = $font['family'];
+
+        // Check if the font is available in TCPDF
+        if (!$this->isTCPDFFontAvailable($fontFamily)) {
+            // If the font is not available, log an error and use the default font
+            $font = $this->config['fonts']['default'];
+        }
+
         if ($size !== null) {
             $font['size'] = $size;
         }
         return $font;
+    }
+
+    /**
+     * Verify if a font is available in TCPDF.
+     * Searches for any file that contains the font name.
+     */
+    private function isTCPDFFontAvailable($fontFamily) {
+        if (defined('K_PATH_FONTS')) {
+            $fontsDir = K_PATH_FONTS;
+        } else {
+            $fontsDir = __DIR__ . '/../../../../../vendor/tecnickcom/tcpdf/fonts/';
+        }
+        if (!is_dir($fontsDir)) {
+            error_log("TCPDF fonts directory not found: $fontsDir");
+            return false;
+        }
+        $fontFamilyLower = strtolower($fontFamily);
+        foreach (glob($fontsDir . '*.php') as $file) {
+            
+            if (strpos(strtolower(basename($file)), $fontFamilyLower) !== false) {
+                return true;
+            }
+        }
+        error_log("Font '$fontFamily' not found in TCPDF fonts directory: $fontsDir");
+        return false;
     }
 
     public function getColorConfig($type = 'primary') {
