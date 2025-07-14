@@ -154,6 +154,7 @@ class TemplateBody extends GenericComponent {
             $this->pdfTemplate->GetY(),
             $this->config->getTitlesConfig(),
             $this->config->getSubtitlesConfig(),
+            $this->config->getPrefixesConfig(),
             $localeKey
         );
 
