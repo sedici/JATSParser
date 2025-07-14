@@ -146,13 +146,14 @@ class PDFBodyHelper {
 	 * @param object $config The configuration object
 	 */
 	private static function processCitations(\DOMDocument $dom, \DOMXPath $xpath, $config): void {
+		//Process reference citations
 		$supportedCitationStyles = $config::getSupportedCustomCitationStyles();
 		$actualCitationStyle = $config->getCitationStyle();
 		if ($supportedCitationStyles && in_array(strtolower($actualCitationStyle), $supportedCitationStyles)) {
 			$publicationId = $config->getPublicationId();
 			$localeKey = $config->getLocaleKeyConfig();
 
-			//Get citations from database ONLY for APA style.
+			//Get citations from database ONLY for APA style (for now)
 			$customPublicationSettingsDAO = new \CustomPublicationSettingsDAO();
 			$settings = $customPublicationSettingsDAO->getSetting($publicationId, 'jatsParser::citationTableData', $localeKey);
 
@@ -171,6 +172,19 @@ class PDFBodyHelper {
 					}
 				}
 			}
+		}
+
+		//Process footnotes citations for superscript links
+		$fnLinks = $xpath->evaluate('//a[contains(@class, "fn")]');
+		foreach ($fnLinks as $fnLink) {
+			$textContent = $fnLink->textContent; 
+			
+			while ($fnLink->firstChild) {
+        		$fnLink->removeChild($fnLink->firstChild);
+    		}
+
+			$sup = $fnLink->ownerDocument->createElement('sup', $textContent);
+			$fnLink->appendChild($sup);
 		}
 	}
 
