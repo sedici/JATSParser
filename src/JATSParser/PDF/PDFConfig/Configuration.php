@@ -174,6 +174,18 @@ class Configuration {
         ];
     }
 
+    public function getPrefixesConfig() {
+        return [
+            'prefixes_texts' => $this->getMetadata('prefixes'),
+            'prefixes_config' => [
+                'principal_prefix_font' => $this->getFontConfig('bold', 15),
+                'principal_prefix_color' => $this->getColorConfig('accent'),
+                'text_color' => $this->getColorConfig('black'),
+                'font' => $this->getFontConfig('default', 10)
+            ]
+        ];
+    }
+
     public function getAuthorsConfig() {
         return [
             'authors_data' => $this->getMetadata('authors'),
