@@ -31,12 +31,18 @@ class PDFBodyHelper {
 		self::processFiguresCitations($dom, $xpath);
 		self::processTableCitations($dom, $xpath);
 		self::processBlockquotes($dom, $xpath); 
-		self::addHrefAttributes($xpath);
+		self::processHrefElements($xpath);
+		self::processExternalLinks($dom, $xpath);
 
 		// Remove redundant whitespaces before caption label
 		$modifiedHtmlString = $dom->saveHTML();
 		$modifiedHtmlString = preg_replace('/<caption>\s*/', '<br>' . '<caption>', $modifiedHtmlString);
 		$modifiedHtmlString = preg_replace('/<p class="caption">\s*/', '<p class="caption">', $modifiedHtmlString);
+
+		file_put_contents(
+			__DIR__ . '/htmlString.html',
+			$modifiedHtmlString
+		);
 
 		return $modifiedHtmlString;
 	}
@@ -194,10 +200,28 @@ class PDFBodyHelper {
 	 * @param \DOMDocument $dom The DOM document
 	 * @param \DOMXPath $xpath The XPath object for DOM traversal
 	 */
-	private static function addHrefAttributes(\DOMXPath $xpath): void {
+	private static function processHrefElements(\DOMXPath $xpath): void {
+		//process all links in the document(including urls - citations)
 		$refs = $xpath->evaluate('//a');
 		foreach ($refs as $ref) {
 			$ref->setAttribute('style', 'color: #0066CC; text-decoration: none;'); 
+		}
+	}
+
+	private static function processExternalLinks(\DOMDocument $dom, \DOMXPath $xpath): void {
+		// Process external links to ensure they are styled correctly and converted to <a> elements for a correct styling process in TCPDF
+		$externalLinks = $xpath->evaluate('//ext-link');
+		foreach ($externalLinks as $link) {
+			// Create a new <a> element with the link text
+			$a = $dom->createElement('a', $link->textContent);
+			// Copy the class attribute if it exists
+			if ($link->hasAttribute('xlink:href')) {
+				$a->setAttribute('href', $link->getAttribute('xlink:href'));
+			}
+			// Add the class attribute if it exists
+			$a->setAttribute('style', 'color: #0066CC; text-decoration: none;');
+			// Replace the <ext-link> element with the new <a> element
+			$link->parentNode->replaceChild($a, $link);
 		}
 	}
 
