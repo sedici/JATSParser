@@ -243,7 +243,6 @@ class Document extends \DOMDocument {
 		if ($this->styleInTextLinks) {
 			$this->setInTextLinks($citeProc, $data);
 		}
-		$htmlString = str_replace(['<i>', '</i>'], '', $htmlString);
 		$this->getCiteBody($htmlString, $rawData);
 	}
 
