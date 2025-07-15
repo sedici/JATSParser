@@ -49,13 +49,13 @@ class Configuration {
                 'logo_height' => 6,
                 'logo_width' => 17,
                 'links' => [
-                    'CC-BY' => 'https://creativecommons.org/licenses/by/4.0/',
-                    'CC-BY-NC' => 'https://creativecommons.org/licenses/by-nc/4.0/',
-                    'CC-BY-ND' => 'https://creativecommons.org/licenses/by-nd/4.0/',
-                    'CC-BY-SA' => 'https://creativecommons.org/licenses/by-sa/4.0/',
-                    'CC-BY-NC-ND' => 'https://creativecommons.org/licenses/by-nc-nd/4.0/',
-                    'CC-BY-NC-SA' => 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
-                    'CC-ZERO' => 'https://creativecommons.org/publicdomain/zero/1.0/'
+                    'CC-BY' => 'https://creativecommons.org/licenses/by/4.0',
+                    'CC-BY-NC' => 'https://creativecommons.org/licenses/by-nc/4.0',
+                    'CC-BY-ND' => 'https://creativecommons.org/licenses/by-nd/4.0',
+                    'CC-BY-SA' => 'https://creativecommons.org/licenses/by-sa/4.0',
+                    'CC-BY-NC-ND' => 'https://creativecommons.org/licenses/by-nc-nd/4.0',
+                    'CC-BY-NC-SA' => 'https://creativecommons.org/licenses/by-nc-sa/4.0',
+                    'CC-ZERO' => 'https://creativecommons.org/publicdomain/zero/1.0'
                 ],
                 'logos' => [
                     'CC-BY' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by.png',

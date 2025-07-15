@@ -17,9 +17,7 @@ class TitlesAndSubtitles {
     */
     public static function renderTitlesAndSubtitles($pdfTemplate, float $x, float $y, Array $titlesConfig, Array $subtitlesConfig, Array $prefixesConfig, $localeKey) {
         $pdfTemplate->SetXY($x, $y);
-        
-        error_log(print_r($prefixesConfig, true));
-
+    
         //print principal prefix (localeKey is used to get the correct principal prefix and unset it from the array)
         if ($prefixesConfig['prefixes_texts'] && $prefixesConfig['prefixes_texts'][$localeKey]) {
             $pdfTemplate->SetFont(
