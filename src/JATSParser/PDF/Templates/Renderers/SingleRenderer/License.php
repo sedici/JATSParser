@@ -5,6 +5,9 @@ use JATSParser\PDF\Templates\Renderers\SingleRenderer\LinkableText;
 
 class License{ 
     public static function renderLicense($pdfTemplate, Array $licenseConfig, Array $translationsConfig, $localeKey, $licenseUrl): void {
+        
+        $licenseUrl = rtrim($licenseUrl, '/');
+        
         foreach ($licenseConfig['links'] as $license => $licenseLink) {
             if ($licenseUrl === $licenseLink) {
                 $licenseLogoPath = $licenseConfig['logos'][$license]; 
