@@ -49,13 +49,13 @@ class Configuration {
                 'logo_height' => 6,
                 'logo_width' => 17,
                 'links' => [
-                    'CC-BY' => 'https://creativecommons.org/licenses/by/4.0/',
-                    'CC-BY-NC' => 'https://creativecommons.org/licenses/by-nc/4.0/',
-                    'CC-BY-ND' => 'https://creativecommons.org/licenses/by-nd/4.0/',
-                    'CC-BY-SA' => 'https://creativecommons.org/licenses/by-sa/4.0/',
-                    'CC-BY-NC-ND' => 'https://creativecommons.org/licenses/by-nc-nd/4.0/',
-                    'CC-BY-NC-SA' => 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
-                    'CC-ZERO' => 'https://creativecommons.org/publicdomain/zero/1.0/'
+                    'CC-BY' => 'https://creativecommons.org/licenses/by/4.0',
+                    'CC-BY-NC' => 'https://creativecommons.org/licenses/by-nc/4.0',
+                    'CC-BY-ND' => 'https://creativecommons.org/licenses/by-nd/4.0',
+                    'CC-BY-SA' => 'https://creativecommons.org/licenses/by-sa/4.0',
+                    'CC-BY-NC-ND' => 'https://creativecommons.org/licenses/by-nc-nd/4.0',
+                    'CC-BY-NC-SA' => 'https://creativecommons.org/licenses/by-nc-sa/4.0',
+                    'CC-ZERO' => 'https://creativecommons.org/publicdomain/zero/1.0'
                 ],
                 'logos' => [
                     'CC-BY' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by.png',
@@ -77,10 +77,43 @@ class Configuration {
 
     public function getFontConfig($type = 'default', $size = null) {
         $font = $this->config['fonts'][$type] ?? $this->config['fonts']['default'];
+        $fontFamily = $font['family'];
+
+        // Check if the font is available in TCPDF
+        if (!$this->isTCPDFFontAvailable($fontFamily)) {
+            // If the font is not available, log an error and use the default font
+            $font = $this->config['fonts']['default'];
+        }
+
         if ($size !== null) {
             $font['size'] = $size;
         }
         return $font;
+    }
+
+    /**
+     * Verify if a font is available in TCPDF.
+     * Searches for any file that contains the font name.
+     */
+    private function isTCPDFFontAvailable($fontFamily) {
+        if (defined('K_PATH_FONTS')) {
+            $fontsDir = K_PATH_FONTS;
+        } else {
+            $fontsDir = __DIR__ . '/../../../../../vendor/tecnickcom/tcpdf/fonts/';
+        }
+        if (!is_dir($fontsDir)) {
+            error_log("TCPDF fonts directory not found: $fontsDir");
+            return false;
+        }
+        $fontFamilyLower = strtolower($fontFamily);
+        foreach (glob($fontsDir . '*.php') as $file) {
+            
+            if (strpos(strtolower(basename($file)), $fontFamilyLower) !== false) {
+                return true;
+            }
+        }
+        error_log("Font '$fontFamily' not found in TCPDF fonts directory: $fontsDir");
+        return false;
     }
 
     public function getColorConfig($type = 'primary') {
@@ -135,6 +168,18 @@ class Configuration {
             'subtitles_config' => [
                 'principal_subtitle_font' => $this->getFontConfig('bold', 12),
                 'principal_subtitle_color' => $this->getColorConfig('accent'),
+                'text_color' => $this->getColorConfig('black'),
+                'font' => $this->getFontConfig('default', 10)
+            ]
+        ];
+    }
+
+    public function getPrefixesConfig() {
+        return [
+            'prefixes_texts' => $this->getMetadata('prefixes'),
+            'prefixes_config' => [
+                'principal_prefix_font' => $this->getFontConfig('bold', 15),
+                'principal_prefix_color' => $this->getColorConfig('accent'),
                 'text_color' => $this->getColorConfig('black'),
                 'font' => $this->getFontConfig('default', 10)
             ]
