@@ -41,7 +41,7 @@ class PDFBodyHelper {
 			if (preg_match('/parser_/', $id)) {
 				$refs[$id] = $pdfTemplate->AddLink(); // lo vamos a llenar con AddLink() más adelante
 			}
-		}		
+		}
 
 		foreach ($xpath->query('//a[starts-with(@href, "#parser_")]') as $a) {
 			$href = ltrim($a->getAttribute('href'), '#');
