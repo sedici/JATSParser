@@ -39,7 +39,9 @@ class Body extends GenericComponent{
             if (preg_match('/{{LINK:([^:]+):(.+?)}}/', $parte, $match)) {
                 $refId = $match[1];
                 $texto = $match[2];
+                $this->pdfTemplate->SetTextColor(0, 102, 204); // #0066cc
                 $this->pdfTemplate->Write(0, $texto, $refs[$refId], 0);
+                $this->pdfTemplate->SetTextColor(0, 0, 0); 
                 $this->pdfTemplate->SetLeftMargin($leftMargin); // temporal fix, margin left error
 
             } else {
