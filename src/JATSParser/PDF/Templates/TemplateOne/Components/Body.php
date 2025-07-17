@@ -33,10 +33,10 @@ class Body extends GenericComponent{
         $htmlString = preg_replace('/<div[^>]*class\s*=\s*"[^"]*footnotes-container[^"]*"[^>]*>.*<\/div>/is', '', $htmlString);
 
         // process citations
-        $partes = preg_split('/({{LINK:parser_\d+:[^}]+}})/', $htmlString, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $partes = preg_split('/({{LINK:[^:]+:[^}]+}})/', $htmlString, -1, PREG_SPLIT_DELIM_CAPTURE);
 
         foreach ($partes as $parte) {
-            if (preg_match('/{{LINK:(parser_\d+):(.+?)}}/', $parte, $match)) {
+            if (preg_match('/{{LINK:([^:]+):(.+?)}}/', $parte, $match)) {
                 $refId = $match[1];
                 $texto = $match[2];
                 $this->pdfTemplate->Write(0, $texto, $refs[$refId], 0);

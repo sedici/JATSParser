@@ -35,15 +35,19 @@ class PDFBodyHelper {
 		self::processHrefElements($xpath);
 		self::processExternalLinks($dom, $xpath);
 
-		$referencesNodes = $xpath->evaluate('//*[@id]');
+		// Buscar todos los <li> dentro de .references-section
+		$referencesNodes = $xpath->evaluate('//div[contains(@class,"references-section")]//li');
 		foreach ($referencesNodes as $refNode) {
 			$id = $refNode->getAttribute('id');
-			if (preg_match('/parser_/', $id)) {
-				$refs[$id] = $pdfTemplate->AddLink(); // lo vamos a llenar con AddLink() más adelante
-			}
+			$refs[$id] = $pdfTemplate->AddLink(); // lo vamos a llenar con AddLink() más adelante
 		}
 
-		foreach ($xpath->query('//a[starts-with(@href, "#parser_")]') as $a) {
+        file_put_contents(
+            __DIR__ . '/debug_output.html',
+            $htmlString
+        );	
+
+		foreach ($xpath->query('//a[contains(@class, "bibr")]') as $a) {
 			$href = ltrim($a->getAttribute('href'), '#');
 			if (isset($refs[$href])) {
 				// Reemplazamos el <a> por texto plano que será reemplazado con TCPDF->Write más adelante
