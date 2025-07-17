@@ -8,7 +8,7 @@ class PDFBodyHelper {
 	 * @param string $htmlString
 	 * @return string Preprocessed HTML string for TCPDF
 	*/
-	public static function _prepareForPdfGalley(string $htmlString, $config): string {
+	public static function _prepareForPdfGalley(string $htmlString, $config, $pdfTemplate, &$refs): string {
 
 		$dom = new \DOMDocument('1.0', 'utf-8');
 		$htmlHead = "\n";
@@ -25,7 +25,8 @@ class PDFBodyHelper {
 		self::processTables($xpath);
 		self::formatCaptions($dom, $xpath);
 		self::moveCaptionsForTCPDF($dom, $xpath);
-		self::processCitations($dom, $xpath, $config);
+		//self::addLinks($dom, $xpath, $pdfTemplate);
+		self::replaceCitationsContent($dom, $xpath, $config);
 		self::processFootnotes($dom, $xpath); 
 		self::processReferences($dom, $xpath);
 		self::processFiguresCitations($dom, $xpath);
@@ -34,18 +35,62 @@ class PDFBodyHelper {
 		self::processHrefElements($xpath);
 		self::processExternalLinks($dom, $xpath);
 
+		$referencesNodes = $xpath->evaluate('//*[@id]');
+		foreach ($referencesNodes as $refNode) {
+			$id = $refNode->getAttribute('id');
+			if (preg_match('/parser_/', $id)) {
+				$refs[$id] = $pdfTemplate->AddLink(); // lo vamos a llenar con AddLink() más adelante
+			}
+		}		
+
+		foreach ($xpath->query('//a[starts-with(@href, "#parser_")]') as $a) {
+			$href = ltrim($a->getAttribute('href'), '#');
+			if (isset($refs[$href])) {
+				// Reemplazamos el <a> por texto plano que será reemplazado con TCPDF->Write más adelante
+				$a->parentNode->replaceChild(
+					$dom->createTextNode("{{LINK:$href:" . $a->nodeValue . "}}"),
+					$a
+				);				
+			}
+		}
+
+		error_log(print_r($refs, true));
+
 		// Remove redundant whitespaces before caption label
 		$modifiedHtmlString = $dom->saveHTML();
 		$modifiedHtmlString = preg_replace('/<caption>\s*/', '<br>' . '<caption>', $modifiedHtmlString);
 		$modifiedHtmlString = preg_replace('/<p class="caption">\s*/', '<p class="caption">', $modifiedHtmlString);
 
-		file_put_contents(
-			__DIR__ . '/htmlString.html',
-			$modifiedHtmlString
-		);
-
 		return $modifiedHtmlString;
 	}
+
+	/*
+	 
+	private static function addLinks(\DOMDocument $dom, \DOMXPath $xpath, $pdfTemplate): void {
+		$linkMap = [];
+
+		// process all anchors in the document
+		$anchors = $xpath->evaluate('//a[@href]');
+		foreach ($anchors as $anchor) {
+			$href = $anchor->getAttribute('href');
+			// use the href content as the key
+			if (!isset($linkMap[$href])) {
+				$linkMap[$href] = $pdfTemplate->AddLink();
+			}
+			$anchor->setAttribute('data-tcpdf-link', $linkMap[$href]);
+		}
+
+		// process all elements with id attributes
+		$refs = $xpath->evaluate('//*[@id]');
+		foreach ($refs as $ref) {
+			$id = $ref->getAttribute('id');
+			if (isset($linkMap['#' . $id])) {
+				$pdfTemplate->SetLink($linkMap['#' . $id]);
+				$ref->setAttribute('data-tcpdf-setlink', $linkMap['#' . $id]);
+			}
+		}
+	}
+		/*
 	
 	/**
 	 * Processing tables for styles and translations.
@@ -151,7 +196,7 @@ class PDFBodyHelper {
 	 * @param \DOMXPath $xpath The XPath object for DOM traversal
 	 * @param object $config The configuration object
 	 */
-	private static function processCitations(\DOMDocument $dom, \DOMXPath $xpath, $config): void {
+	private static function replaceCitationsContent(\DOMDocument $dom, \DOMXPath $xpath, $config): void {
 		//Process reference citations
 		$supportedCitationStyles = $config::getSupportedCustomCitationStyles();
 		$actualCitationStyle = $config->getCitationStyle();
