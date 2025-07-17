@@ -33,17 +33,31 @@ class Body extends GenericComponent{
         $htmlString = preg_replace('/<div[^>]*class\s*=\s*"[^"]*footnotes-container[^"]*"[^>]*>.*<\/div>/is', '', $htmlString);
 
         // process citations
-        $partes = preg_split('/({{LINK:[^:]+:[^}]+}})/', $htmlString, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $partes = preg_split(
+            '/(<table\b[^>]*>(?:(?!<\/table>).)*{{LINK:[^:]+:[^}]+}}(?:(?!<\/table>).)*<\/table>|{{LINK:[^:]+:[^}]+}})/is', $htmlString, -1, PREG_SPLIT_DELIM_CAPTURE);
+
+		file_put_contents(
+            __DIR__ . '/debug_output.txt',
+            print_r($partes, true) . "\n"
+        );			
 
         foreach ($partes as $parte) {
-            if (preg_match('/{{LINK:([^:]+):(.+?)}}/', $parte, $match)) {
+            if (preg_match('/<table\b[^>]*>(?:(?!<\/table>).)*{{LINK:[^:]+:[^}]+}}(?:(?!<\/table>).)*<\/table>/is', $parte)) {
+                if (preg_match('/{{LINK:([^:]+):(.+?)}}/', $parte, $match)) {
+                    $parte = str_replace('{{LINK:' . $match[1] . ':' . $match[2] . '}}', $match[2], $parte); // <- ¡asignar el resultado!
+                    error_log('{{LINK:' . $match[1] . ':' . $match[2] . '}}');
+                    $this->pdfTemplate->Ln(3);
+                    $this->pdfTemplate->writeHTML($parte, false, false, true, false, '');
+                    $this->pdfTemplate->SetLeftMargin($leftMargin); // temporal fix, margin left error
+                }
+            }
+            else if (preg_match('/{{LINK:([^:]+):(.+?)}}/', $parte, $match)) {
                 $refId = $match[1];
                 $texto = $match[2];
                 $this->pdfTemplate->SetTextColor(0, 102, 204); // #0066cc
-                $this->pdfTemplate->Write(0, $texto, $refs[$refId], 0);
+                $this->pdfTemplate->Write(0, ' ' . $texto . ' ', $refs[$refId], 0);
                 $this->pdfTemplate->SetTextColor(0, 0, 0); 
                 $this->pdfTemplate->SetLeftMargin($leftMargin); // temporal fix, margin left error
-
             } else {
                 $this->pdfTemplate->writeHTML($parte, false, false, true, false, '');
                 $this->pdfTemplate->SetLeftMargin($leftMargin); // temporal fix, margin left error
@@ -62,7 +76,6 @@ class Body extends GenericComponent{
         $this->pdfTemplate->Ln(5);
 
         foreach ($refs as $refId => $linkId) {
-            error_log("[LINKID]: " . $linkId);
             $this->pdfTemplate->SetLink($linkId); // marcar posición
             if (isset($referencias[$refId])) {
                 $this->pdfTemplate->writeHTML($referencias[$refId], false, false, true, false, '');

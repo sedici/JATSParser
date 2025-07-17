@@ -42,11 +42,6 @@ class PDFBodyHelper {
 			$refs[$id] = $pdfTemplate->AddLink(); // lo vamos a llenar con AddLink() más adelante
 		}
 
-        file_put_contents(
-            __DIR__ . '/debug_output.html',
-            $htmlString
-        );	
-
 		foreach ($xpath->query('//a[contains(@class, "bibr")]') as $a) {
 			$href = ltrim($a->getAttribute('href'), '#');
 			if (isset($refs[$href])) {
@@ -57,8 +52,6 @@ class PDFBodyHelper {
 				);				
 			}
 		}
-
-		error_log(print_r($refs, true));
 
 		// Remove redundant whitespaces before caption label
 		$modifiedHtmlString = $dom->saveHTML();
