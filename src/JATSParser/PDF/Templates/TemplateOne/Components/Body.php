@@ -31,6 +31,8 @@ class Body extends GenericComponent{
         // Extraer endnotes usando el nuevo método
         $endnotes = $this->extractEndnotes($htmlString);
 
+        error_log(print_r($endnotes, true));
+
         // Eliminar todo el contenedor de referencias-section y su contenido
         $htmlString = preg_replace('/<div[^>]*class\s*=\s*"[^"]*references-section[^"]*"[^>]*>.*<\/div>/is', '', $htmlString);
 
@@ -60,7 +62,17 @@ class Body extends GenericComponent{
                 $refId = $match[1];
                 $texto = $match[2];
                 $this->pdfTemplate->SetTextColor(0, 102, 204); // #0066cc
-                $this->pdfTemplate->Write(0, ' ' . $texto . ' ', $refs[$refId], 0);
+                if (isset($endnotes[$refId])) {
+                    $currentFont = $this->pdfTemplate->getFontFamily();
+                    $currentStyle = $this->pdfTemplate->getFontStyle();
+                    $currentSize = $this->pdfTemplate->getFontSizePt();
+                    $this->pdfTemplate->SetFont($currentFont, $currentStyle, $currentSize * 0.7);
+                    $this->pdfTemplate->Write(0, $texto, $refs[$refId], 0);
+                    $this->pdfTemplate->Write(0, '  ', '', 0); // espacio después del superíndice
+                    $this->pdfTemplate->SetFont($currentFont, $currentStyle, $currentSize);
+                } else {
+                    $this->pdfTemplate->Write(0, ' ' . $texto . ' ', $refs[$refId], 0);
+                }
                 $this->pdfTemplate->SetTextColor(0, 0, 0); 
                 $this->pdfTemplate->SetLeftMargin($leftMargin); // temporal fix, margin left error
             } else {
@@ -147,6 +159,9 @@ class Body extends GenericComponent{
         $endnotes = [];
         foreach ($xpathNotes->query('//div[contains(@class,"footnote-item")]') as $div) {
             $noteId = $div->getAttribute('id');
+            if (strpos($noteId, 'fn-') === 0) {
+                $noteId = substr($noteId, 3); // quitar 'fn-' si existe
+            }
             $endnotes[$noteId] = $domNotes->saveHTML($div);
         }
         return $endnotes;
