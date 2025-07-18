@@ -20,6 +20,11 @@ class Body extends GenericComponent{
         $htmlString .= "\n" . '<style>' . "\n" . file_get_contents($pluginPath . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'styles' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'pdfGalley.css') . '</style>';
         $htmlString = PDFBodyHelper::_prepareForPdfGalley($htmlString, $this->config, $this->pdfTemplate, $refs);
 
+        file_put_contents(
+            __DIR__ . '/debug_output.html',
+            $htmlString
+        );
+
         // Extraer referencias reales del HTML usando el nuevo método
         $referencias = $this->extractReferences($htmlString);
 
@@ -39,12 +44,12 @@ class Body extends GenericComponent{
 		file_put_contents(
             __DIR__ . '/debug_output.txt',
             print_r($partes, true) . "\n"
-        );			
+        );
 
         foreach ($partes as $parte) {
             if (preg_match('/<table\b[^>]*>(?:(?!<\/table>).)*{{LINK:[^:]+:[^}]+}}(?:(?!<\/table>).)*<\/table>/is', $parte)) {
                 if (preg_match('/{{LINK:([^:]+):(.+?)}}/', $parte, $match)) {
-                    $parte = str_replace('{{LINK:' . $match[1] . ':' . $match[2] . '}}', $match[2], $parte); // <- ¡asignar el resultado!
+                    $parte = str_replace('{{LINK:' . $match[1] . ':' . $match[2] . '}}', $match[2], $parte); // 
                     error_log('{{LINK:' . $match[1] . ':' . $match[2] . '}}');
                     $this->pdfTemplate->Ln(3);
                     $this->pdfTemplate->writeHTML($parte, false, false, true, false, '');
@@ -71,8 +76,10 @@ class Body extends GenericComponent{
         $this->pdfTemplate->SetFillColor(255, 255, 255); // fondo blanco
 
         // Título de referencias
-        $this->pdfTemplate->writeHTML('<h2>' . __('plugins.generic.jatsParser.article.references.title') . '</h2>', false, false, true, false, '');
-
+        if (!empty($referencias)) {
+            $this->pdfTemplate->writeHTML('<h2>' . __('plugins.generic.jatsParser.article.references.title') . '</h2>', false, false, true, false, '');
+        }
+        
         $this->pdfTemplate->Ln(5);
 
         foreach ($refs as $refId => $linkId) {
@@ -87,11 +94,22 @@ class Body extends GenericComponent{
         $this->pdfTemplate->Ln(5);
 
         // Título de footnotes
-        $this->pdfTemplate->writeHTML('<h2>' . __('plugins.generic.jatsParser.article.footnotes.title') . '</h2>', false, false, true, false, '');
-
+        if (!empty($endnotes)) {
+            $this->pdfTemplate->writeHTML('<h2>' . __('plugins.generic.jatsParser.article.footnotes.title') . '</h2>', false, false, true, false, '');
+        }
         $this->pdfTemplate->Ln(5);
 
         foreach ($endnotes as $noteId => $noteHtml) {
+            $refKey = $noteId;
+            if (!isset($refs[$refKey]) && strpos($refKey, 'fn-') === 0) {
+                // Si no existe, intenta sin el prefijo
+                $refKeyNoFn = substr($refKey, 3);
+                if (isset($refs[$refKeyNoFn])) {
+                    $this->pdfTemplate->SetLink($refs[$refKeyNoFn]);
+                }
+            } else if (isset($refs[$refKey])) {
+                $this->pdfTemplate->SetLink($refs[$refKey]);
+            }
             $this->pdfTemplate->writeHTML($noteHtml, false, false, true, false, '');
             $this->pdfTemplate->SetLeftMargin($leftMargin); // temporal fix, margin left error
             $this->pdfTemplate->Ln(6);
