@@ -8,7 +8,7 @@ class PDFBodyHelper {
 	 * @param string $htmlString
 	 * @return string Preprocessed HTML string for TCPDF
 	*/
-	public static function _prepareForPdfGalley(string $htmlString, $config): string {
+	public static function _prepareForPdfGalley(string $htmlString, $config, $pdfTemplate, &$refs): string {
 
 		$dom = new \DOMDocument('1.0', 'utf-8');
 		$htmlHead = "\n";
@@ -18,14 +18,14 @@ class PDFBodyHelper {
 		$htmlHead .= '</head>';
 		$dom->loadHTML($htmlHead . $htmlString);
 
-		
 		// set style for figures and table
 		$xpath = new \DOMXPath($dom);
 
 		self::processTables($xpath);
 		self::formatCaptions($dom, $xpath);
 		self::moveCaptionsForTCPDF($dom, $xpath);
-		self::processCitations($dom, $xpath, $config);
+		//self::addLinks($dom, $xpath, $pdfTemplate);
+		self::replaceCitationsContent($dom, $xpath, $config);
 		self::processFootnotes($dom, $xpath); 
 		self::processReferences($dom, $xpath);
 		self::processFiguresCitations($dom, $xpath);
@@ -34,18 +34,92 @@ class PDFBodyHelper {
 		self::processHrefElements($xpath);
 		self::processExternalLinks($dom, $xpath);
 
+		// Buscar todos los <li> dentro de .references-section
+		$referencesNodes = $xpath->evaluate('//div[contains(@class,"references-section")]//li');
+		foreach ($referencesNodes as $refNode) {
+			$id = $refNode->getAttribute('id');
+			$refs[$id] = $pdfTemplate->AddLink(); // lo vamos a llenar con AddLink() más adelante
+		}
+
+		//process all <a> elements with class "bibr" to replace them with {{LINK:refId:linkText}}
+		foreach ($xpath->query('//a[contains(@class, "bibr")]') as $a) {
+			$href = ltrim($a->getAttribute('href'), '#');
+			if (isset($refs[$href])) {
+				// Reemplazamos el <a> por texto plano que será reemplazado con TCPDF->Write más adelante
+				$a->parentNode->replaceChild(
+					$dom->createTextNode("{{LINK:$href:" . $a->nodeValue . "}}"),
+					$a
+				);				
+			}
+	
+		}
+
+		// Buscar todos Las footnotes <div><span> dentro de footnotes-container
+		$footnotesNodes = $xpath->evaluate('//div[contains(@class,"footnotes-container")]//div');
+		foreach ($footnotesNodes as $node) {
+			$id = $node->getAttribute('id');
+			if (strpos($id, 'fn-') === 0) {
+				$id = substr($id, 3); // quitar 'fn-' si existe
+			}
+			$refs[$id] = $pdfTemplate->AddLink(); // lo vamos a llenar con AddLink() más adelante
+		}
+
+		error_log(print_r($refs, true));
+
+		foreach ($xpath->query('//a[contains(@class, "fn")]') as $a) {
+			$href = ltrim($a->getAttribute('href'), '#');
+			error_log("PROCESANDO HREF:" . $href);
+			error_log("PROCESANDO HREF:" . $href);
+			error_log("PROCESANDO HREF:" . $href);
+			error_log("PROCESANDO HREF:" . $href);
+			error_log("PROCESANDO HREF:" . $href);
+			error_log("PROCESANDO HREF:" . $href);
+			error_log("PROCESANDO HREF:" . $href);
+			if (isset($refs[$href])) {
+				error_log("key " . $href . " SETEADA");
+				// Reemplazamos el <a> por texto plano que será reemplazado con TCPDF->Write más adelante
+				$a->parentNode->replaceChild(
+					$dom->createTextNode("{{LINK:$href:" . $a->nodeValue . "}}"),
+					$a
+				);
+			}
+		}
+
 		// Remove redundant whitespaces before caption label
 		$modifiedHtmlString = $dom->saveHTML();
 		$modifiedHtmlString = preg_replace('/<caption>\s*/', '<br>' . '<caption>', $modifiedHtmlString);
 		$modifiedHtmlString = preg_replace('/<p class="caption">\s*/', '<p class="caption">', $modifiedHtmlString);
 
-		file_put_contents(
-			__DIR__ . '/htmlString.html',
-			$modifiedHtmlString
-		);
-
 		return $modifiedHtmlString;
 	}
+
+	/*
+	 
+	private static function addLinks(\DOMDocument $dom, \DOMXPath $xpath, $pdfTemplate): void {
+		$linkMap = [];
+
+		// process all anchors in the document
+		$anchors = $xpath->evaluate('//a[@href]');
+		foreach ($anchors as $anchor) {
+			$href = $anchor->getAttribute('href');
+			// use the href content as the key
+			if (!isset($linkMap[$href])) {
+				$linkMap[$href] = $pdfTemplate->AddLink();
+			}
+			$anchor->setAttribute('data-tcpdf-link', $linkMap[$href]);
+		}
+
+		// process all elements with id attributes
+		$refs = $xpath->evaluate('//*[@id]');
+		foreach ($refs as $ref) {
+			$id = $ref->getAttribute('id');
+			if (isset($linkMap['#' . $id])) {
+				$pdfTemplate->SetLink($linkMap['#' . $id]);
+				$ref->setAttribute('data-tcpdf-setlink', $linkMap['#' . $id]);
+			}
+		}
+	}
+		/*
 	
 	/**
 	 * Processing tables for styles and translations.
@@ -151,7 +225,7 @@ class PDFBodyHelper {
 	 * @param \DOMXPath $xpath The XPath object for DOM traversal
 	 * @param object $config The configuration object
 	 */
-	private static function processCitations(\DOMDocument $dom, \DOMXPath $xpath, $config): void {
+	private static function replaceCitationsContent(\DOMDocument $dom, \DOMXPath $xpath, $config): void {
 		//Process reference citations
 		$supportedCitationStyles = $config::getSupportedCustomCitationStyles();
 		$actualCitationStyle = $config->getCitationStyle();
@@ -234,80 +308,83 @@ class PDFBodyHelper {
 	private static function processBlockquotes(\DOMDocument $dom, \DOMXPath $xpath): void {
 		$blockquotes = $xpath->evaluate('//blockquote');
 		foreach ($blockquotes as $blockquote) {
-			// Create a table structure to ensure proper indentation in TCPDF
+			// 1) Creamos la tabla contenedora
 			$table = $dom->createElement('table');
 			$table->setAttribute('width', '100%');
 			$table->setAttribute('border', '0');
 			$table->setAttribute('cellspacing', '0');
 			$table->setAttribute('cellpadding', '0');
-			$table->setAttribute('style', 'margin-top: 10px; margin-bottom: 10px; width: 100%;');
-			
+			// margin-top para el espacio superior; margin-bottom ya no es necesario
+			$table->setAttribute('style', 'margin-top: 10px; width: 100%;');
+
+			// 2) Construimos la fila principal con las 4 celdas
 			$tr = $dom->createElement('tr');
-			
-			// Initial spacing cell - significantly increased to move line far to the right
+
+			// 2.1) Celda inicial para desplazar la línea hacia la derecha
 			$tdInitial = $dom->createElement('td');
-			$tdInitial->setAttribute('width', '45'); // Increased from 15 to 45
-			$spacerInitial = $dom->createTextNode(' ');
-			$tdInitial->appendChild($spacerInitial);
-			
-			// Left cell with blue vertical line
+			$tdInitial->setAttribute('width', '45');
+			$tdInitial->appendChild($dom->createTextNode(' '));
+
+			// 2.2) Celda de la línea vertical azul
 			$tdLeft = $dom->createElement('td');
 			$tdLeft->setAttribute('width', '5');
 			$tdLeft->setAttribute('style', 'border-right: 4px solid #4c9cd6;');
-			$spacer = $dom->createTextNode(' ');
-			$tdLeft->appendChild($spacer);
-			
-			// Middle spacing cell - reduced to minimum
+			$tdLeft->appendChild($dom->createTextNode(' '));
+
+			// 2.3) Celda intermedia de separación
 			$tdMiddle = $dom->createElement('td');
-			$tdMiddle->setAttribute('width', '10'); // Reduced from 25 to 10
+			$tdMiddle->setAttribute('width', '10');
 			$tdMiddle->setAttribute('style', 'padding: 0;');
-			$spacer2 = $dom->createTextNode(' ');
-			$tdMiddle->appendChild($spacer2);
-			
-			// Right cell for content - adjusted width
+			$tdMiddle->appendChild($dom->createTextNode(' '));
+
+			// 2.4) Celda de contenido (texto y atribución)
 			$tdRight = $dom->createElement('td');
-			$tdRight->setAttribute('width', '88%'); // Adjusted to account for new widths
+			$tdRight->setAttribute('width', '88%');
 			$tdRight->setAttribute('style', 'padding-left: 5px; width: 72%;');
-			
-			// Extract paragraphs and citations
+
+			// 3) Movemos párrafos dentro de tdRight
 			$paragraphs = $xpath->evaluate('./p', $blockquote);
-			$citations = $xpath->evaluate('./cite', $blockquote);
-			
-			// Add content paragraphs to content cell with proper styling
 			foreach ($paragraphs as $paragraph) {
 				$clone = $paragraph->cloneNode(true);
-				// Add specific styling to paragraph text - ensure it takes full width
-				if (!$clone->hasAttribute('style')) {
-					$clone->setAttribute('style', 'margin: 3px 0; width: 100%; font-size: 1.20em;');
-				} else {
-					// Append width to existing style
-					$currentStyle = $clone->getAttribute('style');
-					$clone->setAttribute('style', $currentStyle . '; width: 100%; font-size: 1.05em;');
-				}
+				$style = $clone->hasAttribute('style')
+					? $clone->getAttribute('style') . '; width: 100%; font-size: 0.95em;'
+					: 'margin: 3px 0; width: 100%; font-size: 0.95em;';
+				$clone->setAttribute('style', $style);
 				$tdRight->appendChild($clone);
 			}
-			
-			// Only add citation if it exists
+
+			// 4) Movemos las citas (<cite>) si existen
+			$citations = $xpath->evaluate('./cite', $blockquote);
 			if ($citations->length > 0) {
 				foreach ($citations as $citation) {
 					$citeDiv = $dom->createElement('div');
 					$citeDiv->setAttribute('class', 'blockquote-attribution');
-					$citeDiv->setAttribute('style', 'margin-top: 2px; font-style: italic; text-align: right; font-size: 1.05em;');
-					
+					$citeDiv->setAttribute(
+						'style',
+						'margin-top: 2px; font-style: italic; text-align: right; font-size: 0.95em;'
+					);
 					$clone = $citation->cloneNode(true);
 					$citeDiv->appendChild($clone);
 					$tdRight->appendChild($citeDiv);
 				}
 			}
-			
-			// Assemble the table with all cells
+
+			// 5) Montamos la fila y la añadimos a la tabla
 			$tr->appendChild($tdInitial);
 			$tr->appendChild($tdLeft);
 			$tr->appendChild($tdMiddle);
 			$tr->appendChild($tdRight);
 			$table->appendChild($tr);
-			
-			// Replace the original blockquote with our table structure
+
+			// 6) Fila espaciadora para el margen inferior (10px)
+			$spacerRow  = $dom->createElement('tr');
+			$spacerCell = $dom->createElement('td');
+			$spacerCell->setAttribute('colspan', '4');
+			$spacerCell->setAttribute('height', '10'); // mismo valor que margin-top
+			$spacerRow->appendChild($spacerCell);
+			$table->appendChild($spacerRow);
+
+			// 7) Reemplazamos el <blockquote> original por la tabla
 			$blockquote->parentNode->replaceChild($table, $blockquote);
 		}
 	}
