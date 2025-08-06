@@ -49,9 +49,8 @@ class PDFBodyHelper {
 				$a->parentNode->replaceChild(
 					$dom->createTextNode("{{LINK:$href:" . $a->nodeValue . "}}"),
 					$a
-				);				
+				);
 			}
-	
 		}
 
 		// Buscar todos Las footnotes <div><span> dentro de footnotes-container

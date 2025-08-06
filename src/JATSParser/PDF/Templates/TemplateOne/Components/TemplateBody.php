@@ -27,6 +27,12 @@ class TemplateBody extends GenericComponent {
         $translationsConfig = $this->config->getMetadata('translations_config');
         $localeKey = $this->config->getMetadata('locale_key');
         $licenseUrl = $this->config->getMetadata('license_url');
+        $publicationPages = $this->config->getMetadata('publication_pages');
+        $issueVolume = $this->config->getMetadata('issue_volume');
+        $issueNumber = $this->config->getMetadata('issue_number');
+        $issueYear = $this->config->getMetadata('issue_year');
+        $sectionTitle = $this->config->getMetadata('section_title');
+
 
         $journalTitleFont = $this->config->getFontConfig('calibri');
         $journalTitleColor = $this->config->getColorConfig('black');
@@ -62,10 +68,26 @@ class TemplateBody extends GenericComponent {
         }
 
         // RENDER COMPLETE JOURNAL DATA TEXT
-        if ($journalData) {
+        if ($issueVolume || $issueNumber || $issueYear) {
+            $journalDataText = '';
+            if ($issueVolume) {
+                $journalDataText .= 'Vol. ' . $issueVolume . ', ';
+            }
+            if ($issueNumber) {
+                $journalDataText .= 'Núm. ' . $issueNumber . ', ';
+            }
+            if ($publicationPages) {
+                $journalDataText .= $publicationPages . ', ';
+            }
+            if ($sectionTitle) {
+                $journalDataText .= $sectionTitle . ', ';
+            }
+            if ($issueYear) {
+                $journalDataText .=  $issueYear;
+            }
             NoLinkableText::renderNoLinkableText(
                 $this->pdfTemplate,
-                $journalData,
+                $journalDataText,
                 $xPos,
                 $yPos,
                 $journalIssueColor,
@@ -100,7 +122,6 @@ class TemplateBody extends GenericComponent {
                 $onlineIssnColor,
                 $onlineIssnFont
             );
-            $yPos = $yPos + 4;
         }
 
         // CREATE JOURNAL URL
@@ -109,7 +130,7 @@ class TemplateBody extends GenericComponent {
                 $this->pdfTemplate,
                 $journalUrl,
                 $journalUrl,
-                $xPos,
+                $this->pdfTemplate->GetX() + 9.5,
                 $yPos,
                 $journalUrlColor,
                 $journalUrlFont
