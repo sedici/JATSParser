@@ -33,6 +33,12 @@ class PDFBodyHelper {
 		self::processBlockquotes($dom, $xpath); 
 		self::processHrefElements($xpath);
 		self::processExternalLinks($dom, $xpath);
+		self::blankspaceAfterHeadings($dom, $xpath);
+
+		file_put_contents(
+			__DIR__ . '/debug_output.html',
+			$dom->saveHTML()
+		);
 
 		// Buscar todos los <li> dentro de .references-section
 		$referencesNodes = $xpath->evaluate('//div[contains(@class,"references-section")]//li');
@@ -63,17 +69,8 @@ class PDFBodyHelper {
 			$refs[$id] = $pdfTemplate->AddLink(); // lo vamos a llenar con AddLink() más adelante
 		}
 
-		error_log(print_r($refs, true));
-
 		foreach ($xpath->query('//a[contains(@class, "fn")]') as $a) {
 			$href = ltrim($a->getAttribute('href'), '#');
-			error_log("PROCESANDO HREF:" . $href);
-			error_log("PROCESANDO HREF:" . $href);
-			error_log("PROCESANDO HREF:" . $href);
-			error_log("PROCESANDO HREF:" . $href);
-			error_log("PROCESANDO HREF:" . $href);
-			error_log("PROCESANDO HREF:" . $href);
-			error_log("PROCESANDO HREF:" . $href);
 			if (isset($refs[$href])) {
 				error_log("key " . $href . " SETEADA");
 				// Reemplazamos el <a> por texto plano que será reemplazado con TCPDF->Write más adelante
@@ -277,7 +274,7 @@ class PDFBodyHelper {
 		//process all links in the document(including urls - citations)
 		$refs = $xpath->evaluate('//a');
 		foreach ($refs as $ref) {
-			$ref->setAttribute('style', 'color: #0066CC; text-decoration: none;'); 
+			$ref->setAttribute('style', 'color: #32849C; text-decoration: none;'); 
 		}
 	}
 
@@ -292,7 +289,7 @@ class PDFBodyHelper {
 				$a->setAttribute('href', $link->getAttribute('xlink:href'));
 			}
 			// Add the class attribute if it exists
-			$a->setAttribute('style', 'color: #0066CC; text-decoration: none;');
+			$a->setAttribute('style', 'color: #32849C; text-decoration: none;');
 			// Replace the <ext-link> element with the new <a> element
 			$link->parentNode->replaceChild($a, $link);
 		}
@@ -477,6 +474,20 @@ class PDFBodyHelper {
 				foreach ($urlSpans as $url) {
 					$url->setAttribute('style', 'color: #31849b; word-wrap: break-word;');
 				}
+			}
+		}
+	}
+
+	private static function blankspaceAfterHeadings(\DOMDocument $dom, \DOMXPath $xpath): void {
+		// Add blank space before headings
+		$headings = $xpath->evaluate('//h1|//h2|//h3');
+		foreach ($headings as $heading) {
+			// Add 4 paragraph elements before each heading
+			for ($i = 0; $i < 1; $i++) {
+				$paragraph = $dom->createElement('p');
+				// Add a non-breaking space to ensure the paragraph renders consistently
+				$paragraph->appendChild($dom->createTextNode(' '));
+				$heading->parentNode->insertBefore($paragraph, $heading);
 			}
 		}
 	}

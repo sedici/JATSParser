@@ -42,6 +42,7 @@ class Body extends GenericComponent{
         // process citations
         $partes = preg_split(
             '/(<table\b[^>]*>(?:(?!<\/table>).)*{{LINK:[^:]+:[^}]+}}(?:(?!<\/table>).)*<\/table>|{{LINK:[^:]+:[^}]+}})/is', $htmlString, -1, PREG_SPLIT_DELIM_CAPTURE);
+            //Verificar espacio con comas
 
 		file_put_contents(
             __DIR__ . '/debug_output.txt',
@@ -126,6 +127,12 @@ class Body extends GenericComponent{
             $this->pdfTemplate->SetLeftMargin($leftMargin); // temporal fix, margin left error
             $this->pdfTemplate->Ln(6);
         }
+
+        file_put_contents(
+			__DIR__ . '/debug_output.html',
+			 $htmlString
+		);
+
     }
 
     /**

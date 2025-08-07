@@ -46,6 +46,9 @@ class TemplateBody extends GenericComponent {
         $journalUrlColor = $this->config->getColorConfig('primary');
         $editorialFont = $this->config->getFontConfig('calibri');
         $editorialColor = $this->config->getColorConfig('black');
+        $urlColor = $this->config->getColorConfig('url');
+
+         // Render logos
 
         InstitutionLogo::renderInstitutionLogo($this->config, $this->pdfTemplate);
         JournalLogo::renderJournalLogo($this->config, $this->pdfTemplate);
@@ -105,7 +108,7 @@ class TemplateBody extends GenericComponent {
                 $doiUrl,
                 $xPos,
                 $yPos,
-                $doiColor,
+                $urlColor,
                 $doiFont
             );
             $yPos = $yPos + 4;
@@ -132,7 +135,7 @@ class TemplateBody extends GenericComponent {
                 $journalUrl,
                 $this->pdfTemplate->GetX() + 9.5,
                 $yPos,
-                $journalUrlColor,
+                $urlColor,
                 $journalUrlFont
             );
             $yPos = $yPos + 1;
