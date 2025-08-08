@@ -31,8 +31,6 @@ class Body extends GenericComponent{
         // Extraer endnotes usando el nuevo método
         $endnotes = $this->extractEndnotes($htmlString);
 
-        error_log(print_r($endnotes, true));
-
         // Eliminar todo el contenedor de referencias-section y su contenido
         $htmlString = preg_replace('/<div[^>]*class\s*=\s*"[^"]*references-section[^"]*"[^>]*>.*<\/div>/is', '', $htmlString);
 
@@ -41,19 +39,17 @@ class Body extends GenericComponent{
 
         // process citations
         $partes = preg_split(
-            '/(<table\b[^>]*>(?:(?!<\/table>).)*{{LINK:[^:]+:[^}]+}}(?:(?!<\/table>).)*<\/table>|{{LINK:[^:]+:[^}]+}})/is', $htmlString, -1, PREG_SPLIT_DELIM_CAPTURE);
-            //Verificar espacio con comas
+            '/(<table\b[^>]*>(?:(?!<\/table>).)*{{LINK:[^:]+:[^}]+}}(?:(?!<\/table>).)*<\/table>|{{LINK:[^:]+:[^}]+}})/is', $htmlString, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
 
-		file_put_contents(
-            __DIR__ . '/debug_output.txt',
-            print_r($partes, true) . "\n"
+        file_put_contents(
+            __DIR__ . '/partes.txt',
+            print_r($partes, true)
         );
 
-        foreach ($partes as $parte) {
+        foreach ($partes as $i => $parte) {
             if (preg_match('/<table\b[^>]*>(?:(?!<\/table>).)*{{LINK:[^:]+:[^}]+}}(?:(?!<\/table>).)*<\/table>/is', $parte)) {
                 if (preg_match('/{{LINK:([^:]+):(.+?)}}/', $parte, $match)) {
-                    $parte = str_replace('{{LINK:' . $match[1] . ':' . $match[2] . '}}', $match[2], $parte); // 
-                    error_log('{{LINK:' . $match[1] . ':' . $match[2] . '}}');
+                    $parte = str_replace('{{LINK:' . $match[1] . ':' . $match[2] . '}}', $match[2], $parte); 
                     $this->pdfTemplate->Ln(3);
                     $this->pdfTemplate->writeHTML($parte, false, false, true, false, '');
                     $this->pdfTemplate->SetLeftMargin($leftMargin); // temporal fix, margin left error
@@ -69,10 +65,54 @@ class Body extends GenericComponent{
                     $currentSize = $this->pdfTemplate->getFontSizePt();
                     $this->pdfTemplate->SetFont($currentFont, $currentStyle, $currentSize * 0.7);
                     $this->pdfTemplate->Write(0, $texto, $refs[$refId], 0);
-                    $this->pdfTemplate->Write(0, '  ', '', 0); // espacio después del superíndice
                     $this->pdfTemplate->SetFont($currentFont, $currentStyle, $currentSize);
+
+                    $addSpace = true;
+                    if (isset($partes[$i + 1])) {
+                        $nextPart = $partes[$i + 1];
+                        // No agregar espacio si lo que sigue es un signo de puntuación.
+                        if (preg_match('/^[\.,;:]/', $nextPart)) {
+                            $addSpace = false;
+                        }
+                    }
+                    if ($addSpace) {
+                        $this->pdfTemplate->Write(0, ' ', '', 0); // espacio luego del texto
+                    }
                 } else {
-                    $this->pdfTemplate->Write(0, ' ' . $texto . ' ', $refs[$refId], 0);
+                    // No agregar espacio antes si el texto anterior termina en (
+                    $addSpaceBefore = true;
+                    if (isset($partes[$i - 1])) {
+                        $prevPart = $partes[$i - 1];
+                        if (substr(rtrim($prevPart), -1) === '(') {
+                            $addSpaceBefore = false;
+                        }
+                    }
+                    if ($addSpaceBefore) {
+                        $this->pdfTemplate->Write(0, ' ', '', 0); // espacio antes del texto
+                    }
+
+                    $this->pdfTemplate->Write(0, $texto, $refs[$refId], 0);
+                    
+                    $addSpace = true;
+                    if (isset($partes[$i + 1])) {
+                        $nextPart = $partes[$i + 1];
+                        
+                        $isFootnoteLink = false;
+                        if (preg_match('/^{{LINK:([^:]+):(.+?)}}/', $nextPart, $nextMatch)) {
+                            $nextRefId = $nextMatch[1];
+                            if (isset($endnotes[$nextRefId])) {
+                                $isFootnoteLink = true;
+                            }
+                        }
+
+                        // No agregar espacio si lo que sigue es un signo de puntuación o una nota al pie.
+                        if (preg_match('/^[\.,;:]/', $nextPart) || $isFootnoteLink) {
+                            $addSpace = false;
+                        }
+                    }
+                    if ($addSpace) {
+                        $this->pdfTemplate->Write(0, ' ', '', 0); // espacio luego del texto
+                    }
                 }
                 $this->pdfTemplate->SetTextColor(0, 0, 0); 
                 $this->pdfTemplate->SetLeftMargin($leftMargin); // temporal fix, margin left error
@@ -126,13 +166,12 @@ class Body extends GenericComponent{
             $this->pdfTemplate->writeHTML($noteHtml, false, false, true, false, '');
             $this->pdfTemplate->SetLeftMargin($leftMargin); // temporal fix, margin left error
             $this->pdfTemplate->Ln(6);
-        }
 
         file_put_contents(
-			__DIR__ . '/debug_output.html',
-			 $htmlString
-		);
-
+            __DIR__ . '/finalhtml.html',
+            $htmlString
+        );
+        }
     }
 
     /**
