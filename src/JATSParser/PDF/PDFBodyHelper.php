@@ -35,11 +35,6 @@ class PDFBodyHelper {
 		self::processExternalLinks($dom, $xpath);
 		self::blankspaceAfterHeadings($dom, $xpath);
 
-		file_put_contents(
-			__DIR__ . '/debug_output.html',
-			$dom->saveHTML()
-		);
-
 		// Buscar todos los <li> dentro de .references-section
 		$referencesNodes = $xpath->evaluate('//div[contains(@class,"references-section")]//li');
 		foreach ($referencesNodes as $refNode) {

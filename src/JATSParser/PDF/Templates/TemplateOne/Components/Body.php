@@ -20,11 +20,6 @@ class Body extends GenericComponent{
         $htmlString .= "\n" . '<style>' . "\n" . file_get_contents($pluginPath . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'styles' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'pdfGalley.css') . '</style>';
         $htmlString = PDFBodyHelper::_prepareForPdfGalley($htmlString, $this->config, $this->pdfTemplate, $refs);
 
-        file_put_contents(
-            __DIR__ . '/debug_output.html',
-            $htmlString
-        );
-
         // Extraer referencias reales del HTML usando el nuevo método
         $referencias = $this->extractReferences($htmlString);
 
@@ -40,11 +35,6 @@ class Body extends GenericComponent{
         // process citations
         $partes = preg_split(
             '/(<table\b[^>]*>(?:(?!<\/table>).)*{{LINK:[^:]+:[^}]+}}(?:(?!<\/table>).)*<\/table>|{{LINK:[^:]+:[^}]+}})/is', $htmlString, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
-
-        file_put_contents(
-            __DIR__ . '/partes.txt',
-            print_r($partes, true)
-        );
 
         foreach ($partes as $i => $parte) {
             if (preg_match('/<table\b[^>]*>(?:(?!<\/table>).)*{{LINK:[^:]+:[^}]+}}(?:(?!<\/table>).)*<\/table>/is', $parte)) {
@@ -167,10 +157,6 @@ class Body extends GenericComponent{
             $this->pdfTemplate->SetLeftMargin($leftMargin); // temporal fix, margin left error
             $this->pdfTemplate->Ln(6);
 
-        file_put_contents(
-            __DIR__ . '/finalhtml.html',
-            $htmlString
-        );
         }
     }
 

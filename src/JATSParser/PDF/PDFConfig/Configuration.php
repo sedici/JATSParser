@@ -40,7 +40,7 @@ class Configuration {
                 'journal_logo' => [
                     'path' => $metadata['journal_logos_path'] ?? '',
                     'x_pos' => 25,
-                    'y_pos' => 20,
+                    'y_pos' => 17,
                     'width' => 35,
                 ],
             ],
