@@ -114,31 +114,41 @@ class TemplateBody extends GenericComponent {
             $yPos = $yPos + 4;
         }
 
-        // RENDER ONLINE ISSN TEXT
+        // RENDER ONLINE ISSN TEXT AND/OR JOURNAL URL
+        $currentXPos = $xPos; // Initial X position
+
+        // Primero verificamos si hay ISSN y lo imprimimos
+        // First, we check if there is an ISSN and print it
         if ($onlineIssn) {
             $text = "ISSN " . $onlineIssn . ' | ';
             NoLinkableText::renderNoLinkableText(
                 $this->pdfTemplate,
                 $text,
-                $xPos,
+                $currentXPos,
                 $yPos,
                 $onlineIssnColor,
                 $onlineIssnFont
             );
+            // Update the X position for the possible URL
+            $currentXPos += $this->pdfTemplate->GetStringWidth($text);
         }
-
-        // CREATE JOURNAL URL
+        
+        // Verificamos si hay URL y la imprimimos en la posición actual
         if ($journalUrl) {
             LinkableText::renderLinkableText(
                 $this->pdfTemplate,
                 $journalUrl,
                 $journalUrl,
-                $this->pdfTemplate->GetX() + 9.5,
+                $currentXPos,
                 $yPos,
                 $urlColor,
                 $journalUrlFont
             );
-            $yPos = $yPos + 1;
+        }
+        
+        // Solo incrementamos Y si se imprimió algo (ISSN o URL o ambos)
+        if ($onlineIssn || $journalUrl) {
+            $yPos = $yPos + 1; // Reducido de 4 a 2 para disminuir el espacio
         }
 
         /*
