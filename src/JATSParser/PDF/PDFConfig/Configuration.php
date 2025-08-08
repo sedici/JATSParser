@@ -24,6 +24,7 @@ class Configuration {
                 'black' => [0, 0, 0],
                 'white' => [255, 255, 255],
                 'accent' => [49, 132, 155],
+                'url' => [20, 52, 61],
             ],
             'margins' => [
                 'footer_left' => 25,

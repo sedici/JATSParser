@@ -238,6 +238,8 @@ class Document extends \DOMDocument {
 		];
 
 		$citeProc = new CiteProc($style, $this->citationLang, $additionalMarkup);
+		//Le pido a citeproc que me renderice texto plano si italica
+	
 		$htmlString = $citeProc->render($data, 'bibliography');
 		
 		if ($this->styleInTextLinks) {
