@@ -39,11 +39,17 @@ class FootnoteRenderer {
             '<h2>' . __('plugins.generic.jatsParser.article.footnotes.title') . '</h2>', 
             false, false, true, false, ''
         );
-        
+        // Asegurar margen y X correctos antes de la primera nota
+        $this->pdfTemplate->SetLeftMargin($this->leftMargin);
+        $this->pdfTemplate->SetX($this->leftMargin);
         $this->pdfTemplate->Ln(5);
         
         // Render each footnote
         foreach ($footnotes as $noteId => $noteHtml) {
+            // Forzar margen y X antes de escribir cada nota
+            $this->pdfTemplate->SetLeftMargin($this->leftMargin);
+            $this->pdfTemplate->SetX($this->leftMargin);
+
             // Capture current Y position for precise linking
             $yPosition = $this->pdfTemplate->GetY();
             
@@ -60,7 +66,6 @@ class FootnoteRenderer {
             
             // Render the footnote
             $this->pdfTemplate->writeHTML($noteHtml, false, false, true, false, '');
-            $this->pdfTemplate->SetLeftMargin($this->leftMargin); // temporal fix, margin left error
             $this->pdfTemplate->Ln(6);
         }
     }

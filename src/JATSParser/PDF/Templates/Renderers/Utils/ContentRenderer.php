@@ -125,24 +125,7 @@ class ContentRenderer {
      * @param array $footnotes Footnotes array
      */
     private function renderFootnoteLink(string $text, int $i, array $parts, array $refs, string $refId, array $footnotes): void {
-        // No agregar espacio antes si el texto anterior termina en ( o si viene de un LINK/MULTILINK
-        $addSpaceBefore = true;
-        if (isset($parts[$i - 1])) {
-            $prevPart = $parts[$i - 1];
-            $prevTrim = rtrim($prevPart);
-
-            // sin espacio si el anterior es "(" o termina en ")" o es un marcador de LINK/MULTILINK
-            if (
-                substr($prevTrim, -1) === '(' ||
-                substr($prevTrim, -1) === ')' ||
-                preg_match('/^{{(?:LINK|MULTILINK):/i', $prevTrim)
-            ) {
-                $addSpaceBefore = false;
-            }
-        }
-        if ($addSpaceBefore) {
-            $this->pdfTemplate->Write(0, ' ', '', 0);
-        }
+        // Nunca agregar espacio antes de una nota al pie
 
         $ids = $this->parseIds($refId);
         if (!$ids) { $ids = [$refId]; }
@@ -152,10 +135,8 @@ class ContentRenderer {
         $currentStyle = $this->pdfTemplate->getFontStyle();
         $currentSize = $this->pdfTemplate->getFontSizePt();
 
-        // aplicar tamaño "superíndice" una sola vez
         $this->pdfTemplate->SetFont($currentFont, $currentStyle, $currentSize * 0.7);
 
-        // Render cada parte en estilo “nota al pie”
         for ($j = 0; $j < count($textParts); $j++) {
             $currentRefId = isset($ids[$j]) ? $ids[$j] : end($ids);
 
@@ -172,7 +153,6 @@ class ContentRenderer {
             }
         }
 
-        // restaurar fuente original
         $this->pdfTemplate->SetFont($currentFont, $currentStyle, $currentSize);
 
         $addSpace = true;
@@ -257,7 +237,8 @@ class ContentRenderer {
      * @param string $html HTML content
      */
     private function renderHtml(string $html): void {
-        // Do not strip LINK/MULTILINK; they are handled by the split+handlers
+        // Eliminar espacios en blanco al final para evitar un espacio antes de footnotes
+        $html = preg_replace('/\s+$/u', '', $html);
         $this->pdfTemplate->writeHTML($html, false, false, true, false, '');
         $this->pdfTemplate->SetLeftMargin($this->leftMargin); // temporal fix, margin left error
     }
