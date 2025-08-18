@@ -145,7 +145,6 @@ class ContentRenderer {
             if (isset($refs[$currentRefId])) {
                 $link = $refs[$currentRefId];
             }
-
             $this->pdfTemplate->Write(0, $textParts[$j], $link, 0);
 
             if ($j < count($textParts) - 1) {
