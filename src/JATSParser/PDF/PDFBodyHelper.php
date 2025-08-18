@@ -20,7 +20,7 @@ class PDFBodyHelper {
 
 		// set style for figures and table
 		$xpath = new \DOMXPath($dom);
-
+		
 		self::processTables($xpath);
 		self::formatCaptions($dom, $xpath);
 		self::moveCaptionsForTCPDF($dom, $xpath);
@@ -39,16 +39,24 @@ class PDFBodyHelper {
 		$referencesNodes = $xpath->evaluate('//div[contains(@class,"references-section")]//li');
 		foreach ($referencesNodes as $refNode) {
 			$id = $refNode->getAttribute('id');
-			$refs[$id] = $pdfTemplate->AddLink(); // lo vamos a llenar con AddLink() más adelante
+			$refs[$id] = $pdfTemplate->AddLink();
 		}
 
 		//process all <a> elements with class "bibr" to replace them with {{LINK:refId:linkText}}
 		foreach ($xpath->query('//a[contains(@class, "bibr")]') as $a) {
 			$href = ltrim($a->getAttribute('href'), '#');
-			if (isset($refs[$href])) {
+			if (!strpos($href, '%20') && isset($refs[$href])) {
 				// Reemplazamos el <a> por texto plano que será reemplazado con TCPDF->Write más adelante
 				$a->parentNode->replaceChild(
 					$dom->createTextNode("{{LINK:$href:" . $a->nodeValue . "}}"),
+					$a
+				);
+			} else {
+				$refsIds = preg_split('/%20/', $href);
+				$refsIds = explode(' ', $refsIds[0]);
+				$text = "{{MULTILINK:$href:" . $a->nodeValue . '}}';
+				$a->parentNode->replaceChild(
+					$dom->createTextNode($text),
 					$a
 				);
 			}
@@ -66,14 +74,23 @@ class PDFBodyHelper {
 
 		foreach ($xpath->query('//a[contains(@class, "fn")]') as $a) {
 			$href = ltrim($a->getAttribute('href'), '#');
-			if (isset($refs[$href])) {
-				error_log("key " . $href . " SETEADA");
+			if (!strpos($href, '%20') && isset($refs[$href])) {
 				// Reemplazamos el <a> por texto plano que será reemplazado con TCPDF->Write más adelante
 				$a->parentNode->replaceChild(
 					$dom->createTextNode("{{LINK:$href:" . $a->nodeValue . "}}"),
 					$a
 				);
+			} else {
+				$refsIds = preg_split('/%20/', $href);
+				$refsIds = explode(' ', $refsIds[0]);
+				$text = "{{MULTILINK:$href:" . $a->nodeValue . '}}';
+				$a->parentNode->replaceChild(
+					$dom->createTextNode($text),
+					$a
+				);
 			}
+
+
 		}
 
 		// Remove redundant whitespaces before caption label
@@ -84,34 +101,6 @@ class PDFBodyHelper {
 		return $modifiedHtmlString;
 	}
 
-	/*
-	 
-	private static function addLinks(\DOMDocument $dom, \DOMXPath $xpath, $pdfTemplate): void {
-		$linkMap = [];
-
-		// process all anchors in the document
-		$anchors = $xpath->evaluate('//a[@href]');
-		foreach ($anchors as $anchor) {
-			$href = $anchor->getAttribute('href');
-			// use the href content as the key
-			if (!isset($linkMap[$href])) {
-				$linkMap[$href] = $pdfTemplate->AddLink();
-			}
-			$anchor->setAttribute('data-tcpdf-link', $linkMap[$href]);
-		}
-
-		// process all elements with id attributes
-		$refs = $xpath->evaluate('//*[@id]');
-		foreach ($refs as $ref) {
-			$id = $ref->getAttribute('id');
-			if (isset($linkMap['#' . $id])) {
-				$pdfTemplate->SetLink($linkMap['#' . $id]);
-				$ref->setAttribute('data-tcpdf-setlink', $linkMap['#' . $id]);
-			}
-		}
-	}
-		/*
-	
 	/**
 	 * Processing tables for styles and translations.
 	 * 
@@ -125,12 +114,24 @@ class PDFBodyHelper {
 			// Search span elements with class "label" inside the table
 			$labelSpans = $xpath->evaluate('.//span[@class="label"]', $tableNode);
 			foreach ($labelSpans as $span) {
+				$span->parentNode->removeChild($span);
+				/*
 				$spanContent = $span->textContent;
 				if (preg_match('/\d+/', $spanContent, $matches)) {
 					$tableNumber = $matches[0]; // Get the table number
 					$translatedTableText = __('plugins.generic.jatsParser.table.title'); // Translate the table text if needed (e.g., "Table 1" for english or "Tabla 1" for spanish)
 					$span->textContent = $translatedTableText . ' ' . $tableNumber; // Set the new content
  				}
+			*/
+			}
+			//process span elements with class "notes" inside the table for adding line breaks
+			//This is to add line breaks before the notes or "Leyenda" in all the tables
+			$spanNotesNode = $xpath->evaluate('.//span[@class="notes"]', $tableNode);
+			foreach ($spanNotesNode as $spanNote) {
+				for($i = 0; $i < 2; $i++) {
+					$br = $tableNode->ownerDocument->createElement('br');
+					$spanNote->parentNode->insertBefore($br, $spanNote);
+				}
 			}
 		}
 	}
@@ -269,7 +270,7 @@ class PDFBodyHelper {
 		//process all links in the document(including urls - citations)
 		$refs = $xpath->evaluate('//a');
 		foreach ($refs as $ref) {
-			$ref->setAttribute('style', 'color: #32849C; text-decoration: none;'); 
+			$ref->setAttribute('style', 'color: #32849c; text-decoration: none;'); 
 		}
 	}
 
@@ -407,7 +408,7 @@ class PDFBodyHelper {
 			$labelNodes = $xpath->evaluate('.//span[@class="footnote-label"]', $item);
 			if ($labelNodes->length > 0) {
 				$labelNode = $labelNodes->item(0);
-				$labelNode->setAttribute('style', 'display: inline-block; color: #31849b; font-weight: bold; margin-right: 0.8em; min-width: 1.5em; text-align: left;');
+				$labelNode->setAttribute('style', 'display: inline-block; color: #32849c; font-weight: bold; margin-right: 0.8em; min-width: 1.5em; text-align: left;');
 			}
 			
 			// Style the footnote content
@@ -467,7 +468,7 @@ class PDFBodyHelper {
 				// Style URLs within the citations
 				$urlSpans = $xpath->evaluate('.//span[@class="citation-url"]', $item);
 				foreach ($urlSpans as $url) {
-					$url->setAttribute('style', 'color: #31849b; word-wrap: break-word;');
+					$url->setAttribute('style', 'color: #32849c; word-wrap: break-word;');
 				}
 			}
 		}

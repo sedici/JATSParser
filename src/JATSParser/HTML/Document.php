@@ -1,5 +1,8 @@
 <?php namespace JATSParser\HTML;
 
+use JATSParser\HTML\UnlpHTML\Figure as FigureUNLP;
+use JATSParser\HTML\UnlpHTML\Table as TableUNLP;
+
 use JATSParser\Body\DispQuote;
 use JATSParser\Body\Document as JATSDocument;
 use JATSParser\HTML\Par as  Par;
@@ -150,12 +153,15 @@ class Document extends \DOMDocument {
 					$listing->setContent($articleSection);
 					break;
 				case "JATSParser\Body\Table":
-					$table = new Table();
+					// $table = new Table();
+					$table = new TableUNLP();
 					$parentEl->appendChild($table);
 					$table->setContent($articleSection);
 					break;
 				case "JATSParser\Body\Figure":
-					$figure = new Figure();
+					//$figure = new Figure();
+					//instance of our Figure class adapted to UNLP HTML 
+					$figure = new FigureUNLP();
 					$parentEl->appendChild($figure);
 					$figure->setContent($articleSection);
 					break;

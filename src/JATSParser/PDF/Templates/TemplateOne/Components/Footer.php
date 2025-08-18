@@ -34,7 +34,7 @@ class Footer extends GenericComponent{
 
         NoLinkableText::renderNoLinkableText(
             $this->pdfTemplate,
-            $sectionTitle,
+            ucfirst(strtolower($sectionTitle)),
             $xPos,
             $yPos,
             $sectionTitleColor,
