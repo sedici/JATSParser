@@ -34,65 +34,7 @@ class PDFBodyHelper {
 		self::processHrefElements($xpath);
 		self::processExternalLinks($dom, $xpath);
 		self::blankspaceAfterHeadings($dom, $xpath);
-
-		// Buscar todos los <li> dentro de .references-section
-		$referencesNodes = $xpath->evaluate('//div[contains(@class,"references-section")]//li');
-		foreach ($referencesNodes as $refNode) {
-			$id = $refNode->getAttribute('id');
-			$refs[$id] = $pdfTemplate->AddLink();
-		}
-
-		//process all <a> elements with class "bibr" to replace them with {{LINK:refId:linkText}}
-		foreach ($xpath->query('//a[contains(@class, "bibr")]') as $a) {
-			$href = ltrim($a->getAttribute('href'), '#');
-			if (!strpos($href, '%20') && isset($refs[$href])) {
-				// Reemplazamos el <a> por texto plano que será reemplazado con TCPDF->Write más adelante
-				$a->parentNode->replaceChild(
-					$dom->createTextNode("{{LINK:$href:" . $a->nodeValue . "}}"),
-					$a
-				);
-			} else {
-				$refsIds = preg_split('/%20/', $href);
-				$refsIds = explode(' ', $refsIds[0]);
-				$text = "{{MULTILINK:$href:" . $a->nodeValue . '}}';
-				$a->parentNode->replaceChild(
-					$dom->createTextNode($text),
-					$a
-				);
-			}
-		}
-
-		// Buscar todos Las footnotes <div><span> dentro de footnotes-container
-		$footnotesNodes = $xpath->evaluate('//div[contains(@class,"footnotes-container")]//div');
-		foreach ($footnotesNodes as $node) {
-			$id = $node->getAttribute('id');
-			if (strpos($id, 'fn-') === 0) {
-				$id = substr($id, 3); // quitar 'fn-' si existe
-			}
-			$refs[$id] = $pdfTemplate->AddLink(); // lo vamos a llenar con AddLink() más adelante
-		}
-
-		foreach ($xpath->query('//a[contains(@class, "fn")]') as $a) {
-			$href = ltrim($a->getAttribute('href'), '#');
-			if (!strpos($href, '%20') && isset($refs[$href])) {
-				// Reemplazamos el <a> por texto plano que será reemplazado con TCPDF->Write más adelante
-				$a->parentNode->replaceChild(
-					$dom->createTextNode("{{LINK:$href:" . $a->nodeValue . "}}"),
-					$a
-				);
-			} else {
-				$refsIds = preg_split('/%20/', $href);
-				$refsIds = explode(' ', $refsIds[0]);
-				$text = "{{MULTILINK:$href:" . $a->nodeValue . '}}';
-				$a->parentNode->replaceChild(
-					$dom->createTextNode($text),
-					$a
-				);
-			}
-
-
-		}
-
+		
 		// Remove redundant whitespaces before caption label
 		$modifiedHtmlString = $dom->saveHTML();
 		$modifiedHtmlString = preg_replace('/<caption>\s*/', '<br>' . '<caption>', $modifiedHtmlString);

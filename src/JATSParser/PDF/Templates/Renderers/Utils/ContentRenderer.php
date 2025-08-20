@@ -27,10 +27,10 @@ class ContentRenderer {
      * Render content with citations
      * 
      * @param string $htmlString The HTML content
-     * @param array $refs References array
+     * @param array $links References array
      * @param array $footnotes Footnotes array
      */
-    public function render(string $htmlString, array $refs, array $footnotes): void {
+    public function render(string $htmlString, array $links, array $footnotes): void {
         // Split content into parts based on links
         $parts = preg_split(
             '/(<table\b[^>]*>(?:(?!<\/table>).)*{{(?:LINK|MULTILINK):[^:]+:[^}]+}}(?:(?!<\/table>).)*<\/table>|{{(?:LINK|MULTILINK):[^:]+:[^}]+}})/is',
@@ -39,16 +39,17 @@ class ContentRenderer {
             PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
         );
 
+
         // Process each part
         foreach ($parts as $i => $part) {
             if (preg_match('/<table\b[^>]*>(?:(?!<\/table>).)*{{(LINK|MULTILINK):[^:]+:[^}]+}}(?:(?!<\/table>).)*<\/table>/is', $part)) {
-                $this->renderTableWithLink($part);
+                $this->renderTableWithLink($part, $links, $footnotes);
             }
             else if (preg_match('/{{(LINK|MULTILINK):([^:]+):(.+?)}}/', $part, $match)) {
                 $linkType = $match[1];
                 $refId = $match[2];
                 $text = $match[3];
-                $this->renderLink($linkType, $refId, $text, $i, $parts, $refs, $footnotes);
+                $this->renderLink($linkType, $refId, $text, $i, $parts, $links, $footnotes);
             } else {
                 $this->renderHtml($part);
             }
@@ -60,8 +61,9 @@ class ContentRenderer {
      * 
      * @param string $part HTML table with link
      */
-    private function renderTableWithLink(string $part): void {
+    private function renderTableWithLink(string $part, $links, $footnotes): void {
         if (preg_match('/{{(LINK|MULTILINK):([^:]+):(.+?)}}/', $part, $match)) {
+
             $part = str_replace('{{' . $match[1] . ':' . $match[2] . ':' . $match[3] . '}}', $match[3], $part); 
             $this->pdfTemplate->Ln(3);
             $this->pdfTemplate->writeHTML($part, false, false, true, false, '');
@@ -77,17 +79,17 @@ class ContentRenderer {
      * @param string $text Text to display
      * @param int $i Current part index
      * @param array $parts All content parts
-     * @param array $refs References array
+     * @param array $links References array
      * @param array $footnotes Footnotes array
      */
-    private function renderLink(string $linkType, string $refId, string $text, int $i, array $parts, array $refs, array $footnotes): void {
+    private function renderLink(string $linkType, string $refId, string $text, int $i, array $parts, array $links, array $footnotes): void {
         $this->pdfTemplate->SetTextColor(50, 132, 156); // rgb(50,132,156)
 
         // Unify: decide footnote vs reference looking at IDs (supports single or multiple)
         if ($this->allIdsAreFootnotes($refId, $footnotes)) {
-            $this->renderFootnoteLink($text, $i, $parts, $refs, $refId, $footnotes);
+            $this->renderFootnoteLink($text, $i, $parts, $links, $refId, $footnotes);
         } else {
-            $this->renderReferenceLink($text, $i, $parts, $refs, $refId, $footnotes);
+            $this->renderReferenceLink($text, $i, $parts, $links, $refId, $footnotes);
         }
 
         $this->pdfTemplate->SetTextColor(0, 0, 0);
@@ -120,11 +122,11 @@ class ContentRenderer {
      * @param string $text Link text
      * @param int $i Current part index
      * @param array $parts All content parts
-     * @param array $refs References array
+     * @param array $links References array
      * @param string $refId Reference ID
      * @param array $footnotes Footnotes array
      */
-    private function renderFootnoteLink(string $text, int $i, array $parts, array $refs, string $refId, array $footnotes): void {
+    private function renderFootnoteLink(string $text, int $i, array $parts, array $links, string $refId, array $footnotes): void {
         // Nunca agregar espacio antes de una nota al pie
 
         $ids = $this->parseIds($refId);
@@ -142,13 +144,13 @@ class ContentRenderer {
 
             // resolver link: probar id y fn-id
             $link = '';
-            if (isset($refs[$currentRefId])) {
-                $link = $refs[$currentRefId];
+            if (isset($links[$currentRefId])) {
+                $link = $links[$currentRefId];
             }
             $this->pdfTemplate->Write(0, $textParts[$j], $link, 0);
 
             if ($j < count($textParts) - 1) {
-                $this->pdfTemplate->Write(0, ', ', '', 0);
+                $this->pdfTemplate->Write(0, ',', '', 0);
             }
         }
 
@@ -172,11 +174,11 @@ class ContentRenderer {
      * @param string $text Link text
      * @param int $i Current part index
      * @param array $parts All content parts
-     * @param array $refs References array
+     * @param array $links References array
      * @param string $refId Reference ID
      * @param array $footnotes Footnotes array
      */
-    private function renderReferenceLink(string $text, int $i, array $parts, array $refs, string $refId, array $footnotes): void {
+    private function renderReferenceLink(string $text, int $i, array $parts, array $links, string $refId, array $footnotes): void {
         // No agregar espacio antes si el texto anterior termina en (
         $addSpaceBefore = true;
         if (isset($parts[$i - 1])) {
@@ -196,8 +198,8 @@ class ContentRenderer {
         // Render cada parte con estilo de referencia
         for ($j = 0; $j < count($textParts); $j++) {
             $currentRefId = isset($ids[$j]) ? $ids[$j] : end($ids);
-            if (isset($refs[$currentRefId])) {
-                $this->pdfTemplate->Write(0, $textParts[$j], $refs[$currentRefId], 0);
+            if (isset($links[$currentRefId])) {
+                $this->pdfTemplate->Write(0, $textParts[$j], $links[$currentRefId], 0);
             } else {
                 $this->pdfTemplate->Write(0, $textParts[$j], '', 0);
             }

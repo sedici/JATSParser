@@ -7,6 +7,7 @@ use JATSParser\PDF\Templates\Renderers\Utils\FootnoteExtractor;
 use JATSParser\PDF\Templates\Renderers\Utils\ContentRenderer;
 use JATSParser\PDF\Templates\Renderers\Utils\ReferenceRenderer;
 use JATSParser\PDF\Templates\Renderers\Utils\FootnoteRenderer;
+use JATSParser\PDF\CitationMarker;
 
 class Body extends GenericComponent {
 
@@ -24,12 +25,13 @@ class Body extends GenericComponent {
         // Add CSS styles
         $htmlString .= "\n" . '<style>' . "\n" . file_get_contents($pluginPath . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'styles' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'pdfGalley.css') . '</style>';
         
-        // Initialize references array
-        $refs = [];
+        // Initialize links array
+        $links = [];
         
         // Prepare HTML for PDF galley
-        $htmlString = PDFBodyHelper::_prepareForPdfGalley($htmlString, $this->config, $this->pdfTemplate, $refs);
-        
+        $htmlString = PDFBodyHelper::_prepareForPdfGalley($htmlString, $this->config, $this->pdfTemplate, $links);
+        $htmlString = CitationMarker::markCitations($htmlString, $this->config, $this->pdfTemplate, $links);
+
         // Extract references and footnotes
         $referenceExtractor = new ReferenceExtractor();
         $references = $referenceExtractor->extract($htmlString);
@@ -42,25 +44,25 @@ class Body extends GenericComponent {
         
         // Render the main content
         $contentRenderer = new ContentRenderer($this->pdfTemplate, $this->config, $leftMargin);
-        $contentRenderer->render($htmlString, $refs, $footnotes);
+        $contentRenderer->render($htmlString, $links, $footnotes);
         
         // Add a new page for references and footnotes
         $this->pdfTemplate->AddPage();
         $this->pdfTemplate->SetLeftMargin($leftMargin);
         $this->pdfTemplate->SetFillColor(255, 255, 255);
         
+        file_put_contents(
+            __DIR__ . '/debug.txt',
+            print_r($footnotes, true)
+        );
+
         // Render references
         $referenceRenderer = new ReferenceRenderer($this->pdfTemplate, $this->config, $leftMargin);
-        $referenceRenderer->render($references, $refs);
+        $referenceRenderer->render($references, $links);
         
         // Render footnotes
         $footnoteRenderer = new FootnoteRenderer($this->pdfTemplate, $this->config, $leftMargin);
-        $footnoteRenderer->render($footnotes, $refs);
-
-        file_put_contents(
-            __DIR__ . '/debug.html',
-            $htmlString
-        );
+        $footnoteRenderer->render($footnotes, $links);
     }
     
     /**
