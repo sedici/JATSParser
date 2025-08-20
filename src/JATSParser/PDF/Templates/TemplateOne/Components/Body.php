@@ -50,11 +50,6 @@ class Body extends GenericComponent {
         $this->pdfTemplate->AddPage();
         $this->pdfTemplate->SetLeftMargin($leftMargin);
         $this->pdfTemplate->SetFillColor(255, 255, 255);
-        
-        file_put_contents(
-            __DIR__ . '/debug.txt',
-            print_r($footnotes, true)
-        );
 
         // Render references
         $referenceRenderer = new ReferenceRenderer($this->pdfTemplate, $this->config, $leftMargin);
