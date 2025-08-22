@@ -25,6 +25,7 @@ class Document extends \DOMDocument {
 	var $jatsDocument;
 
 	public function __construct(JATSDocument $jatsDocument) {
+
 		parent::__construct('1.0', 'utf-8');
 		$this->preserveWhiteSpace = false;
 		$this->formatOutput = true;
@@ -218,6 +219,12 @@ class Document extends \DOMDocument {
 
 		$data = [];
 		$rawData = [];
+
+		file_put_contents(
+			__DIR__ . '/TestingFiles/references.txt',
+			print_r($references, true)
+		);
+
 		foreach ($references as $reference) {
 			$citeProcRef = new Reference($reference);
 			if (!$citeProcRef->refIsEmpty()) {
@@ -243,15 +250,63 @@ class Document extends \DOMDocument {
 			]
 		];
 
+		file_put_contents(
+			__DIR__ . '/TestingFiles/citeProcReference.txt',
+			print_r($citeProcRef, true)
+		);
+
+		file_put_contents(
+			__DIR__ . '/TestingFiles/stylesheet.txt',
+			print_r($style, true)
+		);
+
+		file_put_contents(
+			__DIR__ . '/TestingFiles/additionalMarkup.txt',
+			print_r($additionalMarkup, true)
+		);
+
+		file_put_contents(
+			__DIR__ . '/TestingFiles/citeproc-data.txt',
+			print_r($data, true)
+		);
+
 		$citeProc = new CiteProc($style, $this->citationLang, $additionalMarkup);
-		//Le pido a citeproc que me renderice texto plano si italica
-	
-		$htmlString = $citeProc->render($data, 'bibliography');
-		
+
+		$htmlString = $citeProc->render($data, "bibliography");
+
+		file_put_contents(
+			__DIR__ . '/TestingFiles/htmlString.txt',
+			print_r($htmlString, true)
+		);
+
 		if ($this->styleInTextLinks) {
 			$this->setInTextLinks($citeProc, $data);
 		}
 		$this->getCiteBody($htmlString, $rawData);
+
+
+        // Testing section
+		$wrapIntoListItem = function($cslItem, $renderedText) {
+			return '<li id="' . $cslItem->id .'">' . $renderedText . '</li>';
+		};
+
+		$additionalMarkup = [
+			'bibliography' => [
+				'csl-entry' => $wrapIntoListItem
+			]
+		];
+
+		$data = file_get_contents(__DIR__ . "/TestingFiles/metadata.json");
+		$decoded = json_decode($data);
+
+		$styleName = $this->getCitationStyle();
+		$style = StyleSheet::loadStyleSheet($styleName);
+
+		$citeProc = new CiteProc($style, 'es', $additionalMarkup);
+		$testHtml = $citeProc->render($decoded, "bibliography");
+		$cssStyles = $citeProc->renderCssStyles();
+		file_put_contents(__DIR__ . '/TestingFiles/cssStyles.html', $cssStyles);
+		file_put_contents(__DIR__ . '/TestingFiles/testOutput.html', $testHtml);
 	}
 
 	protected function getCiteBody(string $htmlString, array $rawData) {

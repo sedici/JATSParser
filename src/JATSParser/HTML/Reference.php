@@ -60,7 +60,7 @@ class Reference {
 			}
 		}
 
-		$this->setSimpleProperty('url', 'getUrl');
+		$this->setSimpleProperty('URL', 'getUrl');
 		$this->setSimpleProperty('title', 'getTitle');
 
 		// specific properties
