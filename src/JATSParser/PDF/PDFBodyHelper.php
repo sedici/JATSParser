@@ -262,7 +262,7 @@ class PDFBodyHelper {
 			// 2.2) Celda de la línea vertical azul
 			$tdLeft = $dom->createElement('td');
 			$tdLeft->setAttribute('width', '5');
-			$tdLeft->setAttribute('style', 'border-right: 4px solid #4c9cd6;');
+			$tdLeft->setAttribute('style', 'border-right: 4px solid #32849c;');
 			$tdLeft->appendChild($dom->createTextNode(' '));
 
 			// 2.3) Celda intermedia de separación
