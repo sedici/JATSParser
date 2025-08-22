@@ -220,11 +220,6 @@ class Document extends \DOMDocument {
 		$data = [];
 		$rawData = [];
 
-		file_put_contents(
-			__DIR__ . '/TestingFiles/references.txt',
-			print_r($references, true)
-		);
-
 		foreach ($references as $reference) {
 			$citeProcRef = new Reference($reference);
 			if (!$citeProcRef->refIsEmpty()) {
@@ -250,34 +245,9 @@ class Document extends \DOMDocument {
 			]
 		];
 
-		file_put_contents(
-			__DIR__ . '/TestingFiles/citeProcReference.txt',
-			print_r($citeProcRef, true)
-		);
-
-		file_put_contents(
-			__DIR__ . '/TestingFiles/stylesheet.txt',
-			print_r($style, true)
-		);
-
-		file_put_contents(
-			__DIR__ . '/TestingFiles/additionalMarkup.txt',
-			print_r($additionalMarkup, true)
-		);
-
-		file_put_contents(
-			__DIR__ . '/TestingFiles/citeproc-data.txt',
-			print_r($data, true)
-		);
-
 		$citeProc = new CiteProc($style, $this->citationLang, $additionalMarkup);
 
 		$htmlString = $citeProc->render($data, "bibliography");
-
-		file_put_contents(
-			__DIR__ . '/TestingFiles/htmlString.txt',
-			print_r($htmlString, true)
-		);
 
 		if ($this->styleInTextLinks) {
 			$this->setInTextLinks($citeProc, $data);
@@ -286,6 +256,7 @@ class Document extends \DOMDocument {
 
 
         // Testing section
+		/*
 		$wrapIntoListItem = function($cslItem, $renderedText) {
 			return '<li id="' . $cslItem->id .'">' . $renderedText . '</li>';
 		};
@@ -307,6 +278,7 @@ class Document extends \DOMDocument {
 		$cssStyles = $citeProc->renderCssStyles();
 		file_put_contents(__DIR__ . '/TestingFiles/cssStyles.html', $cssStyles);
 		file_put_contents(__DIR__ . '/TestingFiles/testOutput.html', $testHtml);
+		*/
 	}
 
 	protected function getCiteBody(string $htmlString, array $rawData) {

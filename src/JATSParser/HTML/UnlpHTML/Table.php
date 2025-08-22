@@ -34,15 +34,6 @@ class Table extends \DOMElement {
 			// Create actual caption element inside the div
 			$captionElement = $this->ownerDocument->createElement("caption");
 			$captionDiv->appendChild($captionElement);
-
-			// Set figure label (e.g., Figure 1)
-			if ($jatsTable->getLabel()) {
-				$spanLabel = $this->ownerDocument->createElement("span");
-				$spanLabel->setAttribute("class", "label");
-				$captionElement->appendChild($spanLabel);
-				$textNode = $this->ownerDocument->createTextNode(HTMLText::checkPunctuation($jatsTable->getLabel()));
-				$spanLabel->appendChild($textNode);
-			}
 			
 			/* Set table title
 			* @var $tableTitle JATSText
