@@ -58,6 +58,11 @@ class Body extends GenericComponent {
         // Render footnotes
         $footnoteRenderer = new FootnoteRenderer($this->pdfTemplate, $this->config, $leftMargin);
         $footnoteRenderer->render($footnotes, $links);
+
+        file_put_contents(
+            __DIR__ . '/debug.html', 
+            $htmlString
+        );
     }
     
     /**

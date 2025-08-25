@@ -255,8 +255,8 @@ class Document extends \DOMDocument {
 		$this->getCiteBody($htmlString, $rawData);
 
 
-        // Testing section
-		/*
+        /* Testing section
+	
 		$wrapIntoListItem = function($cslItem, $renderedText) {
 			return '<li id="' . $cslItem->id .'">' . $renderedText . '</li>';
 		};

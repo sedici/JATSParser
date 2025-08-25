@@ -57,8 +57,7 @@ abstract class AbstractReference implements Reference
 		$this->id = $this->extractId($reference);
 		$this->year = $this->extractFromElement($reference, './/year[1]');
 
-		// $this->url = $this->extractFromElement($reference, './/ext-link[@ext-link-type="uri"]');
-		$this->url = $this->extractFromElement($reference, './/elocation-id[1]');
+		$this->url = $this->extractFromElement($reference, './/ext-link[@ext-link-type="uri"]');
 		$this->pubIdType = $this->extractPubIdType($reference);
 
 		$citNode = $this->getFirstChildElement($reference);
@@ -158,6 +157,11 @@ abstract class AbstractReference implements Reference
 							break;
 						case "pmcid":
 							filter_var($pubIdValue, FILTER_VALIDATE_URL) ? $pubIdType[$pubIdKey] = $pubIdValue : $pubIdType[$pubIdKey] = PMCID_REFERENCE_PREFIX . trim($pubIdValue);
+							break;
+						case "accession":
+						case "ark":
+						case "archive":
+							$pubIdType[$pubIdKey] = trim($pubIdValue);
 							break;
 					}
 				}

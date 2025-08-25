@@ -31,19 +31,22 @@ class ContentRenderer {
      * @param array $footnotes Footnotes array
      */
     public function render(string $htmlString, array $links, array $footnotes): void {
-        // Split content into parts based on links
+        // Split content into parts based on links (tables, lists, or raw markers)
         $parts = preg_split(
-            '/(<table\b[^>]*>(?:(?!<\/table>).)*{{(?:LINK|MULTILINK):[^:]+:[^}]+}}(?:(?!<\/table>).)*<\/table>|{{(?:LINK|MULTILINK):[^:]+:[^}]+}})/is',
+            '/(<table\b[^>]*>(?:(?!<\/table>).)*{{(?:LINK|MULTILINK):[^:]+:[^}]+}}(?:(?!<\/table>).)*<\/table>|<ul\b[^>]*>(?:(?!<\/ul>).)*{{(?:LINK|MULTILINK):[^:]+:[^}]+}}(?:(?!<\/ul>).)*<\/ul>|<ol\b[^>]*>(?:(?!<\/ol>).)*{{(?:LINK|MULTILINK):[^:]+:[^}]+}}(?:(?!<\/ol>).)*<\/ol>|{{(?:LINK|MULTILINK):[^:]+:[^}]+}})/is',
             $htmlString,
             -1,
             PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
         );
 
-
         // Process each part
         foreach ($parts as $i => $part) {
             if (preg_match('/<table\b[^>]*>(?:(?!<\/table>).)*{{(LINK|MULTILINK):[^:]+:[^}]+}}(?:(?!<\/table>).)*<\/table>/is', $part)) {
                 $this->renderTableWithLink($part, $links, $footnotes);
+            }
+            // Detect UL/OL blocks containing a citation marker and render as a whole to avoid breaking the list
+            else if (preg_match('/<(ul|ol)\b[^>]*>(?:(?!<\/\1>).)*{{(?:LINK|MULTILINK):[^:]+:[^}]+}}(?:(?!<\/\1>).)*<\/\1>/is', $part)) {
+                $this->renderListWithLink($part, $links, $footnotes);
             }
             else if (preg_match('/{{(LINK|MULTILINK):([^:]+):(.+?)}}/', $part, $match)) {
                 $linkType = $match[1];
@@ -62,13 +65,38 @@ class ContentRenderer {
      * @param string $part HTML table with link
      */
     private function renderTableWithLink(string $part, $links, $footnotes): void {
-        if (preg_match('/{{(LINK|MULTILINK):([^:]+):(.+?)}}/', $part, $match)) {
+        $part = preg_replace_callback(
+            '/{{(LINK|MULTILINK):([^:]+):(.+?)}}/',
+            function ($matches) {
+                return $matches[3];
+            },
+            $part
+        );
 
-            $part = str_replace('{{' . $match[1] . ':' . $match[2] . ':' . $match[3] . '}}', $match[3], $part); 
-            $this->pdfTemplate->Ln(3);
-            $this->pdfTemplate->writeHTML($part, false, false, true, false, '');
-            $this->pdfTemplate->SetLeftMargin($this->leftMargin); // temporal fix, margin left error
-        }
+        $this->pdfTemplate->Ln(3);
+        $this->pdfTemplate->writeHTML($part, false, false, true, false, '');
+        $this->pdfTemplate->SetLeftMargin($this->leftMargin); // temporal fix, margin left error
+    }
+
+    /**
+     * Render list (ul/ol) with link
+     * Processes the whole list block to avoid breaking list structure when splitting by markers.
+     */
+    private function renderListWithLink(string $part, $links, $footnotes): void {
+        // add <p> wrapper para evitar espacio antes de notas al pie
+        $part = '<p></p>' . $part . '<p></p>';
+
+        // Reemplazar todas las ocurrencias por el texto visible
+        $part = preg_replace_callback(
+            '/{{(LINK|MULTILINK):([^:]+):(.+?)}}/',
+            function ($matches) {
+                return $matches[3];
+            },
+            $part
+        );
+
+        $this->pdfTemplate->writeHTML($part, false, false, true, false, '');
+        $this->pdfTemplate->SetLeftMargin($this->leftMargin); // temporal fix, margin left error
     }
     
     /**

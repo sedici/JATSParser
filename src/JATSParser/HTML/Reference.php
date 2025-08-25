@@ -7,7 +7,10 @@ use JATSParser\Back\Journal;
 use JATSParser\Back\Book;
 use JATSParser\Back\Chapter;
 use JATSParser\Back\Conference;
-
+use JATSParser\Back\Webpage;
+use JATSParser\Back\Thesis;
+use JATSParser\Back\Magazine;
+use JATSParser\Back\Dataset; // NUEVO
 
 class Reference {
 
@@ -67,6 +70,9 @@ class Reference {
 		if (checkdate(1, 1, (int) $this->jatsReference->getYear())) {
 			$this->setDate('issued', 'getYear');
 		}
+		$this->setDate('issued', 'getIssuedDate');
+		$this->setDate('accessed', 'getAccessDate');
+
 		$this->setSimpleProperty('container-title', 'getJournal');
 		$this->setSimpleProperty('journal', 'getJournal');
 		$this->setSimpleProperty('volume', 'getVolume');
@@ -82,13 +88,26 @@ class Reference {
 			}
 			$this->content->{'DOI'} =$doi;
 		}
+		// NUEVO: dataset ids comunes
+		if (method_exists($this->jatsReference, 'getPubIdType')) {
+			$ids = $this->jatsReference->getPubIdType();
+			if (array_key_exists('archive', $ids)) {
+				$this->content->{'archive'} = $ids['archive'];
+			}
+			if (array_key_exists('accession', $ids)) {
+				$this->content->{'archive_location'} = $ids['accession'];
+			}
+		}
 
 		$this->setSimpleProperty('publisher', 'getPublisherName');
 		$this->setSimpleProperty('publisher-place', 'getPublisherLoc');
 		$this->setSimpleProperty('container-title', 'getBook');
+		$this->setSimpleProperty('container-title', 'getSource');
 		$this->setSimpleProperty('event', 'getConfName');
 		$this->setDate('event-date', 'getConfDate');
 		$this->setSimpleProperty('event-place', 'getConfLoc');
+		$this->setSimpleProperty('genre', 'getPublisherLoc'); 
+
 
 		switch (get_class($this->jatsReference)) {
 
@@ -102,21 +121,44 @@ class Reference {
 
 				/* @var $jatsReference Book */
 				$this->content->type = 'book';
-
 				break;
 
 			case "JATSParser\Back\Chapter":
 
 				/* @var $jatsReference Chapter */
 				$this->content->type = 'chapter';
-
 				break;
 
 			case "JATSParser\Back\Conference":
 
 				/* @var $jatsReference Conference */
 				$this->content->type = 'conference';
+				break;
 
+			case "JATSParser\Back\Webpage":
+				/* @var $jatsReference Webpage */
+				$this->content->type = 'webpage';
+				$this->setSimpleProperty('container-title', 'getContainerTitle');
+				$this->setDate('issued', 'getIssuedDate');
+				$this->setDate('accessed', 'getAccessDate');
+				break;
+
+			case "JATSParser\Back\Thesis":
+				/* @var $jatsReference Thesis */
+				$this->content->type = 'thesis';
+				$this->setSimpleProperty('genre', 'getGenre');
+				break;
+
+			case "JATSParser\Back\Magazine":
+				/* @var $jatsReference Magazine */
+				$this->content->type = 'article-magazine';
+				$this->setDate('issued', 'getIssuedDate');
+				break;
+
+			case "JATSParser\Back\Dataset": 
+				/* @var $jatsReference Dataset */
+				$this->content->type = 'dataset';
+				$this->setDate('issued', 'getIssuedDate');
 				break;
 		}
 	}
@@ -141,10 +183,21 @@ class Reference {
 	}
 
 	protected function setDate(string $property, string $method): void {
-		if (method_exists($this->jatsReference, $method) && !empty($this->jatsReference->$method())) {
-			$date = new \stdClass();
-			$date->{'date-parts'}[][] = $this->jatsReference->$method();
-			$this->content->{$property} = $date;
+		if (method_exists($this->jatsReference, $method) && !empty($value = $this->jatsReference->$method())) {
+			$dateParts = [];
+			if (is_int($value) || (is_string($value) && ctype_digit($value))) {
+				$dateParts = [(int)$value];
+			} elseif (is_string($value)) {
+				$val = trim($value);
+				if (preg_match('/^\d{4}(?:-\d{1,2}){0,2}$/', $val)) {
+					$dateParts = array_map('intval', explode('-', $val));
+				}
+			}
+			if (!empty($dateParts)) {
+				$date = new \stdClass();
+				$date->{'date-parts'} = [ $dateParts ];
+				$this->content->{$property} = $date;
+			}
 		}
 	}
 
