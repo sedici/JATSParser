@@ -51,11 +51,16 @@ class TemplateBody extends GenericComponent {
          // Render logos
 
         InstitutionLogo::renderInstitutionLogo($this->config, $this->pdfTemplate);
-        JournalLogo::renderJournalLogo($this->config, $this->pdfTemplate);
+        $logoExists = JournalLogo::renderJournalLogo($this->config, $this->pdfTemplate);
 
-        $xPos = $this->pdfTemplate->getImageRBX();
-        $xPos = $xPos + 5;
-        $yPos = 18;
+        if ($logoExists) {
+            $xPos = $this->pdfTemplate->getImageRBX();
+            $xPos = $xPos + 5;
+            $yPos = 18;
+        } else {
+            $xPos = 15;
+            $yPos = 18;
+        }
 
         // RENDER JOURNAL TITLE TEXT
         if ($journalTitle) {
