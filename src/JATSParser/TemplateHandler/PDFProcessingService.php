@@ -1,0 +1,126 @@
+<?php
+
+namespace JATSParser\TemplateHandler;
+
+class PDFProcessingService
+{
+  private function citeToLink($node, $dom)
+  {
+    $text = trim($node->textContent, '[\]'); # Elimino los corcheted de cada cita, [1], [1,2]
+    $numbers = explode(',', $text); # Guardo los números de la cita sin la coma en un array, [1], "[1, 2]"
+    $refs = preg_split('/\s+/', $node->getAttribute('href')); # Guardo los href, #parser_0, #parser_0 parser_1
+    $refs = array_map(function ($ref) {
+      return str_replace('#', '', $ref);
+    }, $refs); # Elimino el # del href, ya que solo el primero lo tiene (en caso de ser más de uno)
+
+    $fragment = $dom->createDocumentFragment();
+    $fragment->appendChild($dom->createTextNode('['));
+
+    for ($i = 0; $i < count($numbers); $i++) {
+      $anchorNode = $dom->createElement('a');
+      $anchorNode->setAttribute('name', 'citation_' . $refs[$i]);
+      $anchorNode->setAttribute('id', 'citation_' . $refs[$i]);
+      $fragment->appendChild($anchorNode);
+
+      $newNode = $dom->createElement('a', $numbers[$i]);
+      $newNode->setAttribute('href', '#' . $refs[$i]);
+      $fragment->appendChild($newNode);
+
+      if ($i < count($numbers) - 1) {
+        $fragment->appendChild($dom->createTextNode(',')); # Agrego las , si es necesario
+      }
+    }
+
+    $fragment->appendChild($dom->createTextNode(']'));
+    $node->parentNode->replaceChild($fragment, $node);
+  }
+
+  private function footnoteToLink($node, $dom)
+  {
+    $numbers = explode(',', $node->textContent); # Guardo los números de la fn sin la coma en un array, [1], "[1, 2]"
+    $refs = preg_split('/\s+/', $node->getAttribute('href')); # Guardo los href, #parser_0, #parser_0 parser_1
+    $refs = array_map(function ($ref) {
+      return str_replace('#', '', $ref);
+    }, $refs); # Elimino el # del href, ya que solo el primero lo tiene (en caso de ser más de uno)
+
+    $fragment = $dom->createDocumentFragment();
+
+    for ($i = 0; $i < count($numbers); $i++) {
+      $anchorNode = $dom->createElement('a');
+      $anchorNode->setAttribute('name', 'citation_' . $refs[$i]);
+      $anchorNode->setAttribute('id', 'citation_' . $refs[$i]);
+      $fragment->appendChild($anchorNode);
+
+      $sup = $dom->createElement('sup');
+      $newNode = $dom->createElement('a', $numbers[$i]);
+      $newNode->setAttribute('href', '#' . $refs[$i]);
+      $sup->appendChild($newNode);
+      $fragment->appendChild($sup);
+
+      if ($i < count($numbers) - 1) {
+        $fragment->appendChild($dom->createElement('sup', ',')); # Agrego las , si es necesario
+      }
+    }
+
+    $node->parentNode->replaceChild($fragment, $node);
+  }
+
+  public function setReferencesAnchors($referencesAPA, $referencesNodes)
+  { # Creo el HTML para las references
+    $references = [];
+    for ($i = 0; $i < count($referencesNodes); $i++) {
+      $id = $referencesNodes[$i]->getAttribute('id');
+      $references[$i] = ["id" => $id, "text" => $referencesAPA[$id]];
+    }
+    return $references;
+  }
+
+  public function setFootnotesAnchors($footnotesNodes)
+  { # Creo el HTML para las footnotes
+    for ($i = 0; $i < count($footnotesNodes); $i++) {
+      $id = str_replace('fn-', '', $footnotesNodes[$i]->getAttribute('id'));
+      $footnotes[$i] = ["id" => $id, "text" => $footnotesNodes[$i]->textContent];
+    }
+    return $footnotes;
+  }
+
+  public function processCitations($a, $dom, $type)
+  { # Agrego las tags <a> vacías de las citas
+    $id = $a->getAttribute('href');
+    $id = trim($id, '#');
+    $id = trim($id, 'fn-');
+    $id = $type . $id;
+
+    $newTag = $dom->createElement('a', '');
+    $newTag->setAttribute('name', $id);
+    $newTag->setAttribute('id', $id);
+
+    if ($a->nextSibling) {
+      $a->parentNode->insertBefore($newTag, $a->nextSibling);
+    } else {
+      $a->parentNode->appendChild($newTag);
+    }
+  }
+
+  public function processReferences($referencesSection, $references, $dom)
+  {
+    foreach ($references as $reference) {
+      $li = $dom->createElement('li');
+
+      $newNode = $dom->createElement('a', '');
+      $newNode->setAttribute('name', $reference['id']);
+      $newNode->setAttribute('id', $reference['id']);
+      $li->appendChild($newNode);
+
+      $ref = $dom->createDocumentFragment();
+      $ref->appendXML($reference['text']);
+      $li->appendChild($ref);
+
+      $href = $dom->createElement('a', $reference['id']);
+      $href->setAttribute('href', '#citation_' . $reference['id']);
+      $li->appendChild($href);
+
+      $referencesSection->appendChild($li);
+    }
+  }
+}
