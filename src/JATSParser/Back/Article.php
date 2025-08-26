@@ -2,32 +2,22 @@
 
 use JATSParser\Back\AbstractReference as AbstractReference;
 
-class Dataset extends AbstractReference
+class Article extends AbstractReference
 {
-	/* @var string */
-	private $title;
-
-	/* @var string */
-	private $containerTitle;
-
-	/* @var string */
-	private $month;
-
-	/* @var string */
-	private $day;
+	private $title = '';
+	private $containerTitle = '';
+	private $month = '';
+	private $day = '';
 
 	public function __construct(\DOMElement $reference)
 	{
 		parent::__construct($reference);
-
-		$this->title = $this->extractFromElement($reference, ".//data-title[1]");
+		$this->title = $this->extractFromElement($reference, ".//article-title[1]");
 		$this->containerTitle = $this->extractFromElement($reference, ".//source[1]");
-
-		$this->month  = $this->extractFromElement($reference, ".//month[1]");
-		$this->day    = $this->extractFromElement($reference, ".//day[1]");
-
-		$this->url = $this->extractFromElement($reference, ".//ext-link[@ext-link-type=\"uri\"][1]|.//uri[1]");
-	}
+		$this->month = $this->extractFromElement($reference, ".//month[1]");
+		$this->day = $this->extractFromElement($reference, ".//day[1]");
+        
+    }
 
 	public function getId(): string { return $this->id; }
 	public function getTitle(): string { return $this->title; }
@@ -37,8 +27,9 @@ class Dataset extends AbstractReference
 	public function getUrl(): string { return $this->url; }
 	public function getPubIdType(): array { return $this->pubIdType; }
 
-	// Para mapeo genérico
+	// Para mapeo del contenedor
 	public function getJournal(): string { return $this->containerTitle; }
+	public function getSource(): string { return $this->containerTitle; }
 
 	// Componentes de fecha
 	public function getMonth(): string { return $this->month; }

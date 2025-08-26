@@ -10,7 +10,11 @@ use JATSParser\Back\Conference;
 use JATSParser\Back\Webpage;
 use JATSParser\Back\Thesis;
 use JATSParser\Back\Magazine;
-use JATSParser\Back\Dataset; // NUEVO
+use JATSParser\Back\Dataset;
+use JATSParser\Back\Software;
+use JATSParser\Back\Patent;
+use JATSParser\Back\Article;
+use JATSParser\Back\Newspaper;
 
 class Reference {
 
@@ -107,7 +111,8 @@ class Reference {
 		$this->setDate('event-date', 'getConfDate');
 		$this->setSimpleProperty('event-place', 'getConfLoc');
 		$this->setSimpleProperty('genre', 'getPublisherLoc'); 
-
+		$this->setSimpleProperty('edition', 'getEdition');
+		$this->setSimpleProperty('part-title', 'getPartTitle');
 
 		switch (get_class($this->jatsReference)) {
 
@@ -139,8 +144,6 @@ class Reference {
 				/* @var $jatsReference Webpage */
 				$this->content->type = 'webpage';
 				$this->setSimpleProperty('container-title', 'getContainerTitle');
-				$this->setDate('issued', 'getIssuedDate');
-				$this->setDate('accessed', 'getAccessDate');
 				break;
 
 			case "JATSParser\Back\Thesis":
@@ -159,6 +162,30 @@ class Reference {
 				/* @var $jatsReference Dataset */
 				$this->content->type = 'dataset';
 				$this->setDate('issued', 'getIssuedDate');
+				break;
+
+			case "JATSParser\Back\Software":
+				/* @var $jatsReference Software */
+				$this->content->type = 'software';
+				$this->setSimpleProperty('version', 'getVersion');
+				break;
+
+			case "JATSParser\Back\Patent":
+				/* @var $jatsReference Patent */
+				$this->content->type = 'patent';
+				$this->setDate('issued', 'getIssuedDate');
+				$this->setSimpleProperty('authority', 'getAuthority');
+				$this->setSimpleProperty('number', 'getNumber');
+				break;
+
+			case "JATSParser\Back\Article":
+				/* @var $jatsReference Article */
+				$this->content->type = 'article';
+				break;
+
+			case "JATSParser\Back\Newspaper":
+				/* @var $jatsReference Newspaper */
+				$this->content->type = 'article-newspaper';
 				break;
 		}
 	}

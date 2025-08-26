@@ -233,7 +233,13 @@ class Document extends \DOMDocument {
 
 		$this->citeProcReferences = $data;
 
-		$style = StyleSheet::loadStyleSheet($this->getCitationStyle());
+		if($this->citationStyle === 'apa') {
+			$styleName = __DIR__ . "/../Back/CSL/apa-no-ampersand.csl";
+		}
+		else {
+			$styleName = $this->citationStyle;	
+		}
+		$style = StyleSheet::loadStyleSheet($styleName);
 
 		$wrapIntoListItem = function($cslItem, $renderedText) {
 			return '<li id="' . $cslItem->id .'">' . $renderedText . '</li>';
@@ -255,7 +261,7 @@ class Document extends \DOMDocument {
 		$this->getCiteBody($htmlString, $rawData);
 
 
-        /* Testing section
+        /* Testing section 
 	
 		$wrapIntoListItem = function($cslItem, $renderedText) {
 			return '<li id="' . $cslItem->id .'">' . $renderedText . '</li>';
@@ -271,6 +277,9 @@ class Document extends \DOMDocument {
 		$decoded = json_decode($data);
 
 		$styleName = $this->getCitationStyle();
+		
+		//get apa 7th edition style from CSL folder
+		$styleName = __DIR__ . "/../Back/CSL/apa-no-ampersand.csl";
 		$style = StyleSheet::loadStyleSheet($styleName);
 
 		$citeProc = new CiteProc($style, 'es', $additionalMarkup);

@@ -9,6 +9,10 @@ use JATSParser\Back\Webpage as Webpage;
 use JATSParser\Back\Thesis as Thesis;
 use JATSParser\Back\Magazine as Magazine;
 use JATSParser\Back\Dataset as Dataset;
+use JATSParser\Back\Software as Software;
+use JATSParser\Back\Patent as Patent;
+use JATSParser\Back\Article as Article;
+use JATSParser\Back\Newspaper as Newspaper;
 
 class Document {
 
@@ -71,6 +75,10 @@ class Document {
 							$journal = new Journal($reference);
 							$references[] = $journal;
 							break;
+						case "article":
+							$art = new Article($reference);
+							$references[] = $art;
+							break;
 						case "book":
 							$book = new Book($reference);
 							$references[] = $book;
@@ -100,6 +108,18 @@ class Document {
 						case "dataset":           
 							$data = new Dataset($reference);
 							$references[] = $data;
+							break;
+						case "software":
+							$soft = new Software($reference);
+							$references[] = $soft;
+							break;
+						case "newspaper":
+							$news = new Newspaper($reference);
+							$references[] = $news;
+							break;
+						case "patent":
+							$pat = new Patent($reference);
+							$references[] = $pat;
 							break;
 						default:
 							$defaultRef = new Journal($reference);
