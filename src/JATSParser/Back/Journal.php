@@ -25,7 +25,6 @@ class Journal extends AbstractReference
 
 	public function __construct(\DOMElement $reference)
 	{
-
 		parent::__construct($reference);
 
 		$this->title = $this->extractFromElement($reference, ".//article-title[1]");
@@ -34,6 +33,7 @@ class Journal extends AbstractReference
 		$this->issue = $this->extractFromElement($reference, ".//issue[1]");
 		$this->fpage = $this->extractFromElement($reference, ".//fpage[1]");
 		$this->lpage = $this->extractFromElement($reference, ".//lpage[1]");
+		$this->url = $this->extractFromElement($reference, './/elocation-id[1]');
 	}
 
 	/**

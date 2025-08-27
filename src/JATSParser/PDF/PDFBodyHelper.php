@@ -8,7 +8,7 @@ class PDFBodyHelper {
 	 * @param string $htmlString
 	 * @return string Preprocessed HTML string for TCPDF
 	*/
-	public static function _prepareForPdfGalley(string $htmlString, $config): string {
+	public static function _prepareForPdfGalley(string $htmlString, $config, $pdfTemplate, &$refs): string {
 
 		$dom = new \DOMDocument('1.0', 'utf-8');
 		$htmlHead = "\n";
@@ -20,18 +20,21 @@ class PDFBodyHelper {
 
 		// set style for figures and table
 		$xpath = new \DOMXPath($dom);
-
+		
 		self::processTables($xpath);
 		self::formatCaptions($dom, $xpath);
 		self::moveCaptionsForTCPDF($dom, $xpath);
-		self::processCitations($dom, $xpath, $config);
+		//self::addLinks($dom, $xpath, $pdfTemplate);
+		self::replaceCitationsContent($dom, $xpath, $config);
 		self::processFootnotes($dom, $xpath); 
 		self::processReferences($dom, $xpath);
 		self::processFiguresCitations($dom, $xpath);
 		self::processTableCitations($dom, $xpath);
 		self::processBlockquotes($dom, $xpath); 
-		self::addHrefAttributes($xpath);
-
+		self::processHrefElements($xpath);
+		self::processExternalLinks($dom, $xpath);
+		self::blankspaceAfterHeadings($dom, $xpath);
+		
 		// Remove redundant whitespaces before caption label
 		$modifiedHtmlString = $dom->saveHTML();
 		$modifiedHtmlString = preg_replace('/<caption>\s*/', '<br>' . '<caption>', $modifiedHtmlString);
@@ -39,7 +42,7 @@ class PDFBodyHelper {
 
 		return $modifiedHtmlString;
 	}
-	
+
 	/**
 	 * Processing tables for styles and translations.
 	 * 
@@ -53,12 +56,24 @@ class PDFBodyHelper {
 			// Search span elements with class "label" inside the table
 			$labelSpans = $xpath->evaluate('.//span[@class="label"]', $tableNode);
 			foreach ($labelSpans as $span) {
+				$span->parentNode->removeChild($span);
+				/*
 				$spanContent = $span->textContent;
 				if (preg_match('/\d+/', $spanContent, $matches)) {
 					$tableNumber = $matches[0]; // Get the table number
 					$translatedTableText = __('plugins.generic.jatsParser.table.title'); // Translate the table text if needed (e.g., "Table 1" for english or "Tabla 1" for spanish)
 					$span->textContent = $translatedTableText . ' ' . $tableNumber; // Set the new content
  				}
+			*/
+			}
+			//process span elements with class "notes" inside the table for adding line breaks
+			//This is to add line breaks before the notes or "Leyenda" in all the tables
+			$spanNotesNode = $xpath->evaluate('.//span[@class="notes"]', $tableNode);
+			foreach ($spanNotesNode as $spanNote) {
+				for($i = 0; $i < 2; $i++) {
+					$br = $tableNode->ownerDocument->createElement('br');
+					$spanNote->parentNode->insertBefore($br, $spanNote);
+				}
 			}
 		}
 	}
@@ -144,14 +159,15 @@ class PDFBodyHelper {
 	 * @param \DOMXPath $xpath The XPath object for DOM traversal
 	 * @param object $config The configuration object
 	 */
-	private static function processCitations(\DOMDocument $dom, \DOMXPath $xpath, $config): void {
+	private static function replaceCitationsContent(\DOMDocument $dom, \DOMXPath $xpath, $config): void {
+		//Process reference citations
 		$supportedCitationStyles = $config::getSupportedCustomCitationStyles();
 		$actualCitationStyle = $config->getCitationStyle();
 		if ($supportedCitationStyles && in_array(strtolower($actualCitationStyle), $supportedCitationStyles)) {
 			$publicationId = $config->getPublicationId();
 			$localeKey = $config->getLocaleKeyConfig();
 
-			//Get citations from database ONLY for APA style.
+			//Get citations from database ONLY for APA style (for now)
 			$customPublicationSettingsDAO = new \CustomPublicationSettingsDAO();
 			$settings = $customPublicationSettingsDAO->getSetting($publicationId, 'jatsParser::citationTableData', $localeKey);
 
@@ -171,6 +187,19 @@ class PDFBodyHelper {
 				}
 			}
 		}
+
+		//Process footnotes citations for superscript links
+		$fnLinks = $xpath->evaluate('//a[contains(@class, "fn")]');
+		foreach ($fnLinks as $fnLink) {
+			$textContent = $fnLink->textContent; 
+			
+			while ($fnLink->firstChild) {
+        		$fnLink->removeChild($fnLink->firstChild);
+    		}
+
+			$sup = $fnLink->ownerDocument->createElement('sup', $textContent);
+			$fnLink->appendChild($sup);
+		}
 	}
 
 	/**
@@ -179,10 +208,28 @@ class PDFBodyHelper {
 	 * @param \DOMDocument $dom The DOM document
 	 * @param \DOMXPath $xpath The XPath object for DOM traversal
 	 */
-	private static function addHrefAttributes(\DOMXPath $xpath): void {
+	private static function processHrefElements(\DOMXPath $xpath): void {
+		//process all links in the document(including urls - citations)
 		$refs = $xpath->evaluate('//a');
 		foreach ($refs as $ref) {
-			$ref->setAttribute('style', 'color: #0066CC; text-decoration: none;'); 
+			$ref->setAttribute('style', 'color: #32849c; text-decoration: none;'); 
+		}
+	}
+
+	private static function processExternalLinks(\DOMDocument $dom, \DOMXPath $xpath): void {
+		// Process external links to ensure they are styled correctly and converted to <a> elements for a correct styling process in TCPDF
+		$externalLinks = $xpath->evaluate('//ext-link');
+		foreach ($externalLinks as $link) {
+			// Create a new <a> element with the link text
+			$a = $dom->createElement('a', $link->textContent);
+			// Copy the class attribute if it exists
+			if ($link->hasAttribute('xlink:href')) {
+				$a->setAttribute('href', $link->getAttribute('xlink:href'));
+			}
+			// Add the class attribute if it exists
+			$a->setAttribute('style', 'color: #32849C; text-decoration: none;');
+			// Replace the <ext-link> element with the new <a> element
+			$link->parentNode->replaceChild($a, $link);
 		}
 	}
 
@@ -195,80 +242,83 @@ class PDFBodyHelper {
 	private static function processBlockquotes(\DOMDocument $dom, \DOMXPath $xpath): void {
 		$blockquotes = $xpath->evaluate('//blockquote');
 		foreach ($blockquotes as $blockquote) {
-			// Create a table structure to ensure proper indentation in TCPDF
+			// 1) Creamos la tabla contenedora
 			$table = $dom->createElement('table');
 			$table->setAttribute('width', '100%');
 			$table->setAttribute('border', '0');
 			$table->setAttribute('cellspacing', '0');
 			$table->setAttribute('cellpadding', '0');
-			$table->setAttribute('style', 'margin-top: 10px; margin-bottom: 10px; width: 100%;');
-			
+			// margin-top para el espacio superior; margin-bottom ya no es necesario
+			$table->setAttribute('style', 'margin-top: 10px; width: 100%;');
+
+			// 2) Construimos la fila principal con las 4 celdas
 			$tr = $dom->createElement('tr');
-			
-			// Initial spacing cell - significantly increased to move line far to the right
+
+			// 2.1) Celda inicial para desplazar la línea hacia la derecha
 			$tdInitial = $dom->createElement('td');
-			$tdInitial->setAttribute('width', '45'); // Increased from 15 to 45
-			$spacerInitial = $dom->createTextNode(' ');
-			$tdInitial->appendChild($spacerInitial);
-			
-			// Left cell with blue vertical line
+			$tdInitial->setAttribute('width', '45');
+			$tdInitial->appendChild($dom->createTextNode(' '));
+
+			// 2.2) Celda de la línea vertical azul
 			$tdLeft = $dom->createElement('td');
 			$tdLeft->setAttribute('width', '5');
-			$tdLeft->setAttribute('style', 'border-right: 4px solid #4c9cd6;');
-			$spacer = $dom->createTextNode(' ');
-			$tdLeft->appendChild($spacer);
-			
-			// Middle spacing cell - reduced to minimum
+			$tdLeft->setAttribute('style', 'border-right: 4px solid #32849c;');
+			$tdLeft->appendChild($dom->createTextNode(' '));
+
+			// 2.3) Celda intermedia de separación
 			$tdMiddle = $dom->createElement('td');
-			$tdMiddle->setAttribute('width', '10'); // Reduced from 25 to 10
+			$tdMiddle->setAttribute('width', '10');
 			$tdMiddle->setAttribute('style', 'padding: 0;');
-			$spacer2 = $dom->createTextNode(' ');
-			$tdMiddle->appendChild($spacer2);
-			
-			// Right cell for content - adjusted width
+			$tdMiddle->appendChild($dom->createTextNode(' '));
+
+			// 2.4) Celda de contenido (texto y atribución)
 			$tdRight = $dom->createElement('td');
-			$tdRight->setAttribute('width', '88%'); // Adjusted to account for new widths
+			$tdRight->setAttribute('width', '88%');
 			$tdRight->setAttribute('style', 'padding-left: 5px; width: 72%;');
-			
-			// Extract paragraphs and citations
+
+			// 3) Movemos párrafos dentro de tdRight
 			$paragraphs = $xpath->evaluate('./p', $blockquote);
-			$citations = $xpath->evaluate('./cite', $blockquote);
-			
-			// Add content paragraphs to content cell with proper styling
 			foreach ($paragraphs as $paragraph) {
 				$clone = $paragraph->cloneNode(true);
-				// Add specific styling to paragraph text - ensure it takes full width
-				if (!$clone->hasAttribute('style')) {
-					$clone->setAttribute('style', 'margin: 3px 0; width: 100%; font-size: 1.20em;');
-				} else {
-					// Append width to existing style
-					$currentStyle = $clone->getAttribute('style');
-					$clone->setAttribute('style', $currentStyle . '; width: 100%; font-size: 1.05em;');
-				}
+				$style = $clone->hasAttribute('style')
+					? $clone->getAttribute('style') . '; width: 100%; font-size: 0.95em;'
+					: 'margin: 3px 0; width: 100%; font-size: 0.95em;';
+				$clone->setAttribute('style', $style);
 				$tdRight->appendChild($clone);
 			}
-			
-			// Only add citation if it exists
+
+			// 4) Movemos las citas (<cite>) si existen
+			$citations = $xpath->evaluate('./cite', $blockquote);
 			if ($citations->length > 0) {
 				foreach ($citations as $citation) {
 					$citeDiv = $dom->createElement('div');
 					$citeDiv->setAttribute('class', 'blockquote-attribution');
-					$citeDiv->setAttribute('style', 'margin-top: 2px; font-style: italic; text-align: right; font-size: 1.05em;');
-					
+					$citeDiv->setAttribute(
+						'style',
+						'margin-top: 2px; font-style: italic; text-align: right; font-size: 0.95em;'
+					);
 					$clone = $citation->cloneNode(true);
 					$citeDiv->appendChild($clone);
 					$tdRight->appendChild($citeDiv);
 				}
 			}
-			
-			// Assemble the table with all cells
+
+			// 5) Montamos la fila y la añadimos a la tabla
 			$tr->appendChild($tdInitial);
 			$tr->appendChild($tdLeft);
 			$tr->appendChild($tdMiddle);
 			$tr->appendChild($tdRight);
 			$table->appendChild($tr);
-			
-			// Replace the original blockquote with our table structure
+
+			// 6) Fila espaciadora para el margen inferior (10px)
+			$spacerRow  = $dom->createElement('tr');
+			$spacerCell = $dom->createElement('td');
+			$spacerCell->setAttribute('colspan', '4');
+			$spacerCell->setAttribute('height', '10'); // mismo valor que margin-top
+			$spacerRow->appendChild($spacerCell);
+			$table->appendChild($spacerRow);
+
+			// 7) Reemplazamos el <blockquote> original por la tabla
 			$blockquote->parentNode->replaceChild($table, $blockquote);
 		}
 	}
@@ -300,7 +350,7 @@ class PDFBodyHelper {
 			$labelNodes = $xpath->evaluate('.//span[@class="footnote-label"]', $item);
 			if ($labelNodes->length > 0) {
 				$labelNode = $labelNodes->item(0);
-				$labelNode->setAttribute('style', 'display: inline-block; color: #31849b; font-weight: bold; margin-right: 0.8em; min-width: 1.5em; text-align: left;');
+				$labelNode->setAttribute('style', 'display: inline-block; color: #32849c; font-weight: bold; margin-right: 0.8em; min-width: 1.5em; text-align: left;');
 			}
 			
 			// Style the footnote content
@@ -360,8 +410,22 @@ class PDFBodyHelper {
 				// Style URLs within the citations
 				$urlSpans = $xpath->evaluate('.//span[@class="citation-url"]', $item);
 				foreach ($urlSpans as $url) {
-					$url->setAttribute('style', 'color: #31849b; word-wrap: break-word;');
+					$url->setAttribute('style', 'color: #32849c; word-wrap: break-word;');
 				}
+			}
+		}
+	}
+
+	private static function blankspaceAfterHeadings(\DOMDocument $dom, \DOMXPath $xpath): void {
+		// Add blank space before headings
+		$headings = $xpath->evaluate('//h1|//h2|//h3');
+		foreach ($headings as $heading) {
+			// Add 4 paragraph elements before each heading
+			for ($i = 0; $i < 1; $i++) {
+				$paragraph = $dom->createElement('p');
+				// Add a non-breaking space to ensure the paragraph renders consistently
+				$paragraph->appendChild($dom->createTextNode(' '));
+				$heading->parentNode->insertBefore($paragraph, $heading);
 			}
 		}
 	}

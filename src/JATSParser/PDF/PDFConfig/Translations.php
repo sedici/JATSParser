@@ -2,15 +2,7 @@
 
     class Translations {
         private static $translationsConfig = [
-            'en_EN' => [
-                'abstract' => 'Abstract',
-                'received' => 'Received',
-                'accepted' => 'Accepted',
-                'published' => 'Published',
-                'keywords' => 'Keywords',
-                'license_text' => 'This work is under a Creative Commons License',
-                'references_sections_separator' => '&'
-            ],
+
             'en_US' => [
                 'abstract' => 'Abstract',
                 'received' => 'Received',

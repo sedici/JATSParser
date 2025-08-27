@@ -30,7 +30,7 @@ class AuthorsData {
                     
                     // ORCID CLICKABLE LOGO (before author name)
                     if (htmlspecialchars($author->getOrcid())) {
-                        ClickableOrcidLogo::renderClickableOrcidLogo($pdfTemplate, $currentX, $currentY, 5, $author->getOrcid());
+                        ClickableOrcidLogo::renderClickableOrcidLogo($pdfTemplate, $currentX, $currentY, 5, $author->getOrcid(), $authorsConfig['plugin_path']);
                         // Move position to the right of the logo for the author name
                         $pdfTemplate->SetXY($currentX + 5, $currentY); // Adjust the 5 value as needed for spacing
                     }
@@ -58,12 +58,13 @@ class AuthorsData {
                     // Affiliation with Country
                     if ($author->getAffiliation($localeKey)) {
                         $affiliationText = htmlspecialchars($author->getAffiliation($localeKey));
-                        
-                        // Append country if available
+                    
+                        /* // Append country if available -> NOT NEEDED
                         if ($author->getCountryLocalized($localeKey)) {
                             $country = htmlspecialchars($author->getCountryLocalized($localeKey));
                             $affiliationText .= ', ' . $country;
                         }
+                        */
                         
                         $pdfTemplate->SetFont(
                             $authorsConfig['authors_config']['affiliation_font']['family'], 

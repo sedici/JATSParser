@@ -27,6 +27,12 @@ class TemplateBody extends GenericComponent {
         $translationsConfig = $this->config->getMetadata('translations_config');
         $localeKey = $this->config->getMetadata('locale_key');
         $licenseUrl = $this->config->getMetadata('license_url');
+        $publicationPages = $this->config->getMetadata('publication_pages');
+        $issueVolume = $this->config->getMetadata('issue_volume');
+        $issueNumber = $this->config->getMetadata('issue_number');
+        $issueYear = $this->config->getMetadata('issue_year');
+        $sectionTitle = $this->config->getMetadata('section_title');
+
 
         $journalTitleFont = $this->config->getFontConfig('calibri');
         $journalTitleColor = $this->config->getColorConfig('black');
@@ -40,13 +46,21 @@ class TemplateBody extends GenericComponent {
         $journalUrlColor = $this->config->getColorConfig('primary');
         $editorialFont = $this->config->getFontConfig('calibri');
         $editorialColor = $this->config->getColorConfig('black');
+        $urlColor = $this->config->getColorConfig('url');
+
+         // Render logos
 
         InstitutionLogo::renderInstitutionLogo($this->config, $this->pdfTemplate);
-        JournalLogo::renderJournalLogo($this->config, $this->pdfTemplate);
+        $logoExists = JournalLogo::renderJournalLogo($this->config, $this->pdfTemplate);
 
-        $xPos = $this->pdfTemplate->getImageRBX();
-        $xPos = $xPos + 5;
-        $yPos = 18;
+        if ($logoExists) {
+            $xPos = $this->pdfTemplate->getImageRBX();
+            $xPos = $xPos + 5;
+            $yPos = 18;
+        } else {
+            $xPos = 15;
+            $yPos = 18;
+        }
 
         // RENDER JOURNAL TITLE TEXT
         if ($journalTitle) {
@@ -62,10 +76,26 @@ class TemplateBody extends GenericComponent {
         }
 
         // RENDER COMPLETE JOURNAL DATA TEXT
-        if ($journalData) {
+        if ($issueVolume || $issueNumber || $issueYear) {
+            $journalDataText = '';
+            if ($issueVolume) {
+                $journalDataText .= 'Vol. ' . $issueVolume . ', ';
+            }
+            if ($issueNumber) {
+                $journalDataText .= 'Núm. ' . $issueNumber . ', ';
+            }
+            if ($publicationPages) {
+                $journalDataText .= $publicationPages . ', ';
+            }
+            if ($sectionTitle) {
+                $journalDataText .= $sectionTitle . ', ';
+            }
+            if ($issueYear) {
+                $journalDataText .=  $issueYear;
+            }
             NoLinkableText::renderNoLinkableText(
                 $this->pdfTemplate,
-                $journalData,
+                $journalDataText,
                 $xPos,
                 $yPos,
                 $journalIssueColor,
@@ -83,38 +113,47 @@ class TemplateBody extends GenericComponent {
                 $doiUrl,
                 $xPos,
                 $yPos,
-                $doiColor,
+                $urlColor,
                 $doiFont
             );
             $yPos = $yPos + 4;
         }
 
-        // RENDER ONLINE ISSN TEXT
+        // RENDER ONLINE ISSN TEXT AND/OR JOURNAL URL
+        $currentXPos = $xPos; // Initial X position
+
+        // Primero verificamos si hay ISSN y lo imprimimos
+        // First, we check if there is an ISSN and print it
         if ($onlineIssn) {
             $text = "ISSN " . $onlineIssn . ' | ';
             NoLinkableText::renderNoLinkableText(
                 $this->pdfTemplate,
                 $text,
-                $xPos,
+                $currentXPos,
                 $yPos,
                 $onlineIssnColor,
                 $onlineIssnFont
             );
-            $yPos = $yPos + 4;
+            // Update the X position for the possible URL
+            $currentXPos += $this->pdfTemplate->GetStringWidth($text);
         }
-
-        // CREATE JOURNAL URL
+        
+        // Verificamos si hay URL y la imprimimos en la posición actual
         if ($journalUrl) {
             LinkableText::renderLinkableText(
                 $this->pdfTemplate,
                 $journalUrl,
                 $journalUrl,
-                $xPos,
+                $currentXPos,
                 $yPos,
-                $journalUrlColor,
+                $urlColor,
                 $journalUrlFont
             );
-            $yPos = $yPos + 1;
+        }
+        
+        // Solo incrementamos Y si se imprimió algo (ISSN o URL o ambos)
+        if ($onlineIssn || $journalUrl) {
+            $yPos = $yPos + 1; // Reducido de 4 a 2 para disminuir el espacio
         }
 
         /*
@@ -154,6 +193,7 @@ class TemplateBody extends GenericComponent {
             $this->pdfTemplate->GetY(),
             $this->config->getTitlesConfig(),
             $this->config->getSubtitlesConfig(),
+            $this->config->getPrefixesConfig(),
             $localeKey
         );
 

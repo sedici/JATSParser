@@ -5,6 +5,14 @@ use JATSParser\Back\Journal as Journal;
 use JATSParser\Back\Book as Book;
 use JATSParser\Back\Chapter as Chapter;
 use JATSParser\Back\Conference as Conference;
+use JATSParser\Back\Webpage as Webpage;
+use JATSParser\Back\Thesis as Thesis;
+use JATSParser\Back\Magazine as Magazine;
+use JATSParser\Back\Dataset as Dataset;
+use JATSParser\Back\Software as Software;
+use JATSParser\Back\Patent as Patent;
+use JATSParser\Back\Article as Article;
+use JATSParser\Back\Newspaper as Newspaper;
 
 class Document {
 
@@ -52,7 +60,7 @@ class Document {
 	/* @brief Constructor for references
 	 * JATS XML can give us a little, if not at all, information about reference type;
 	 * Here we are trying to determine the type of citation by element-citation node attribute or names of nodes which reference contains;
-	 * Supported types are: journal, book, chapter, and conference.
+	 * Supported types are: journal, book, chapter, conference, webpage, and thesis.
 	 */
 	private function extractReferences() {
 		$references = array();
@@ -67,6 +75,10 @@ class Document {
 							$journal = new Journal($reference);
 							$references[] = $journal;
 							break;
+						case "article":
+							$art = new Article($reference);
+							$references[] = $art;
+							break;
 						case "book":
 							$book = new Book($reference);
 							$references[] = $book;
@@ -78,6 +90,36 @@ class Document {
 						case "conference":
 							$conference = new Conference($reference);
 							$references[] = $conference;
+							break;
+						case "webpage":
+							$web = new Webpage($reference);
+							$references[] = $web;
+							break;
+						case "thesis":
+							$thesis = new Thesis($reference);
+							$references[] = $thesis;
+							break;
+						case "magazine":               
+						case "article-magazine":       
+							$mag = new Magazine($reference);
+							$references[] = $mag;
+							break;
+						case "data":           
+						case "dataset":           
+							$data = new Dataset($reference);
+							$references[] = $data;
+							break;
+						case "software":
+							$soft = new Software($reference);
+							$references[] = $soft;
+							break;
+						case "newspaper":
+							$news = new Newspaper($reference);
+							$references[] = $news;
+							break;
+						case "patent":
+							$pat = new Patent($reference);
+							$references[] = $pat;
 							break;
 						default:
 							$defaultRef = new Journal($reference);

@@ -25,6 +25,7 @@ class Conference extends AbstractReference {
 		$this->confName = $this->extractFromElement($reference, ".//conf-name");
 		$this->confLoc = $this->extractFromElement($reference, ".//conf-loc");
 		$this->confDate = $this->extractFromElement($reference, ".//conf-date");
+		$this->url = $this->extractFromElement($reference, './/elocation-id[1]');
 	}
 
 	/**

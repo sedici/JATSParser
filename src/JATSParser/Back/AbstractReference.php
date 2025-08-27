@@ -56,7 +56,8 @@ abstract class AbstractReference implements Reference
 		$this->editors = $this->extractEditors($reference);
 		$this->id = $this->extractId($reference);
 		$this->year = $this->extractFromElement($reference, './/year[1]');
-		$this->url = $this->extractFromElement($reference, './/ext-link[@ext-link-type="uri"]');
+
+		$this->url = $this->extractFromElement($reference, './/ext-link[@ext-link-type="uri"][1]|.//elocation-id[1]');
 		$this->pubIdType = $this->extractPubIdType($reference);
 
 		$citNode = $this->getFirstChildElement($reference);
@@ -96,10 +97,14 @@ abstract class AbstractReference implements Reference
 			/* @var $nameNode \DOMElement */
 			foreach ($nameNodes as $nameNode) {
 				$parentOfName = $nameNode->parentNode;
-				if ($nameNode->nodeName === 'name' && ($parentOfName->nodeName !== 'person-group' || $parentOfName->getAttribute('person-group-type') === 'author')) {
+				if ($nameNode->nodeName === 'name' &&
+					($parentOfName->nodeName !== 'person-group' || in_array($parentOfName->getAttribute('person-group-type'), ['author','inventor'], true))) 
+				{
 					$individual = new Individual($nameNode);
 					$authors[] = $individual;
-				} elseif ($nameNode->nodeName === 'collab' && ($parentOfName->nodeName !== 'person-group' || $parentOfName->getAttribute('person-group-type') === 'author')) {
+				} elseif ($nameNode->nodeName === 'collab' &&
+					($parentOfName->nodeName !== 'person-group' || in_array($parentOfName->getAttribute('person-group-type'), ['author','inventor'], true))) 
+				{
 					$collaborator = new Collaboration($nameNode);
 					$authors[] = $collaborator;
 				}
@@ -156,6 +161,11 @@ abstract class AbstractReference implements Reference
 							break;
 						case "pmcid":
 							filter_var($pubIdValue, FILTER_VALIDATE_URL) ? $pubIdType[$pubIdKey] = $pubIdValue : $pubIdType[$pubIdKey] = PMCID_REFERENCE_PREFIX . trim($pubIdValue);
+							break;
+						case "accession":
+						case "ark":
+						case "archive":
+							$pubIdType[$pubIdKey] = trim($pubIdValue);
 							break;
 					}
 				}
