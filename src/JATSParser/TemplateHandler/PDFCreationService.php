@@ -3,6 +3,7 @@
 namespace JATSParser\TemplateHandler;
 
 use APP\template\TemplateManager;
+use DOMDocument;
 
 class PDFCreationService
 {
@@ -26,7 +27,7 @@ class PDFCreationService
     $this->processingService = $processingService;
   }
 
-  public function buildPDF($templatesDir, $pdf, $htmlString, $xpath, $dom, $citeProc)
+  public function buildPDF($templatesDir, $pdf, $htmlString, $xpath, $dom, $citeProc, $config)
   {
     $content = trim(file_get_contents($templatesDir . 'SUMARC/REDIC/catalog.xml')); # Esto debería ser ruta de OJS, no estar hardcodeado
     $xml = simplexml_load_string($content);
@@ -37,9 +38,9 @@ class PDFCreationService
     foreach ($catalog['build']['item'] as $part) {
       $currentFile = $catalog[$part]['file'];
       $currentFileData = [
-                          'filepath' => $templatesDir . 'SUMARC/' . $templateName . '/' . $currentFile,
-                          'type' => $part
-                        ];
+        'filepath' => $templatesDir . 'SUMARC/' . $templateName . '/' . $currentFile,
+        'type' => $part
+      ];
       $fileUses = [];
       if (!file_exists($currentFileData['filepath'])) {
         $error .= "$currentFile no encontrado \n";
@@ -54,9 +55,9 @@ class PDFCreationService
         if (is_string($use) && isset($catalog[$use]) && isset($catalog[$use]['file'])) { # Más chequeos por la conversión de XML...
           $usesFile = $catalog[$use]['file'];
           $usesFileData = [
-                            'filepath' => $templatesDir . 'SUMARC/' . $templateName . '/' . $usesFile,
-                            'type' => $use
-                          ];
+            'filepath' => $templatesDir . 'SUMARC/' . $templateName . '/' . $usesFile,
+            'type' => $use
+          ];
           if (!file_exists($templatesDir . 'SUMARC/' . $templateName . '/' . $usesFile)) {
             $error .= "$usesFile no encontrado \n";
           } else {
@@ -65,23 +66,24 @@ class PDFCreationService
         }
       }
 
-      if($currentFileData['type'] === 'body') $this->builderHelper($pdf, $htmlString, $xpath, $dom, $citeProc);
+      if ($currentFileData['type'] === 'body') $this->builderHelper($pdf, $htmlString, $xpath, $dom, $citeProc, $config);
     }
     file_put_contents(__DIR__ . "/errors.txt", $error); # Ahora marco los errores de archivos faltantes en un txt. A futuro será un mensaje en OJS
     return $pdf;
   }
 
-  private function builderHelper($pdf, $htmlString, $xpath, $dom, $citeProc)
+  private function builderHelper($pdf, $htmlString, $xpath, $dom, $citeProc, $config)
   {
-   # $html = $this->templateManager->fetch('SUMARC/test.tpl');
+    # $html = $this->templateManager->fetch('SUMARC/test.tpl');
 
-    $this->processBody($xpath, $dom, $htmlString, $pdf); # Debería procesar todo y escribir solo el body > crear una nueva variable SIN references-section ni footnotes-container
+    $htmlString = $this->processBody($xpath, $dom, $htmlString, $pdf, $config); # Debería procesar todo y escribir solo el body > crear una nueva variable SIN references-section ni footnotes-container
     $this->processReferences($citeProc, $dom, $xpath, $htmlString, $pdf); # Debería procesar todo y solo escribir las referencias > crear una nueva variable de solo references-section y footnotes-section
 
     #$pdf->WriteHTML($htmlString);
   }
 
-  private function processReferences($citeProc, $dom, $xpath, $htmlString, $pdf) {
+  private function processReferences($citeProc, $dom, $xpath, $htmlString, $pdf)
+  {
     $referencesAPA = $citeProc->getRawReferences();
 
     $referencesNodes = $xpath->evaluate('//div[contains(@class,"references-section")]//li');
@@ -122,34 +124,47 @@ class PDFCreationService
     $htmlString = $dom->saveHTML();
 
     $this->processingService->processReferences($referencesSection, $references, $dom);
-    $this->processingService->processReferences($footnotesSection, $footnotes, $dom);
+    $this->processingService->processReferences($footnotesSection, $footnotes, $dom); # Ver esto, no genera una nueva lista sino que agarra la misma
 
     $htmlString = $dom->saveHTML();
 
-    $referencesDom = new \DOMDocument('1.0', 'utf-8');
-    $referencesDom->loadHTML($htmlString);
-    $referencesXpath = new \DOMXPath($referencesDom);
+    $this->writeReferences($htmlString, $pdf, 'references-section', $config); # Escribo las references
+    $this->writeReferences($htmlString, $pdf, 'footnotes-container', $config); # Escibo las footnotes
 
-    foreach($references as $reference) {
-      $pdf->WriteHTML($reference);
-    }
+    file_put_contents(__DIR__ . '/test.html', $htmlString);
   }
 
-  private function processBody($xpath, $dom, $htmlString, $pdf) {
+  private function writeReferences($htmlString, $pdf, $busqueda, $config) # Sacar $config de toda la cascada
+  {
+    $referencesDom = new \DOMDocument('1.0', 'utf-8');
+    $referencesDom->loadHTML($htmlString);
+    $referencesDom->saveHTML();
+    $referencesXpath = new \DOMXPath($referencesDom);
+
+    $refsToWrite = $referencesXpath->query("//div[contains(@class, '$busqueda')]");
+    $refs = $refsToWrite->item(0);
+
+    $newDoc = new \DOMDocument();
+    $refsNode = $newDoc->importNode($refs, true);
+    $newDoc->appendChild($refsNode);
+    $r = $newDoc->saveHTML();
+
+    $pdf->WriteHTML($r);
+  }
+
+  private function processBody($xpath, $dom, $htmlString, $pdf, $config)
+  {
     $referencesNodes = $xpath->evaluate('//a[contains(@class, "bibr")]'); # Procesar todas las citas, incluso si son múltiples
     foreach ($referencesNodes as $node) {
-      $this->processingService->citeToLink($node, $dom);
+      $this->processingService->citeToLink($node, $dom, $xpath, $config);
     }
 
     $footnotesNodes = $xpath->evaluate('//a[contains(@class, "fn")]'); # Same con footnotes
     foreach ($footnotesNodes as $node) {
       $this->processingService->footnoteToLink($node, $dom);
     }
-    file_put_contents(__DIR__ . '/fullString.html', $htmlString);
 
     $htmlString = $dom->saveHTML();
-
-    file_put_contents(__DIR__ . '/fullString2.html', $htmlString);
 
     $bodyDom = new \DOMDocument('1.0', 'utf-8');
     $bodyDom->loadHTML($htmlString);
@@ -174,7 +189,7 @@ class PDFCreationService
 
     $isolatedBody = $bodyDom->saveHTML();
     $pdf->writeHTML($isolatedBody);
-    file_put_contents(__DIR__ . '/isolatedBody.html', $isolatedBody);
+    return $htmlString;
   }
 
   public static function test()

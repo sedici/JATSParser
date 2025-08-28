@@ -4,10 +4,12 @@ namespace JATSParser\TemplateHandler;
 
 class PDFProcessingService
 {
-  private function citeToLink($node, $dom)
+  public function citeToLink($node, $dom, $xpath, $config)
   {
+    $this->replaceCitationsContent($xpath, $config);
+
     $text = trim($node->textContent, '[\]'); # Elimino los corcheted de cada cita, [1], [1,2]
-    $numbers = explode(',', $text); # Guardo los números de la cita sin la coma en un array, [1], "[1, 2]"
+    $numbers = explode(';', $text); # Guardo los números de la cita sin la coma en un array, [1], "[1, 2]"
     $refs = preg_split('/\s+/', $node->getAttribute('href')); # Guardo los href, #parser_0, #parser_0 parser_1
     $refs = array_map(function ($ref) {
       return str_replace('#', '', $ref);
@@ -27,7 +29,7 @@ class PDFProcessingService
       $fragment->appendChild($newNode);
 
       if ($i < count($numbers) - 1) {
-        $fragment->appendChild($dom->createTextNode(',')); # Agrego las , si es necesario
+        $fragment->appendChild($dom->createTextNode(';')); # Agrego las , si es necesario
       }
     }
 
@@ -35,7 +37,7 @@ class PDFProcessingService
     $node->parentNode->replaceChild($fragment, $node);
   }
 
-  private function footnoteToLink($node, $dom)
+  public function footnoteToLink($node, $dom)
   {
     $numbers = explode(',', $node->textContent); # Guardo los números de la fn sin la coma en un array, [1], "[1, 2]"
     $refs = preg_split('/\s+/', $node->getAttribute('href')); # Guardo los href, #parser_0, #parser_0 parser_1
@@ -104,6 +106,7 @@ class PDFProcessingService
 
   public function processReferences($referencesSection, $references, $dom)
   {
+    $listContainer = $dom->createElement('ol');
     foreach ($references as $reference) {
       $li = $dom->createElement('li');
 
@@ -120,7 +123,39 @@ class PDFProcessingService
       $href->setAttribute('href', '#citation_' . $reference['id']);
       $li->appendChild($href);
 
-      $referencesSection->appendChild($li);
+      $listContainer->appendChild($li);
+    }
+    $referencesSection->appendChild($listContainer);
+  }
+
+  public function replaceCitationsContent(\DOMXPath $xpath, $config)
+  {
+    //Process reference citations
+    $supportedCitationStyles = $config::getSupportedCustomCitationStyles();
+    $actualCitationStyle = $config->getCitationStyle();
+    if ($supportedCitationStyles && in_array(strtolower($actualCitationStyle), $supportedCitationStyles)) {
+      $publicationId = $config->getPublicationId();
+      $localeKey = $config->getLocaleKeyConfig();
+
+      //Get citations from database ONLY for APA style (for now)
+      $customPublicationSettingsDAO = new \CustomPublicationSettingsDAO();
+      $settings = $customPublicationSettingsDAO->getSetting($publicationId, 'jatsParser::citationTableData', $localeKey);
+
+      if ($settings) {
+        $refs = $xpath->evaluate('//a[@href]');
+        foreach ($refs as $ref) {
+          foreach ($settings['fileId'] as $fileId => $xrefData) {
+            if (is_array($xrefData)) {
+              foreach ($xrefData as $xrefId => $citationText) {
+                if ($ref->getAttribute('id') === $xrefId) {
+                  $ref->nodeValue = $citationText;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

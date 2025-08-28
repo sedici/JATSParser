@@ -51,7 +51,6 @@ class PDFBodyHelper {
 					$a
 				);				
 			}
-	
 		}
 
 		// Buscar todos Las footnotes <div><span> dentro de footnotes-container
@@ -225,7 +224,7 @@ class PDFBodyHelper {
 	 * @param \DOMXPath $xpath The XPath object for DOM traversal
 	 * @param object $config The configuration object
 	 */
-	private static function replaceCitationsContent(\DOMDocument $dom, \DOMXPath $xpath, $config): void {
+	private static function replaceCitationsContent(\DOMXPath $xpath, $config): void {
 		//Process reference citations
 		$supportedCitationStyles = $config::getSupportedCustomCitationStyles();
 		$actualCitationStyle = $config->getCitationStyle();
@@ -252,19 +251,6 @@ class PDFBodyHelper {
 					}
 				}
 			}
-		}
-
-		//Process footnotes citations for superscript links
-		$fnLinks = $xpath->evaluate('//a[contains(@class, "fn")]');
-		foreach ($fnLinks as $fnLink) {
-			$textContent = $fnLink->textContent; 
-			
-			while ($fnLink->firstChild) {
-        		$fnLink->removeChild($fnLink->firstChild);
-    		}
-
-			$sup = $fnLink->ownerDocument->createElement('sup', $textContent);
-			$fnLink->appendChild($sup);
 		}
 	}
 
