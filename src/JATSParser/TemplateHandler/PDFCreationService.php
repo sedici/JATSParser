@@ -13,7 +13,8 @@ class PDFCreationService
 
   private const PROCESS_MAP = [
     'body' => 'processBody',
-    'references' => 'processReferences'
+    'references' => 'processReferences',
+    'frontpage' => 'processFrontPage'
   ];
 
   private const USE_MAP = [
@@ -23,11 +24,11 @@ class PDFCreationService
 
   public function __construct($templateManager, $processingService)
   {
-    $this->templateManager = TemplateManager::getManager();
+    $this->templateManager = $templateManager;
     $this->processingService = $processingService;
   }
 
-  public function buildPDF($templatesDir, $pdf, $htmlString, $xpath, $dom, $citeProc, $config)
+  public function buildPDF($templatesDir, $pdf, $htmlString, $xpath, $dom, $citeProc, $config, $metadata)
   {
     $content = trim(file_get_contents($templatesDir . 'SUMARC/REDIC/catalog.xml')); # Esto debería ser ruta de OJS, no estar hardcodeado
     $xml = simplexml_load_string($content);
@@ -66,20 +67,31 @@ class PDFCreationService
         }
       }
 
-      if ($currentFileData['type'] === 'body') $this->builderHelper($pdf, $htmlString, $xpath, $dom, $citeProc, $config);
+      if ($currentFileData['type'] === 'body') $this->builderHelper($pdf, $htmlString, $xpath, $dom, $citeProc, $config, $metadata, $templatesDir);
     }
     file_put_contents(__DIR__ . "/errors.txt", $error); # Ahora marco los errores de archivos faltantes en un txt. A futuro será un mensaje en OJS
     return $pdf;
   }
 
-  private function builderHelper($pdf, $htmlString, $xpath, $dom, $citeProc, $config)
+  private function builderHelper($pdf, $htmlString, $xpath, $dom, $citeProc, $config, $metadata, $path)
   {
-    # $html = $this->templateManager->fetch('SUMARC/test.tpl');
-
+    $pdf->WriteHTML('<body>');
+    $this->processFrontPage($pdf, $metadata, $path); # Acá escribo sobre el PDF la front page y no mucho más
     $htmlString = $this->processBody($xpath, $dom, $htmlString, $pdf, $config); # Debería procesar todo y escribir solo el body > crear una nueva variable SIN references-section ni footnotes-container
     $this->processReferences($citeProc, $dom, $xpath, $htmlString, $pdf); # Debería procesar todo y solo escribir las referencias > crear una nueva variable de solo references-section y footnotes-section
+    $pdf->WriteHTML('</body></html>');
+  }
 
-    #$pdf->WriteHTML($htmlString);
+  private function processFrontPage($pdf, $metadata, $path) { # Este método escribe directamente la front page ya que se genera en base al TPL y los metadatos ne cesarios
+    foreach ($metadata as $key => $value) {
+        $this->templateManager->assign($key, $value);
+    }
+
+    $authors = json_decode($metadata['authors'], true);
+    $this->templateManager->assign('authors', $authors);
+    
+    $html = $this->templateManager->fetch($path . "SUMARC/REDIC/frontpage.tpl");
+    $pdf->WriteHTML($html);
   }
 
   private function processReferences($citeProc, $dom, $xpath, $htmlString, $pdf)
@@ -124,17 +136,15 @@ class PDFCreationService
     $htmlString = $dom->saveHTML();
 
     $this->processingService->processReferences($referencesSection, $references, $dom);
-    $this->processingService->processReferences($footnotesSection, $footnotes, $dom); # Ver esto, no genera una nueva lista sino que agarra la misma
+    $this->processingService->processReferences($footnotesSection, $footnotes, $dom);
 
     $htmlString = $dom->saveHTML();
 
-    $this->writeReferences($htmlString, $pdf, 'references-section', $config); # Escribo las references
-    $this->writeReferences($htmlString, $pdf, 'footnotes-container', $config); # Escibo las footnotes
-
-    file_put_contents(__DIR__ . '/test.html', $htmlString);
+    $this->writeReferences($htmlString, $pdf, 'references-section'); # Escribo las references
+    $this->writeReferences($htmlString, $pdf, 'footnotes-container'); # Escibo las footnotes
   }
 
-  private function writeReferences($htmlString, $pdf, $busqueda, $config) # Sacar $config de toda la cascada
+  private function writeReferences($htmlString, $pdf, $busqueda)
   {
     $referencesDom = new \DOMDocument('1.0', 'utf-8');
     $referencesDom->loadHTML($htmlString);

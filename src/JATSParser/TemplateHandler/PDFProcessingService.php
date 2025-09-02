@@ -16,7 +16,7 @@ class PDFProcessingService
     }, $refs); # Elimino el # del href, ya que solo el primero lo tiene (en caso de ser más de uno)
 
     $fragment = $dom->createDocumentFragment();
-    $fragment->appendChild($dom->createTextNode('['));
+    #$fragment->appendChild($dom->createTextNode('[')); # Lo dejo comentado porque en APA no se utilizan los [ ]
 
     for ($i = 0; $i < count($numbers); $i++) {
       $anchorNode = $dom->createElement('a');
@@ -29,11 +29,11 @@ class PDFProcessingService
       $fragment->appendChild($newNode);
 
       if ($i < count($numbers) - 1) {
-        $fragment->appendChild($dom->createTextNode(';')); # Agrego las , si es necesario
+        $fragment->appendChild($dom->createTextNode(';')); # Agrego los ; si es necesario
       }
     }
 
-    $fragment->appendChild($dom->createTextNode(']'));
+    #$fragment->appendChild($dom->createTextNode(']'));
     $node->parentNode->replaceChild($fragment, $node);
   }
 
