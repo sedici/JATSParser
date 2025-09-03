@@ -21,7 +21,7 @@
                 'license_text' => 'Esta obra está bajo una Licencia Creative Commons',
                 'references_sections_separator' => 'y'
             ],
-            'pt' => [
+            'pt_BR' => [
                 'abstract' => 'Resumo',
                 'received' => 'Recebido',
                 'accepted' => 'Aceito',
