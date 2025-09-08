@@ -18,6 +18,13 @@ class Configuration {
                 'title' => ['family' => 'helvetica', 'style' => 'BI', 'size' => 12],
                 'calibri' => ['family' => 'calibri400', 'style' => '', 'size' => 7.5],
                 'philosopher' => ['family' => 'philosopher', 'style' => '', 'size' => 10],
+                'dejavusans' => ['family' => 'dejavusans', 'style' => '', 'size' => 10],
+                'dejavuserif' => ['family' => 'dejavuserif', 'style' => '', 'size' => 10],
+                'freeserif' => ['family' => 'freeserif', 'style' => '', 'size' => 10],
+                'times' => ['family' => 'times', 'style' => '', 'size' => 10],
+                'freesans' => ['family' => 'freesans', 'style' => '', 'size' => 10],
+                'symbol' => ['family' => 'symbol', 'style' => '', 'size' => 10],
+                'zapfdingbats' => ['family' => 'zapfdingbats', 'style' => '', 'size' => 10],
             ],
             'colors' => [
                 'primary' => [0, 64, 53],
