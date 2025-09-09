@@ -125,7 +125,8 @@ class PDFProcessingService
 
       $listContainer->appendChild($li);
     }
-    $referencesSection->appendChild($listContainer);
+    
+    if($referencesSection) $referencesSection->appendChild($listContainer);
   }
 
   public function replaceCitationsContent(\DOMXPath $xpath, $config)

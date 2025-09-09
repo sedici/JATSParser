@@ -154,12 +154,14 @@ class PDFCreationService
     $refsToWrite = $referencesXpath->query("//div[contains(@class, '$busqueda')]");
     $refs = $refsToWrite->item(0);
 
-    $newDoc = new \DOMDocument();
-    $refsNode = $newDoc->importNode($refs, true);
-    $newDoc->appendChild($refsNode);
-    $r = $newDoc->saveHTML();
+    if($refs) {
+      $newDoc = new \DOMDocument();
+      $refsNode = $newDoc->importNode($refs, true);
+      $newDoc->appendChild($refsNode);
+      $r = $newDoc->saveHTML();
 
-    $pdf->WriteHTML($r);
+      $pdf->WriteHTML($r);
+    }
   }
 
   private function processBody($xpath, $dom, $htmlString, $pdf, $config)
