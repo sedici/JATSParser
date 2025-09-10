@@ -5,12 +5,20 @@ namespace JATSParser\PDF\PDFConfig;
 class Configuration {
     private $metadata = [];
     private $config = [];
+    private $orcid_logo = [];
 
     public static $supportedCustomCitationStyles = ['apa'];
     public static $numberedReferencesCitationStyles = ['ieee'];
 
     public function __construct($metadata) {
         $this->metadata = $metadata;
+
+        $this->orcid_logo = [
+            'no_bg' => $metadata['plugin_path'] . '/JATSParser/logo/orcid.png',
+            'white_bg' => $metadata['plugin_path'] . '/JATSParser/logo/orcid-white.png',
+            'black_bg' => $metadata['plugin_path'] . '/JATSParser/logo/orcid-black.png',
+        ];
+        
         $this->config = [
             'fonts' => [
                 'default' => ['family' => 'helvetica', 'style' => '', 'size' => 10],
@@ -49,13 +57,13 @@ class Configuration {
                 'logo_height' => 6,
                 'logo_width' => 17,
                 'links' => [
-                    'CC-BY' => 'https://creativecommons.org/licenses/by/4.0',
-                    'CC-BY-NC' => 'https://creativecommons.org/licenses/by-nc/4.0',
-                    'CC-BY-ND' => 'https://creativecommons.org/licenses/by-nd/4.0',
-                    'CC-BY-SA' => 'https://creativecommons.org/licenses/by-sa/4.0',
-                    'CC-BY-NC-ND' => 'https://creativecommons.org/licenses/by-nc-nd/4.0',
-                    'CC-BY-NC-SA' => 'https://creativecommons.org/licenses/by-nc-sa/4.0',
-                    'CC-ZERO' => 'https://creativecommons.org/publicdomain/zero/1.0'
+                    'CC-BY' => 'https://creativecommons.org/licenses/by/4.0/',
+                    'CC-BY-NC' => 'https://creativecommons.org/licenses/by-nc/4.0/',
+                    'CC-BY-ND' => 'https://creativecommons.org/licenses/by-nd/4.0/',
+                    'CC-BY-SA' => 'https://creativecommons.org/licenses/by-sa/4.0/',
+                    'CC-BY-NC-ND' => 'https://creativecommons.org/licenses/by-nc-nd/4.0/',
+                    'CC-BY-NC-SA' => 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+                    'CC-ZERO' => 'https://creativecommons.org/publicdomain/zero/1.0/'
                 ],
                 'logos' => [
                     'CC-BY' => $metadata['plugin_path'] . '/JATSParser/logo/creativecommons/cc-by.png',
@@ -244,6 +252,10 @@ class Configuration {
 
     public function getLocaleKeyConfig() {
         return $this->getMetadata('locale_key');
+    }
+    
+    public function getOrcidLogo() {
+        return $this->orcid_logo;
     }
 
     // Here you can add more methods to retrieve other configurations or metadata as needed.

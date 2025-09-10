@@ -14,7 +14,6 @@ class PDFCreationService
   private const PROCESS_MAP = [
     'body' => 'processBody',
     'references' => 'processReferences',
-    'frontpage' => 'processFrontPage'
   ];
 
   private const USE_MAP = [
@@ -66,35 +65,37 @@ class PDFCreationService
           }
         }
       }
-
-      if ($currentFileData['type'] === 'body') $this->builderHelper($pdf, $htmlString, $xpath, $dom, $citeProc, $config, $metadata, $templatesDir);
+      
+      if (array_key_exists($currentFileData['type'], $this::PROCESS_MAP)) {
+        $fn = $this::PROCESS_MAP[$currentFileData['type']];
+        $this->$fn($xpath, $dom, $htmlString, $pdf, $config, $citeProc);
+      }
+      else {
+        $this->defaultProcessing($pdf, $metadata, $currentFileData['filepath'], $config);
+      }
     }
     file_put_contents(__DIR__ . "/errors.txt", $error); # Ahora marco los errores de archivos faltantes en un txt. A futuro será un mensaje en OJS
     return $pdf;
   }
 
-  private function builderHelper($pdf, $htmlString, $xpath, $dom, $citeProc, $config, $metadata, $path)
-  {
-    $pdf->WriteHTML('<body>');
-    $this->processFrontPage($pdf, $metadata, $path); # Acá escribo sobre el PDF la front page y no mucho más
-    $htmlString = $this->processBody($xpath, $dom, $htmlString, $pdf, $config); # Debería procesar todo y escribir solo el body > crear una nueva variable SIN references-section ni footnotes-container
-    $this->processReferences($citeProc, $dom, $xpath, $htmlString, $pdf); # Debería procesar todo y solo escribir las referencias > crear una nueva variable de solo references-section y footnotes-section
-    $pdf->WriteHTML('</body></html>');
-  }
-
-  private function processFrontPage($pdf, $metadata, $path) { # Este método escribe directamente la front page ya que se genera en base al TPL y los metadatos ne cesarios
+  private function defaultProcessing($pdf, $metadata, $filepath, $config) { # Este método escribe directamente la front page ya que se genera en base al TPL y los metadatos ne cesarios
     foreach ($metadata as $key => $value) {
         $this->templateManager->assign($key, $value);
     }
 
-    $authors = json_decode($metadata['authors'], true);
-    $this->templateManager->assign('authors', $authors);
+    $licenses = $config->getLicenseConfig();
+    $licenseName = array_search($metadata['license_url'], $licenses['links']);
+    $licenseImg = $licenses['logos'][$licenseName];
+    $this->templateManager->assign('license_logo', $licenseImg);
+
+    $this->templateManager->assign('authors', $metadata['authors']);
+    $this->templateManager->assign('orcid_logo', $config->getOrcidLogo());
     
-    $html = $this->templateManager->fetch($path . "SUMARC/REDIC/frontpage.tpl");
+    $html = $this->templateManager->fetch($filepath);
     $pdf->WriteHTML($html);
   }
 
-  private function processReferences($citeProc, $dom, $xpath, $htmlString, $pdf)
+  private function processReferences($xpath, $dom, $htmlString, $pdf, $config, $citeProc)
   {
     $referencesAPA = $citeProc->getRawReferences();
 
@@ -164,7 +165,7 @@ class PDFCreationService
     }
   }
 
-  private function processBody($xpath, $dom, $htmlString, $pdf, $config)
+  private function processBody($xpath, $dom, $htmlString, $pdf, $config, $citeProc)
   {
     $referencesNodes = $xpath->evaluate('//a[contains(@class, "bibr")]'); # Procesar todas las citas, incluso si son múltiples
     foreach ($referencesNodes as $node) {
