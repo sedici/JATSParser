@@ -13,7 +13,7 @@ class Configuration {
         $this->metadata = $metadata;
         $this->config = [
             'fonts' => [
-                'default' => ['family' => 'helvetica', 'style' => '', 'size' => 10],
+                'default' => ['family' => 'freesans', 'style' => '', 'size' => 10],
                 'bold' => ['family' => 'helvetica', 'style' => 'B', 'size' => 10],
                 'title' => ['family' => 'helvetica', 'style' => 'BI', 'size' => 12],
                 'calibri' => ['family' => 'calibri400', 'style' => '', 'size' => 7.5],
