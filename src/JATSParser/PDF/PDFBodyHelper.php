@@ -28,8 +28,6 @@ class PDFBodyHelper {
 		self::replaceCitationsContent($dom, $xpath, $config);
 		self::processFootnotes($dom, $xpath); 
 		self::processReferences($dom, $xpath);
-		self::processFiguresCitations($dom, $xpath);
-		self::processTableCitations($dom, $xpath);
 		self::processBlockquotes($dom, $xpath); 
 		self::processHrefElements($xpath);
 		self::processExternalLinks($dom, $xpath);
@@ -74,42 +72,6 @@ class PDFBodyHelper {
 					$br = $tableNode->ownerDocument->createElement('br');
 					$spanNote->parentNode->insertBefore($br, $spanNote);
 				}
-			}
-		}
-	}
-
-	/**
-	 * Process figure citations in the document to translate them. For example, "Figure 1" to "Figura 1" in Spanish. 
-	 * 
-	 * @param \DOMDocument $dom The DOM document
-	 * @param \DOMXPath $xpath The XPath object for DOM traversal
-	 */
-	private static function processFiguresCitations(\DOMDocument $dom, \DOMXPath $xpath): void {
-		$figureCitationNodes = $xpath->evaluate('//a[@class="fig"]');
-		foreach ($figureCitationNodes as $node) {
-			$nodeContent = $node->textContent;
-			if (preg_match('/\d+/', $nodeContent, $matches)) { //extract the figure number from the content
-				$translatedFigureText = __('plugins.generic.jatsParser.figure.title'); // Translate the figure text if needed (e.g., "Figure 1" for english or "Figura 1" for spanish)
-				$figureNumber = $matches[0]; // Get the figure number
-				$node->textContent = $translatedFigureText . ' ' . $figureNumber;
-			}
-		}
-	}
-
-	/** 
-	 * Process table citations in the document to translate them. For example, "Table 1" to "Tabla 1" in Spanish.
-	 * 
-	 * @param \DOMDocument $dom The DOM document
-	 * @param \DOMXPath $xpath The XPath object for DOM traversal
-	 */
-	private static function processTableCitations(\DOMDocument $dom, \DOMXPath $xpath): void {
-		$tableCitationNodes = $xpath->evaluate('//a[@class="table"]');
-		foreach ($tableCitationNodes as $node) {
-			$nodeContent = $node->textContent;
-			if (preg_match('/\d+/', $nodeContent, $matches)) { //extract the table number from the content
-				$translatedTableText = __('plugins.generic.jatsParser.table.title'); // Translate the table text if needed (e.g., "Table 1" for english or "Tabla 1" for spanish)
-				$tableNumber = $matches[0]; // Get the table number
-				$node->textContent = $translatedTableText . ' ' . $tableNumber;
 			}
 		}
 	}
