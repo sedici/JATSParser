@@ -68,7 +68,7 @@ class PDFCreationService
       
       if (array_key_exists($currentFileData['type'], $this::PROCESS_MAP)) {
         $fn = $this::PROCESS_MAP[$currentFileData['type']];
-        $this->$fn($xpath, $dom, $htmlString, $pdf, $config, $citeProc);
+        $this->$fn($xpath, $dom, $htmlString, $pdf, $config, $citeProc, $currentFileData['filepath']);
       }
       else {
         $this->defaultProcessing($pdf, $metadata, $currentFileData['filepath'], $config);
@@ -78,7 +78,7 @@ class PDFCreationService
     return $pdf;
   }
 
-  private function defaultProcessing($pdf, $metadata, $filepath, $config) { # Este método escribe directamente la front page ya que se genera en base al TPL y los metadatos ne cesarios
+  private function defaultProcessing($pdf, $metadata, $filepath, $config) { # Este método sirve para renderizar cualquier cosa genérica que use metadatos
     foreach ($metadata as $key => $value) {
         $this->templateManager->assign($key, $value);
     }
@@ -95,7 +95,7 @@ class PDFCreationService
     $pdf->WriteHTML($html);
   }
 
-  private function processReferences($xpath, $dom, $htmlString, $pdf, $config, $citeProc)
+  private function processReferences($xpath, $dom, $htmlString, $pdf, $config, $citeProc, $path)
   {
     $referencesAPA = $citeProc->getRawReferences();
 
@@ -141,11 +141,16 @@ class PDFCreationService
 
     $htmlString = $dom->saveHTML();
 
-    $this->writeReferences($htmlString, $pdf, 'references-section'); # Escribo las references
-    $this->writeReferences($htmlString, $pdf, 'footnotes-container'); # Escibo las footnotes
+    $styles = $this->templateManager->fetch($path);
+    $pdf->WriteHTML($styles);
+
+    $pdf->WriteHTML(__('plugins.generic.jatsParser.article.references.title')); # Escribir "Referencias"
+    $this->writeReferences($htmlString, $pdf, 'references-section', $path, 'references'); # Escribo las references
+    $pdf->WriteHTML(__('plugins.generic.jatsParser.article.footnotes.title')); # Escribir "Footnotes"
+    $this->writeReferences($htmlString, $pdf, 'footnotes-container', $path, 'footnotes'); # Escibo las footnotes
   }
 
-  private function writeReferences($htmlString, $pdf, $busqueda)
+  private function writeReferences($htmlString, $pdf, $busqueda, $path)
   {
     $referencesDom = new \DOMDocument('1.0', 'utf-8');
     $referencesDom->loadHTML($htmlString);
@@ -165,8 +170,11 @@ class PDFCreationService
     }
   }
 
-  private function processBody($xpath, $dom, $htmlString, $pdf, $config, $citeProc)
+  private function processBody($xpath, $dom, $htmlString, $pdf, $config, $citeProc, $path)
   {
+    $styles = $this->templateManager->fetch($path);
+    $pdf->WriteHTML($styles);
+
     $referencesNodes = $xpath->evaluate('//a[contains(@class, "bibr")]'); # Procesar todas las citas, incluso si son múltiples
     foreach ($referencesNodes as $node) {
       $this->processingService->citeToLink($node, $dom, $xpath, $config);

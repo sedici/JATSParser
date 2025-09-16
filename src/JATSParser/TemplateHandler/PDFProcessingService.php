@@ -106,7 +106,7 @@ class PDFProcessingService
 
   public function processReferences($referencesSection, $references, $dom)
   {
-    $listContainer = $dom->createElement('ol');
+    $listContainer = $dom->createElement('ul');
     foreach ($references as $reference) {
       $li = $dom->createElement('li');
 
@@ -119,7 +119,7 @@ class PDFProcessingService
       $ref->appendXML($reference['text']);
       $li->appendChild($ref);
 
-      $href = $dom->createElement('a', $reference['id']);
+      $href = $dom->createElement('a', ' ↑');
       $href->setAttribute('href', '#citation_' . $reference['id']);
       $li->appendChild($href);
 
