@@ -70,8 +70,6 @@ class PDFCreationService
           }
         }
       }
-
-      file_put_contents(__DIR__ . "/uses.txt", print_r($fileUsesTest, true));
       
       foreach($fileUses as $use) {
         $test .= "Usando " . print_r($use, true) . " para ". $currentFileData['type'] . "\n";
@@ -92,7 +90,7 @@ class PDFCreationService
         $this->defaultProcessing($pdf, $currentFileData['filepath']);
       }
     }
-    file_put_contents(__DIR__ . "/test.txt", $test);
+
     file_put_contents(__DIR__ . "/errors.txt", $error); # Ahora marco los errores de archivos faltantes en un txt. A futuro será un mensaje en OJS
     return $pdf;
   }
@@ -186,7 +184,6 @@ class PDFCreationService
     $this->writeReferences($htmlString, $pdf, 'references-section', $path, 'references'); # Escribo las references
     $pdf->WriteHTML('<h3>' . __('plugins.generic.jatsParser.article.footnotes.title') . '</h3>'); # Escribir "Footnotes"
     $this->writeReferences($htmlString, $pdf, 'footnotes-container', $path, 'footnotes'); # Escibo las footnotes
-    file_put_contents(__DIR__ . "/references.html", $htmlString);
   }
 
   private function writeReferences($htmlString, $pdf, $busqueda, $path)
@@ -248,7 +245,6 @@ class PDFCreationService
     }
 
     $isolatedBody = $bodyDom->saveHTML();
-    file_put_contents(__DIR__ . "/isolatedBody.html", $isolatedBody);
     $pdf->writeHTML($isolatedBody);
     return $htmlString;
   }
