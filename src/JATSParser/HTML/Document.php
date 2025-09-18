@@ -225,7 +225,15 @@ class Document extends \DOMDocument {
 
 		$this->citeProcReferences = $data;
 
-		$style = StyleSheet::loadStyleSheet($this->getCitationStyle());
+		if($this->citationStyle === 'apa') {
+				$styleName = "apa-no-ampersand";
+		}
+		else {
+				$styleName = $this->citationStyle;
+		}
+		$style = StyleSheet::loadStyleSheet($styleName);
+
+		#$style = StyleSheet::loadStyleSheet($this->getCitationStyle());
 
 		$wrapIntoListItem = function($cslItem, $renderedText) {
 			return '<li id="' . $cslItem->id .'">' . $renderedText . '</li>';

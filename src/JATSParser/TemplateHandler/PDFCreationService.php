@@ -17,8 +17,8 @@ class PDFCreationService
   ];
 
   private const USE_MAP = [
-    'footer' => 'useFooter',
-    'header' => 'useHeader'
+    'footer' => 'genericUses',
+    'header' => 'genericUses'
   ];
 
   public function __construct($templateManager, $processingService)
@@ -34,8 +34,15 @@ class PDFCreationService
     $catalog = json_decode(json_encode($xml), true);
     $templateName = $catalog['template_name'];
     $error = "";
+    $test = "";
+    $fileUsesTest = [];
+
+    $this->assignMetadata($metadata, $config);
 
     foreach ($catalog['build']['item'] as $part) {
+      $pdf->SetHTMLHeader(''); # Desactivo el Header
+      $pdf->SetHTMLFooter(''); # Desactivo el Footer
+
       $currentFile = $catalog[$part]['file'];
       $currentFileData = [
         'filepath' => $templatesDir . 'SUMARC/' . $templateName . '/' . $currentFile,
@@ -46,10 +53,7 @@ class PDFCreationService
         $error .= "$currentFile no encontrado \n";
       }
 
-      $uses = isset($catalog[$part]['uses']) ? $catalog[$part]['uses'] : [];
-      if (!is_array($uses)) {
-        $uses = $uses ? [$uses] : []; # Si no es un Array, lo hago array vacío, la conversión a XML
-      }
+      $uses = (array) (isset($catalog[$part]['uses']['use']) ? $catalog[$part]['uses']['use'] : []);
 
       foreach ($uses as $use) {
         if (is_string($use) && isset($catalog[$use]) && isset($catalog[$use]['file'])) { # Más chequeos por la conversión de XML...
@@ -62,7 +66,21 @@ class PDFCreationService
             $error .= "$usesFile no encontrado \n";
           } else {
             $fileUses[] = $usesFileData;
+            $fileUsesTest[] = $usesFileData;
           }
+        }
+      }
+
+      file_put_contents(__DIR__ . "/uses.txt", print_r($fileUsesTest, true));
+      
+      foreach($fileUses as $use) {
+        $test .= "Usando " . print_r($use, true) . " para ". $currentFileData['type'] . "\n";
+        if(array_key_exists($use['type'], $this::USE_MAP)) {
+          $fn = $this::USE_MAP[$use['type']];
+          $this->$fn($use['filepath'], $pdf, $use['type']);
+        }
+        else {
+          $this->defaultUses($use['filepath'], $pdf);
         }
       }
       
@@ -71,14 +89,32 @@ class PDFCreationService
         $this->$fn($xpath, $dom, $htmlString, $pdf, $config, $citeProc, $currentFileData['filepath']);
       }
       else {
-        $this->defaultProcessing($pdf, $metadata, $currentFileData['filepath'], $config);
+        $this->defaultProcessing($pdf, $currentFileData['filepath']);
       }
     }
+    file_put_contents(__DIR__ . "/test.txt", $test);
     file_put_contents(__DIR__ . "/errors.txt", $error); # Ahora marco los errores de archivos faltantes en un txt. A futuro será un mensaje en OJS
     return $pdf;
   }
 
-  private function defaultProcessing($pdf, $metadata, $filepath, $config) { # Este método sirve para renderizar cualquier cosa genérica que use metadatos
+  private function genericUses($filepath, $pdf, $type) {
+    $html = $this->templateManager->fetch($filepath);
+    switch($type) {
+      case "header":
+        $pdf->SetHTMLHeader($html);
+        break;
+      case "footer":
+        $pdf->SetHTMLFooter($html);
+        break;
+    }
+  }
+
+  private function defaultUses($filepath, $pdf) {
+    $html = $this->templateManager->fetch($filepath);
+    $pdf->WriteHTML($html); # Uses genérico, no tiene nada de especial, pero así no da error nunca y solo es un PDF "inesperado"
+  }
+
+  private function assignMetadata($metadata, $config) {
     foreach ($metadata as $key => $value) {
         $this->templateManager->assign($key, $value);
     }
@@ -90,7 +126,9 @@ class PDFCreationService
 
     $this->templateManager->assign('authors', $metadata['authors']);
     $this->templateManager->assign('orcid_logo', $config->getOrcidLogo());
-    
+  }
+
+  private function defaultProcessing($pdf, $filepath) { # Este método sirve para renderizar cualquier cosa genérica que use metadatos  
     $html = $this->templateManager->fetch($filepath);
     $pdf->WriteHTML($html);
   }
@@ -144,10 +182,11 @@ class PDFCreationService
     $styles = $this->templateManager->fetch($path);
     $pdf->WriteHTML($styles);
 
-    $pdf->WriteHTML(__('plugins.generic.jatsParser.article.references.title')); # Escribir "Referencias"
+    $pdf->WriteHTML('<h3>' . __('plugins.generic.jatsParser.article.references.title') . '</h3>'); # Escribir "Referencias"
     $this->writeReferences($htmlString, $pdf, 'references-section', $path, 'references'); # Escribo las references
-    $pdf->WriteHTML(__('plugins.generic.jatsParser.article.footnotes.title')); # Escribir "Footnotes"
+    $pdf->WriteHTML('<h3>' . __('plugins.generic.jatsParser.article.footnotes.title') . '</h3>'); # Escribir "Footnotes"
     $this->writeReferences($htmlString, $pdf, 'footnotes-container', $path, 'footnotes'); # Escibo las footnotes
+    file_put_contents(__DIR__ . "/references.html", $htmlString);
   }
 
   private function writeReferences($htmlString, $pdf, $busqueda, $path)
@@ -209,6 +248,7 @@ class PDFCreationService
     }
 
     $isolatedBody = $bodyDom->saveHTML();
+    file_put_contents(__DIR__ . "/isolatedBody.html", $isolatedBody);
     $pdf->writeHTML($isolatedBody);
     return $htmlString;
   }

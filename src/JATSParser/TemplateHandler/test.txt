@@ -1,0 +1,30 @@
+Usando Array
+(
+    [filepath] => /app/plugins/generic/jatsParser/templates/SUMARC/REDIC/footer.tpl
+    [type] => footer
+)
+ para frontpage
+Usando Array
+(
+    [filepath] => /app/plugins/generic/jatsParser/templates/SUMARC/REDIC/header.tpl
+    [type] => header
+)
+ para body
+Usando Array
+(
+    [filepath] => /app/plugins/generic/jatsParser/templates/SUMARC/REDIC/footer.tpl
+    [type] => footer
+)
+ para body
+Usando Array
+(
+    [filepath] => /app/plugins/generic/jatsParser/templates/SUMARC/REDIC/header.tpl
+    [type] => header
+)
+ para references
+Usando Array
+(
+    [filepath] => /app/plugins/generic/jatsParser/templates/SUMARC/REDIC/footer.tpl
+    [type] => footer
+)
+ para references
