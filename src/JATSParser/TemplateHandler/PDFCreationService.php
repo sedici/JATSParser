@@ -14,6 +14,7 @@ class PDFCreationService
   private const PROCESS_MAP = [
     'body' => 'processBody',
     'references' => 'processReferences',
+    'footnotes' => 'processFootnotes',
   ];
 
   private const USE_MAP = [
@@ -138,14 +139,40 @@ class PDFCreationService
     $referencesNodes = $xpath->evaluate('//div[contains(@class,"references-section")]//li');
     $references = $this->processingService->setReferencesAnchors($referencesAPA, $referencesNodes); # Agrego los tags <a> vacíos para las redirecciones de referencias
 
-    $footnotesNodes = $xpath->evaluate('//div[contains(@class,"footnotes-container")]//div');
-    $footnotes = $this->processingService->setFootnotesAnchors($footnotesNodes); # Same con footnotes
-
     $htmlString = $dom->saveHTML();
 
     foreach ($xpath->query('//a[contains(@class, "bibr")]') as $a) { # Agrego los tags <a> a las citas
       $this->processingService->processCitations($a, $dom, "citation_");
     }
+
+    $htmlString = $dom->saveHTML();
+
+    $referencesSection = $xpath->query('//div[contains(@class,"references-section")]');
+    $referencesSection = $referencesSection->item(0);
+
+    if ($referencesSection) {
+      while ($referencesSection->hasChildNodes()) {
+        $referencesSection->removeChild($referencesSection->firstChild);
+      }
+    }
+
+    $htmlString = $dom->saveHTML();
+
+    $this->processingService->processReferences($referencesSection, $references, $dom);
+
+    $htmlString = $dom->saveHTML();
+
+    $styles = $this->templateManager->fetch($path);
+    $pdf->WriteHTML($styles);
+
+    $this->writeReferences($htmlString, $pdf, 'references-section', $path, 'references'); # Escribo las references
+  }
+
+  public function processFootnotes($xpath, $dom, $htmlString, $pdf, $config, $citeProc, $path) {
+    $footnotesNodes = $xpath->evaluate('//div[contains(@class,"footnotes-container")]//div');
+    $footnotes = $this->processingService->setFootnotesAnchors($footnotesNodes); # Same con footnotes
+
+    $htmlString = $dom->saveHTML();
 
     foreach ($xpath->query('//div[contains(@class, "footnote-item")]') as $a) { # Agrego los tags <a> a las citas footnote
       $this->processingService->processCitations($a, $dom, "footnote_");
@@ -153,16 +180,8 @@ class PDFCreationService
 
     $htmlString = $dom->saveHTML();
 
-    $referencesSection = $xpath->query('//div[contains(@class,"references-section")]');
-    $referencesSection = $referencesSection->item(0);
     $footnotesSection = $xpath->query('//div[contains(@class, "footnotes-container")]');
     $footnotesSection = $footnotesSection->item(0);
-
-    if ($referencesSection) {
-      while ($referencesSection->hasChildNodes()) {
-        $referencesSection->removeChild($referencesSection->firstChild);
-      }
-    }
 
     if ($footnotesSection) {
       while ($footnotesSection->hasChildNodes()) {
@@ -172,7 +191,6 @@ class PDFCreationService
 
     $htmlString = $dom->saveHTML();
 
-    $this->processingService->processReferences($referencesSection, $references, $dom);
     $this->processingService->processReferences($footnotesSection, $footnotes, $dom);
 
     $htmlString = $dom->saveHTML();
@@ -180,9 +198,6 @@ class PDFCreationService
     $styles = $this->templateManager->fetch($path);
     $pdf->WriteHTML($styles);
 
-    $pdf->WriteHTML('<h3>' . __('plugins.generic.jatsParser.article.references.title') . '</h3>'); # Escribir "Referencias"
-    $this->writeReferences($htmlString, $pdf, 'references-section', $path, 'references'); # Escribo las references
-    $pdf->WriteHTML('<h3>' . __('plugins.generic.jatsParser.article.footnotes.title') . '</h3>'); # Escribir "Footnotes"
     $this->writeReferences($htmlString, $pdf, 'footnotes-container', $path, 'footnotes'); # Escibo las footnotes
   }
 
@@ -201,7 +216,7 @@ class PDFCreationService
       $refsNode = $newDoc->importNode($refs, true);
       $newDoc->appendChild($refsNode);
       $r = $newDoc->saveHTML();
-
+      
       $pdf->WriteHTML($r);
     }
   }
@@ -232,6 +247,11 @@ class PDFCreationService
     $footnotesSection = $bodyXpath->query('//div[contains(@class, "footnotes-container")]');
     $footnotesSection = $footnotesSection->item(0);
 
+    $this->setTablesClass($bodyXpath, 'table'); # A todas les asigno la clase "table" para no pisar el CSS del footer/header
+    $this->setTablesClass($bodyXpath, 'td');  
+    $this->setTablesClass($bodyXpath, 'tr');  
+    $this->setTablesClass($bodyXpath, 'th');
+
     if ($referencesSection) {
       while ($referencesSection->hasChildNodes()) {
         $referencesSection->removeChild($referencesSection->firstChild);
@@ -245,8 +265,19 @@ class PDFCreationService
     }
 
     $isolatedBody = $bodyDom->saveHTML();
+
     $pdf->writeHTML($isolatedBody);
     return $htmlString;
+  }
+
+  private function setTablesClass($bodyXpath, $term) {
+    $items = $bodyXpath->query('//' . $term);
+
+    foreach($items as $item) {
+      $item->setAttribute('class', 'table');
+    }
+
+    return $items;
   }
 
   public static function test()
