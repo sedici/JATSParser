@@ -10,7 +10,9 @@
                 'published' => 'Published',
                 'keywords' => 'Keywords',
                 'license_text' => 'This work is under a Creative Commons License',
-                'references_sections_separator' => '&'
+                'references_sections_separator' => '&',
+                'number' => 'No.',
+                'volume' => 'Vol.',
             ],
             'es' => [
                 'abstract' => 'Resumen',
@@ -19,7 +21,9 @@
                 'published' => 'Publicado',
                 'keywords' => 'Palabras clave',
                 'license_text' => 'Esta obra está bajo una Licencia Creative Commons',
-                'references_sections_separator' => 'y'
+                'references_sections_separator' => 'y',
+                'number' => 'Núm.',
+                'volume' => 'Vol.',
             ],
             'pt' => [
                 'abstract' => 'Resumo',
@@ -28,7 +32,9 @@
                 'published' => 'Publicado',
                 'keywords' => 'Palavras chave',
                 'license_text' => 'Este trabalho está sob uma licença Creative Commons',
-                'references_sections_separator' => 'e'
+                'references_sections_separator' => 'e',
+                'number' => 'n.',
+                'volume' => 'Vol.',
             ],
         ];
 

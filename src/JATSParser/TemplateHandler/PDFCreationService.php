@@ -107,6 +107,7 @@ class PDFCreationService
 
   private function genericUses($filepath, $pdf, $type) {
     $html = $this->templateManager->fetch($filepath);
+    $html = str_replace('<pagenumber />', '{PAGENO}', $html);
     switch($type) {
       case "header":
         $pdf->SetHTMLHeader($html);
