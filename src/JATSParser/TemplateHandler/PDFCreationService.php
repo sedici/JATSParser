@@ -2,7 +2,6 @@
 
 namespace JATSParser\TemplateHandler;
 
-use APP\template\TemplateManager;
 use DOMDocument;
 
 class PDFCreationService
@@ -30,7 +29,7 @@ class PDFCreationService
 
   public function buildPDF($templatesDir, $pdf, $htmlString, $xpath, $dom, $citeProc, $config, $metadata)
   {
-    $content = trim(file_get_contents($templatesDir . 'SUMARC/REDIC/catalog.xml')); # Esto debería ser ruta de OJS, no estar hardcodeado
+    $content = trim(file_get_contents($templatesDir . 'SUMARC/UNLP/catalog.xml')); # Esto debería ser ruta de OJS, no estar hardcodeado
     $xml = simplexml_load_string($content);
     $catalog = json_decode(json_encode($xml), true);
     $templateName = $catalog['template_name'];
@@ -39,6 +38,16 @@ class PDFCreationService
     $fileUsesTest = [];
 
     $this->assignMetadata($metadata, $config);
+
+    foreach($catalog['media']['item'] as $optional) {
+      $currentFileData = [
+        'filepath' => $templatesDir . 'SUMARC/' . $templateName . '/' . $optional,
+      ];
+      $fileUses = [];
+      if (!file_exists($currentFileData['filepath'])) {
+        $error .= "Archivo opcional $optional no encontrado \n";
+      }
+    }
 
     foreach ($catalog['build']['item'] as $part) {
       $pdf->SetHTMLHeader(''); # Desactivo el Header
