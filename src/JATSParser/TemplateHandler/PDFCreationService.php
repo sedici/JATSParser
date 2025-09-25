@@ -34,8 +34,6 @@ class PDFCreationService
     $catalog = json_decode(json_encode($xml), true);
     $templateName = $catalog['template_name'];
     $error = "";
-    $test = "";
-    $fileUsesTest = [];
 
     $this->assignMetadata($metadata, $config);
 
@@ -50,7 +48,6 @@ class PDFCreationService
             if (!file_exists($currentFileData['filepath'])) {
                 $error .= "Archivo opcional $optionalName no encontrado \n";
             } else {
-                $test .= $optionalName . " || " . $currentFileData['filepath'] . "\n";
                 $this->templateManager->assign($currentFileData['dataName'], $currentFileData['filepath']);
             }
         }
@@ -83,7 +80,6 @@ class PDFCreationService
             $error .= "$usesFile no encontrado \n";
           } else {
             $fileUses[] = $usesFileData;
-            $fileUsesTest[] = $usesFileData;
           }
         }
       }
@@ -94,7 +90,7 @@ class PDFCreationService
           $this->$fn($use['filepath'], $pdf, $use['type']);
         }
         else {
-          $this->defaultUses($use['filepath'], $pdf);
+          $this->defaultProcessing($use['filepath'], $pdf); # Renderiza y escribe, por eso reuso el procesamiento y no es un método aparte
         }
       }
       
@@ -113,7 +109,7 @@ class PDFCreationService
 
   private function genericUses($filepath, $pdf, $type) {
     $html = $this->templateManager->fetch($filepath);
-    $html = str_replace('<pagenumber />', '{PAGENO}', $html);
+    $html = str_replace('<pagenumber />', '{PAGENO}', $html); # Esto debe hacerse una vez renderizado, sino Smarty tira una Exception
     $html = str_replace('<totalpages />', '{nb}', $html);
     switch($type) {
       case "header":
@@ -125,13 +121,14 @@ class PDFCreationService
     }
   }
 
-  private function defaultUses($filepath, $pdf) {
-    $html = $this->templateManager->fetch($filepath);
-    $pdf->WriteHTML($html); # Uses genérico, no tiene nada de especial, pero así no da error nunca y solo es un PDF "inesperado"
-  }
-
   private function assignMetadata($metadata, $config) {
     foreach ($metadata as $key => $value) {
+        if($key === 'abstract_texts') {
+          $value = str_replace('<br />', ' ', $value);
+          $value = str_replace('<p>', '', $value);
+          $value = str_replace('</p>', '', $value);
+        }
+
         $this->templateManager->assign($key, $value);
     }
 
