@@ -6,6 +6,7 @@ class Configuration {
     private $metadata = [];
     private $config = [];
     private $orcid_logo = [];
+    private $images = [];
 
     public static $supportedCustomCitationStyles = ['apa'];
     public static $numberedReferencesCitationStyles = ['ieee'];
@@ -17,6 +18,10 @@ class Configuration {
             'no_bg' => $metadata['plugin_path'] . '/JATSParser/logo/orcid.png',
             'white_bg' => $metadata['plugin_path'] . '/JATSParser/logo/orcid-white.png',
             'black_bg' => $metadata['plugin_path'] . '/JATSParser/logo/orcid-black.png',
+        ];
+
+        $this->images = [
+            'not_found' => $metadata['plugin_path'] . '/JATSParser/logo/not_found.png',
         ];
         
         $this->config = [
@@ -256,6 +261,10 @@ class Configuration {
     
     public function getOrcidLogo() {
         return $this->orcid_logo;
+    }
+
+    public function getImages() {
+        return $this->images;
     }
 
     // Here you can add more methods to retrieve other configurations or metadata as needed.

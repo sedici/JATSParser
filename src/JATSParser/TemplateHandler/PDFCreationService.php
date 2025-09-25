@@ -39,14 +39,21 @@ class PDFCreationService
 
     $this->assignMetadata($metadata, $config);
 
-    foreach($catalog['media']['item'] as $optional) {
-      $currentFileData = [
-        'filepath' => $templatesDir . 'SUMARC/' . $templateName . '/' . $optional,
-      ];
-      $fileUses = [];
-      if (!file_exists($currentFileData['filepath'])) {
-        $error .= "Archivo opcional $optional no encontrado \n";
-      }
+    foreach ($catalog['media']['item'] as $mediaItem) {
+        if (is_array($mediaItem) && isset($mediaItem['name']) && isset($mediaItem['file'])) {
+            $optionalName = $mediaItem['name'];
+            $optionalFile = $mediaItem['file'];
+            $currentFileData = [
+                'dataName' => $optionalName,
+                'filepath' => $templatesDir . 'SUMARC/' . $templateName . '/' . $optionalFile,
+            ];
+            if (!file_exists($currentFileData['filepath'])) {
+                $error .= "Archivo opcional $optionalName no encontrado \n";
+            } else {
+                $test .= $optionalName . " || " . $currentFileData['filepath'] . "\n";
+                $this->templateManager->assign($currentFileData['dataName'], $currentFileData['filepath']);
+            }
+        }
     }
 
     foreach ($catalog['build']['item'] as $part) {
@@ -82,7 +89,6 @@ class PDFCreationService
       }
       
       foreach($fileUses as $use) {
-        $test .= "Usando " . print_r($use, true) . " para ". $currentFileData['type'] . "\n";
         if(array_key_exists($use['type'], $this::USE_MAP)) {
           $fn = $this::USE_MAP[$use['type']];
           $this->$fn($use['filepath'], $pdf, $use['type']);
@@ -108,6 +114,7 @@ class PDFCreationService
   private function genericUses($filepath, $pdf, $type) {
     $html = $this->templateManager->fetch($filepath);
     $html = str_replace('<pagenumber />', '{PAGENO}', $html);
+    $html = str_replace('<totalpages />', '{nb}', $html);
     switch($type) {
       case "header":
         $pdf->SetHTMLHeader($html);
@@ -131,10 +138,11 @@ class PDFCreationService
     $licenses = $config->getLicenseConfig();
     $licenseName = array_search($metadata['license_url'], $licenses['links']);
     $licenseImg = $licenses['logos'][$licenseName];
-    $this->templateManager->assign('license_logo', $licenseImg);
 
+    $this->templateManager->assign('license_logo', $licenseImg);
     $this->templateManager->assign('authors', $metadata['authors']);
     $this->templateManager->assign('orcid_logo', $config->getOrcidLogo());
+    $this->templateManager->assign('images', $config->getImages());
   }
 
   private function defaultProcessing($pdf, $filepath) { # Este método sirve para renderizar cualquier cosa genérica que use metadatos  
