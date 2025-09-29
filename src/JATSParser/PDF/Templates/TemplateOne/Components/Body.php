@@ -13,7 +13,7 @@ class Body extends GenericComponent {
 
     public function render() {
         // Setup basic configuration
-        $bodyFont = $this->config->getFontConfig('philosopher');
+        $bodyFont = $this->config->getFontConfig('freeserif', 11);
         $htmlString = $this->config->getMetadata('html_string');
         $pluginPath = $this->config->getMetadata('plugin_path');
         $leftMargin = $this->config->getMargin('body_left');
