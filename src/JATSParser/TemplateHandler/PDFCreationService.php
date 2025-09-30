@@ -38,19 +38,19 @@ class PDFCreationService
     $this->assignMetadata($metadata, $config);
 
     foreach ($catalog['media']['item'] as $mediaItem) {
-        if (is_array($mediaItem) && isset($mediaItem['name']) && isset($mediaItem['file'])) {
-            $optionalName = $mediaItem['name'];
-            $optionalFile = $mediaItem['file'];
-            $currentFileData = [
-                'dataName' => $optionalName,
-                'filepath' => $templatesDir . 'SUMARC/' . $templateName . '/' . $optionalFile,
-            ];
-            if (!file_exists($currentFileData['filepath'])) {
-                $error .= "Archivo opcional $optionalName no encontrado \n";
-            } else {
-                $this->templateManager->assign($currentFileData['dataName'], $currentFileData['filepath']);
-            }
+      if (is_array($mediaItem) && isset($mediaItem['name']) && isset($mediaItem['file'])) {
+        $optionalName = $mediaItem['name'];
+        $optionalFile = $mediaItem['file'];
+        $currentFileData = [
+          'dataName' => $optionalName,
+          'filepath' => $templatesDir . 'SUMARC/' . $templateName . '/' . $optionalFile,
+        ];
+        if (!file_exists($currentFileData['filepath'])) {
+          $error .= "Archivo opcional $optionalName no encontrado \n";
+        } else {
+          $this->templateManager->assign($currentFileData['dataName'], $currentFileData['filepath']);
         }
+      }
     }
 
     foreach ($catalog['build']['item'] as $part) {
@@ -83,22 +83,20 @@ class PDFCreationService
           }
         }
       }
-      
-      foreach($fileUses as $use) {
-        if(array_key_exists($use['type'], $this::USE_MAP)) {
+
+      foreach ($fileUses as $use) {
+        if (array_key_exists($use['type'], $this::USE_MAP)) {
           $fn = $this::USE_MAP[$use['type']];
           $this->$fn($use['filepath'], $pdf, $use['type']);
-        }
-        else {
+        } else {
           $this->defaultProcessing($use['filepath'], $pdf); # Renderiza y escribe, por eso reuso el procesamiento y no es un método aparte
         }
       }
-      
+
       if (array_key_exists($currentFileData['type'], $this::PROCESS_MAP)) {
         $fn = $this::PROCESS_MAP[$currentFileData['type']];
         $this->$fn($xpath, $dom, $htmlString, $pdf, $config, $citeProc, $currentFileData['filepath']);
-      }
-      else {
+      } else {
         $this->defaultProcessing($pdf, $currentFileData['filepath']);
       }
     }
@@ -107,11 +105,49 @@ class PDFCreationService
     return $pdf;
   }
 
-  private function genericUses($filepath, $pdf, $type) {
+  private function setCustomMargins($html) {
+    $dom = new DOMDocument('1.0', 'utf-8');
+    libxml_use_internal_errors(true); // Ignorar errores de HTML no válido
+    $dom->loadHTML($html);
+    $xpath = new \DOMXPath($dom);
+
+    $margins = ['top', 'bottom', 'left', 'right'];
+    $marginValues = ['top' => '20mm', 'bottom' => '20mm', 'left' => '20mm', 'right' => '20mm'];
+
+    foreach ($margins as $margin) {
+      $query = "//margin-$margin";
+      $nodes = $xpath->query($query);
+      foreach ($nodes as $node) {
+        $size = $node->getAttribute('size');
+        if ($size) {
+          $marginValues[$margin] = $size;
+        }
+        if ($node->parentNode) {
+          $node->parentNode->removeChild($node);
+        }
+      }
+    }
+
+    $style = "<style>
+        @page {
+            margin-top: {$marginValues['top']};
+            margin-bottom: {$marginValues['bottom']};
+            margin-left: {$marginValues['left']};
+            margin-right: {$marginValues['right']};
+        }
+    </style>";
+
+    $html = $style . $dom->saveHTML();
+
+    return $html;
+  }
+
+  private function genericUses($filepath, $pdf, $type)
+  {
     $html = $this->templateManager->fetch($filepath);
     $html = str_replace('<pagenumber />', '{PAGENO}', $html); # Esto debe hacerse una vez renderizado, sino Smarty tira una Exception
     $html = str_replace('<totalpages />', '{nb}', $html);
-    switch($type) {
+    switch ($type) {
       case "header":
         $pdf->SetHTMLHeader($html);
         break;
@@ -121,15 +157,16 @@ class PDFCreationService
     }
   }
 
-  private function assignMetadata($metadata, $config) {
+  private function assignMetadata($metadata, $config)
+  {
     foreach ($metadata as $key => $value) {
-        if($key === 'abstract_texts') {
-          $value = str_replace('<br />', ' ', $value);
-          $value = str_replace('<p>', '', $value);
-          $value = str_replace('</p>', '', $value);
-        }
+      if ($key === 'abstract_texts') {
+        $value = str_replace('<br />', ' ', $value);
+        $value = str_replace('<p>', '', $value);
+        $value = str_replace('</p>', '', $value);
+      }
 
-        $this->templateManager->assign($key, $value);
+      $this->templateManager->assign($key, $value);
     }
 
     $licenses = $config->getLicenseConfig();
@@ -142,8 +179,10 @@ class PDFCreationService
     $this->templateManager->assign('images', $config->getImages());
   }
 
-  private function defaultProcessing($pdf, $filepath) { # Este método sirve para renderizar cualquier cosa genérica que use metadatos  
+  private function defaultProcessing($pdf, $filepath)
+  { # Este método sirve para renderizar cualquier cosa genérica que use metadatos  
     $html = $this->templateManager->fetch($filepath);
+    $html = $this->setCustomMargins($html);
     $pdf->WriteHTML($html);
   }
 
@@ -183,7 +222,8 @@ class PDFCreationService
     $this->writeReferences($htmlString, $pdf, 'references-section', $path, 'references'); # Escribo las references
   }
 
-  public function processFootnotes($xpath, $dom, $htmlString, $pdf, $config, $citeProc, $path) {
+  public function processFootnotes($xpath, $dom, $htmlString, $pdf, $config, $citeProc, $path)
+  {
     $footnotesNodes = $xpath->evaluate('//div[contains(@class,"footnotes-container")]//div');
     $footnotes = $this->processingService->setFootnotesAnchors($footnotesNodes); # Same con footnotes
 
@@ -226,12 +266,12 @@ class PDFCreationService
     $refsToWrite = $referencesXpath->query("//div[contains(@class, '$busqueda')]");
     $refs = $refsToWrite->item(0);
 
-    if($refs) {
+    if ($refs) {
       $newDoc = new \DOMDocument();
       $refsNode = $newDoc->importNode($refs, true);
       $newDoc->appendChild($refsNode);
       $r = $newDoc->saveHTML();
-      
+
       $pdf->WriteHTML($r);
     }
   }
@@ -239,6 +279,7 @@ class PDFCreationService
   private function processBody($xpath, $dom, $htmlString, $pdf, $config, $citeProc, $path)
   {
     $styles = $this->templateManager->fetch($path);
+    $styles = $this->setCustomMargins($styles);
     $pdf->WriteHTML($styles);
 
     $referencesNodes = $xpath->evaluate('//a[contains(@class, "bibr")]'); # Procesar todas las citas, incluso si son múltiples
@@ -263,8 +304,8 @@ class PDFCreationService
     $footnotesSection = $footnotesSection->item(0);
 
     $this->setTablesClass($bodyXpath, 'table'); # A todas les asigno la clase "table" para no pisar el CSS del footer/header
-    $this->setTablesClass($bodyXpath, 'td');  
-    $this->setTablesClass($bodyXpath, 'tr');  
+    $this->setTablesClass($bodyXpath, 'td');
+    $this->setTablesClass($bodyXpath, 'tr');
     $this->setTablesClass($bodyXpath, 'th');
 
     if ($referencesSection) {
@@ -285,10 +326,11 @@ class PDFCreationService
     return $htmlString;
   }
 
-  private function setTablesClass($bodyXpath, $term) {
+  private function setTablesClass($bodyXpath, $term)
+  {
     $items = $bodyXpath->query('//' . $term);
 
-    foreach($items as $item) {
+    foreach ($items as $item) {
       $item->setAttribute('class', 'table');
     }
 
