@@ -2,7 +2,6 @@
 
     class Translations {
         private static $translationsConfig = [
-
             'en' => [
                 'abstract' => 'Abstract',
                 'received' => 'Received',
@@ -30,7 +29,16 @@
                 'license_text' => 'Este trabalho está sob uma licença Creative Commons',
                 'references_sections_separator' => 'e'
             ],
-            'fr' => [
+            'fr_CA' => [
+                'abstract' => 'Résumé',
+                'received' => 'Reçu',
+                'accepted' => 'Accepté',
+                'published' => 'Publié',
+                'keywords' => 'Mots-clés',
+                'license_text' => 'Cette œuvre est sous licence Creative Commons',
+                'references_sections_separator' => 'et'
+            ],
+            'fr_FR' => [
                 'abstract' => 'Résumé',
                 'received' => 'Reçu',
                 'accepted' => 'Accepté',

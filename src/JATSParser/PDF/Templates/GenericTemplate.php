@@ -19,6 +19,7 @@ use JATSParser\PDF\PDFConfig\Configuration;
             $this->baseTemplate = $baseTemplate;
             $this->config = $config;
 
+            
             $this->initializeComponents();
 
             $this->SetCreator(PDF_CREATOR);
