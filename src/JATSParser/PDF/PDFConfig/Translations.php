@@ -30,6 +30,15 @@
                 'license_text' => 'Este trabalho está sob uma licença Creative Commons',
                 'references_sections_separator' => 'e'
             ],
+            'fr' => [
+                'abstract' => 'Résumé',
+                'received' => 'Reçu',
+                'accepted' => 'Accepté',
+                'published' => 'Publié',
+                'keywords' => 'Mots-clés',
+                'license_text' => 'Cette œuvre est sous licence Creative Commons',
+                'references_sections_separator' => 'et'
+            ],
         ];
 
         public static function getTranslations(){
