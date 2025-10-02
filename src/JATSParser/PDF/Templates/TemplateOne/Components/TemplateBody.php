@@ -25,7 +25,7 @@ class TemplateBody extends GenericComponent {
         $dateAccepted = $this->config->getMetadata('date_accepted');
         $datePublished = $this->config->getMetadata('date_published');
         $translationsConfig = $this->config->getMetadata('translations_config');
-        $localeKey = $this->config->getMetadata('locale_key');
+        $articleLocaleKey = $this->config->getMetadata('article_locale_key');
         $licenseUrl = $this->config->getMetadata('license_url');
         $publicationPages = $this->config->getMetadata('publication_pages');
         $issueVolume = $this->config->getMetadata('issue_volume');
@@ -175,7 +175,7 @@ class TemplateBody extends GenericComponent {
                 $this->pdfTemplate,
                 $this->config->getDatesConfig(),
                 $translationsConfig,
-                $localeKey,
+                $articleLocaleKey,
                 $xPos,
                 $yPos
             );
@@ -194,7 +194,7 @@ class TemplateBody extends GenericComponent {
             $this->config->getTitlesConfig(),
             $this->config->getSubtitlesConfig(),
             $this->config->getPrefixesConfig(),
-            $localeKey
+            $articleLocaleKey
         );
 
         $this->pdfTemplate->SetFillColor(0, 0, 0);
@@ -204,7 +204,7 @@ class TemplateBody extends GenericComponent {
             $this->pdfTemplate->GetX(),
             $this->pdfTemplate->GetY(),
             $this->config->getAuthorsConfig(),
-            $localeKey
+            $articleLocaleKey
         );
 
         $this->pdfTemplate->Ln(5);
@@ -226,7 +226,7 @@ class TemplateBody extends GenericComponent {
             $translationsConfig,
             $this->pdfTemplate->GetX(),
             $this->pdfTemplate->GetY(),
-            $localeKey
+            $articleLocaleKey
         );
 
         $this->pdfTemplate->Ln(5);
@@ -235,7 +235,7 @@ class TemplateBody extends GenericComponent {
             $this->pdfTemplate,
             $this->config->getLicenseConfig(),
             $translationsConfig,
-            $localeKey,
+            $articleLocaleKey,
             $licenseUrl
         );
 
