@@ -12,34 +12,38 @@ class Header extends GenericComponent {
         $journalData = $this->config->getMetadata('journal_data');
         $doi = $this->config->getMetadata('doi');
         $journalAffiliation = $this->config->getMetadata('journal_affiliation');
-        $headerFont = $this->config->getFontConfig('bold');
+        $headerFont = $this->config->getFontConfig('bold', 9);
         $headerColor = $this->config->getColorConfig('accent');
-        $doiFont = $this->config->getFontConfig('default');
+        $doiFont = $this->config->getFontConfig('default', 9);
         $doiColor = $this->config->getColorConfig('accent');
 
-        $journalDataText = $journalTitle . ', ' . $journalData;
-        $doiUrl = 'https://doi.org/' . $doi;
+        $journalDataText = ($journalData) ? $journalTitle . ',' . $journalData : $journalTitle;
 
-        NoLinkableText::renderNoLinkableText(
-            $this->pdfTemplate,
-            $journalDataText,
-            10,
-            10,
-            $headerColor,
-            $headerFont,
-            'C'
-        );
+        if ($journalDataText) {
+            NoLinkableText::renderNoLinkableText(
+                $this->pdfTemplate,
+                $journalDataText,
+                10,
+                10,
+                $headerColor,
+                $headerFont,
+                'C'
+            );
+        }   
 
-        LinkableText::renderLinkableText(
-            $this->pdfTemplate,
-            $doiUrl,
-            $doiUrl,
-            10,
-            $this->pdfTemplate->GetY(),
-            $doiColor,
-            $doiFont,
-            'C'
-        );
+        if ($doi) {
+            $doiUrl = 'https://doi.org/' . $doi;
+            LinkableText::renderLinkableText(
+                $this->pdfTemplate,
+                $doiUrl,
+                $doiUrl,
+                10,
+                $this->pdfTemplate->GetY(),
+                $doiColor,
+                $doiFont,
+                'C'
+            );
+        }
 
         /*
         NoLinkableText::renderNoLinkableText(

@@ -54,6 +54,7 @@ class ReferenceRenderer {
                 // Render the reference
                 $this->pdfTemplate->writeHTML($references[$refId], false, false, true, false, '');
                 $this->pdfTemplate->SetLeftMargin($this->leftMargin); // temporal fix, margin left error
+                $this->pdfTemplate->SetRightMargin($this->leftMargin); // temporal fix, right margin error
                 $this->pdfTemplate->Ln(10);
             }
         }

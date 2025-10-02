@@ -52,7 +52,7 @@ class Configuration {
                 ],
             ],
             'licenses' => [
-                'font' => ['family' => 'philosopher', 'style' => '', 'size' => 7.5],
+                'font' => ['family' => 'freeserif', 'style' => '', 'size' => 7.5],
                 'text_color' => [49, 132, 155],
                 'logo_height' => 6,
                 'logo_width' => 17,
@@ -202,9 +202,9 @@ class Configuration {
                 'text_color' => $this->getColorConfig('black'),
                 'fullname_font' => $this->getFontConfig('bold'),
                 'fullname_text_color' => [123, 128, 127],
-                'email_font' => $this->getFontConfig('philosopher'),
+                'email_font' => $this->getFontConfig('freeserif'),
                 'email_text_color' => [61, 145, 191],
-                'affiliation_font' => $this->getFontConfig('philosopher'),
+                'affiliation_font' => $this->getFontConfig('freeserif'),
                 'affiliation_text_color' => $this->getColorConfig('black')
             ]
         ];
@@ -215,7 +215,7 @@ class Configuration {
             'abstract_texts' => $this->getMetadata('abstract_texts'),
             'abstract_title_font' => $this->getFontConfig('bold'),
             'abstract_title_color' => $this->getColorConfig('accent'),
-            'abstract_text_font' => $this->getFontConfig('philosopher'),
+            'abstract_text_font' => $this->getFontConfig('freeserif'),
             'abstract_text_color' => $this->getColorConfig('black')
         ];
     }
@@ -225,7 +225,7 @@ class Configuration {
             'keywords_texts' => $this->getMetadata('keywords_texts'),
             'keywords_title_font' => $this->getFontConfig('bold'),
             'keywords_title_color' => $this->getColorConfig('accent'),
-            'keywords_font' => $this->getFontConfig('philosopher'),
+            'keywords_font' => $this->getFontConfig('freeserif'),
             'keywords_color' => $this->getColorConfig('black')
         ];
     }

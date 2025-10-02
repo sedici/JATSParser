@@ -76,6 +76,7 @@ class ContentRenderer {
         $this->pdfTemplate->Ln(3);
         $this->pdfTemplate->writeHTML($part, false, false, true, false, '');
         $this->pdfTemplate->SetLeftMargin($this->leftMargin); // temporal fix, margin left error
+        $this->pdfTemplate->SetRightMargin($this->leftMargin);
     }
 
     /**
@@ -97,6 +98,7 @@ class ContentRenderer {
 
         $this->pdfTemplate->writeHTML($part, false, false, true, false, '');
         $this->pdfTemplate->SetLeftMargin($this->leftMargin); // temporal fix, margin left error
+        $this->pdfTemplate->SetRightMargin($this->leftMargin); // temporal fix, right margin error
     }
     
     /**
@@ -122,6 +124,7 @@ class ContentRenderer {
 
         $this->pdfTemplate->SetTextColor(0, 0, 0);
         $this->pdfTemplate->SetLeftMargin($this->leftMargin); // temporal fix, margin left error
+        $this->pdfTemplate->SetRightMargin($this->leftMargin); // temporal fix, right margin error
     }
 
     // Helper: split IDs by %20, spaces or commas and normalize 'fn-' prefix
@@ -270,5 +273,6 @@ class ContentRenderer {
         $html = preg_replace('/\s+$/u', '', $html);
         $this->pdfTemplate->writeHTML($html, false, false, true, false, '');
         $this->pdfTemplate->SetLeftMargin($this->leftMargin); // temporal fix, margin left error
+        $this->pdfTemplate->SetRightMargin($this->leftMargin); // temporal fix, right margin error
     }
 }

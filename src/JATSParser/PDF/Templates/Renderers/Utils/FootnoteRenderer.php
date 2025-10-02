@@ -41,6 +41,7 @@ class FootnoteRenderer {
         );
         // Asegurar margen y X correctos antes de la primera nota
         $this->pdfTemplate->SetLeftMargin($this->leftMargin);
+        $this->pdfTemplate->SetRightMargin($this->leftMargin);
         $this->pdfTemplate->SetX($this->leftMargin);
         $this->pdfTemplate->Ln(5);
         
@@ -48,6 +49,7 @@ class FootnoteRenderer {
         foreach ($footnotes as $noteId => $noteHtml) {
             // Forzar margen y X antes de escribir cada nota
             $this->pdfTemplate->SetLeftMargin($this->leftMargin);
+            $this->pdfTemplate->SetRightMargin($this->leftMargin);
             $this->pdfTemplate->SetX($this->leftMargin);
 
             // Capture current Y position for precise linking
@@ -75,6 +77,7 @@ class FootnoteRenderer {
                     } else {
                         $this->pdfTemplate->writeHTML($part, false, false, true, false, '');
                         $this->pdfTemplate->SetLeftMargin($this->leftMargin);
+                        $this->pdfTemplate->SetRightMargin($this->leftMargin);
                     }
                 }
             } else {

@@ -55,7 +55,9 @@ class Body extends GenericComponent {
         $referenceRenderer = new ReferenceRenderer($this->pdfTemplate, $this->config, $leftMargin);
         $referenceRenderer->render($references, $links);
         
+        
         // Render footnotes
+        $this->pdfTemplate->SetFont($bodyFont['family'], $bodyFont['style'], $bodyFont['size'] - 1);
         $footnoteRenderer = new FootnoteRenderer($this->pdfTemplate, $this->config, $leftMargin);
         $footnoteRenderer->render($footnotes, $links);
 
