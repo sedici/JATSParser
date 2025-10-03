@@ -210,8 +210,16 @@ class PDFBodyHelper {
 			$table->setAttribute('border', '0');
 			$table->setAttribute('cellspacing', '0');
 			$table->setAttribute('cellpadding', '0');
-			// margin-top para el espacio superior; margin-bottom ya no es necesario
-			$table->setAttribute('style', 'margin-top: 10px; width: 100%;');
+			// TCPDF no aplica margin-top en tablas; usaremos una fila espaciadora
+			$table->setAttribute('style', 'width: 100%;');
+
+			// 1.1) Fila espaciadora superior (más espacio antes del blockquote)
+			$topSpacerRow  = $dom->createElement('tr');
+			$topSpacerCell = $dom->createElement('td');
+			$topSpacerCell->setAttribute('colspan', '4');
+			$topSpacerCell->setAttribute('height', '14'); // antes 16, un poco más chico
+			$topSpacerRow->appendChild($topSpacerCell);
+			$table->appendChild($topSpacerRow);
 
 			// 2) Construimos la fila principal con las 4 celdas
 			$tr = $dom->createElement('tr');
@@ -276,7 +284,7 @@ class PDFBodyHelper {
 			$spacerRow  = $dom->createElement('tr');
 			$spacerCell = $dom->createElement('td');
 			$spacerCell->setAttribute('colspan', '4');
-			$spacerCell->setAttribute('height', '10'); // mismo valor que margin-top
+			$spacerCell->setAttribute('height', '10'); // espacio inferior
 			$spacerRow->appendChild($spacerCell);
 			$table->appendChild($spacerRow);
 
