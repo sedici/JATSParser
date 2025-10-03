@@ -32,8 +32,6 @@ class PDFBodyHelper {
 		self::processHrefElements($xpath);
 		self::processExternalLinks($dom, $xpath);
 		self::blankspaceAfterHeadings($dom, $xpath);
-		
-		// Nuevo: centrar columna global y justificar texto del body
 		self::applyGlobalTypography($dom, $xpath);
 
 		// Remove redundant whitespaces before caption label
@@ -254,8 +252,8 @@ class PDFBodyHelper {
 			foreach ($paragraphs as $paragraph) {
 				$clone = $paragraph->cloneNode(true);
 				$style = $clone->hasAttribute('style')
-					? $clone->getAttribute('style') . '; width: 100%; font-size: 0.95em;'
-					: 'margin: 3px 0; width: 100%; font-size: 0.95em;';
+					? $clone->getAttribute('style') . '; width: 100%; font-size: 0.80em;'
+					: 'margin: 3px 0; width: 100%; font-size: 0.80em;';
 				$clone->setAttribute('style', $style);
 				$tdRight->appendChild($clone);
 			}
@@ -268,7 +266,7 @@ class PDFBodyHelper {
 					$citeDiv->setAttribute('class', 'blockquote-attribution');
 					$citeDiv->setAttribute(
 						'style',
-						'margin-top: 2px; font-style: italic; text-align: right; font-size: 0.95em;'
+						'margin-top: 2px; font-style: italic; text-align: right; font-size: 0.80em;'
 					);
 					$clone = $citation->cloneNode(true);
 					$citeDiv->appendChild($clone);
@@ -402,10 +400,12 @@ class PDFBodyHelper {
 			}
 		}
 	}
-
+	
 	/**
-	 * Envuelve el contenido del body en un contenedor centrado (columna) y aplica texto justificado.
-	 * Se marca con data-pdf-global="1" para evitar duplicados si se llama más de una vez.
+	 * Apply global typography styles to the body content
+	 * 
+	 * @param \DOMDocument $dom The DOM document
+	 * @param \DOMXPath $xpath The XPath object for DOM traversal
 	 */
 	private static function applyGlobalTypography(\DOMDocument $dom, \DOMXPath $xpath): void {
 		$body = $xpath->evaluate('//body')->item(0);
