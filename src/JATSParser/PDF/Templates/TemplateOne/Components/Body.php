@@ -60,11 +60,6 @@ class Body extends GenericComponent {
         $this->pdfTemplate->SetFont($bodyFont['family'], $bodyFont['style'], $bodyFont['size'] - 1);
         $footnoteRenderer = new FootnoteRenderer($this->pdfTemplate, $this->config, $leftMargin);
         $footnoteRenderer->render($footnotes, $links);
-
-        file_put_contents(
-            __DIR__ . "debug_body.html",
-            $htmlString
-        );
     }
     
     /**
