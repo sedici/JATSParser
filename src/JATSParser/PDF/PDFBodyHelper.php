@@ -33,6 +33,9 @@ class PDFBodyHelper {
 		self::processExternalLinks($dom, $xpath);
 		self::blankspaceAfterHeadings($dom, $xpath);
 		
+		// Nuevo: centrar columna global y justificar texto del body
+		self::applyGlobalTypography($dom, $xpath);
+
 		// Remove redundant whitespaces before caption label
 		$modifiedHtmlString = $dom->saveHTML();
 		$modifiedHtmlString = preg_replace('/<caption>\s*/', '<br>' . '<caption>', $modifiedHtmlString);
@@ -398,6 +401,34 @@ class PDFBodyHelper {
 				$heading->parentNode->insertBefore($paragraph, $heading);
 			}
 		}
+	}
+
+	/**
+	 * Envuelve el contenido del body en un contenedor centrado (columna) y aplica texto justificado.
+	 * Se marca con data-pdf-global="1" para evitar duplicados si se llama más de una vez.
+	 */
+	private static function applyGlobalTypography(\DOMDocument $dom, \DOMXPath $xpath): void {
+		$body = $xpath->evaluate('//body')->item(0);
+		if (!$body) {
+			return;
+		}
+
+		// Evitar doble envoltura
+		$alreadyWrapped = $xpath->evaluate('./div[@data-pdf-global="1"]', $body);
+		if ($alreadyWrapped->length > 0) {
+			return;
+		}
+
+		$container = $dom->createElement('div');
+		$container->setAttribute('data-pdf-global', '1');
+		// Ancho relativo centrado y texto justificado. inter-word ayuda a TCPDF en algunos casos.
+		$container->setAttribute('style', 'width: 85%; margin: 0 auto; text-align: justify; text-justify: inter-word;');
+
+		// Mover todo el contenido actual del body dentro del contenedor
+		while ($body->firstChild) {
+			$container->appendChild($body->firstChild);
+		}
+		$body->appendChild($container);
 	}
 
 }
