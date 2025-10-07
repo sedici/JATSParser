@@ -54,8 +54,8 @@ class PDFCreationService
     }
 
     foreach ($catalog['build']['item'] as $part) {
-      $pdf->SetHTMLHeader(''); # Desactivo el Header
-      $pdf->SetHTMLFooter(''); # Desactivo el Footer
+      $pdf->SetHTMLHeader('', 0); # Desactivo el Header
+      $pdf->SetHTMLFooter('', 0); # Desactivo el Footer
 
       $currentFile = $catalog[$part]['file'];
       $currentFileData = [
@@ -112,7 +112,7 @@ class PDFCreationService
     $xpath = new \DOMXPath($dom);
 
     $margins = ['top', 'bottom', 'left', 'right'];
-    $marginValues = ['top' => '20mm', 'bottom' => '20mm', 'left' => '20mm', 'right' => '20mm'];
+    $marginValues = ['top' => null, 'bottom' => null, 'left' => null, 'right' => null]; # Sacarlos de la config de OJS (cuando exista)
 
     foreach ($margins as $margin) {
       $query = "//margin-$margin";
@@ -129,17 +129,19 @@ class PDFCreationService
     }
 
     $style = "<style>
-        @page {
-            margin-top: {$marginValues['top']};
-            margin-bottom: {$marginValues['bottom']};
-            margin-left: {$marginValues['left']};
-            margin-right: {$marginValues['right']};
-        }
+      @page {";
+        if($marginValues['top'])
+          $style .= "margin-top: {$marginValues['top']};";
+        if($marginValues['bottom'])
+          $style .= "margin-bottom: {$marginValues['bottom']};";
+        if($marginValues['left'])
+          $style .= "margin-left: {$marginValues['left']};";
+        if($marginValues['right'])
+          $style .= "margin-right: {$marginValues['right']};";
+      $style .= "}
     </style>";
 
-    $html = $style . $dom->saveHTML();
-
-    return $html;
+    return $style . $dom->saveHTML();
   }
 
   private function genericUses($filepath, $pdf, $type)
@@ -149,10 +151,10 @@ class PDFCreationService
     $html = str_replace('<totalpages />', '{nb}', $html);
     switch ($type) {
       case "header":
-        $pdf->SetHTMLHeader($html);
+        $pdf->SetHTMLHeader($html, 0);
         break;
       case "footer":
-        $pdf->SetHTMLFooter($html);
+        $pdf->SetHTMLFooter($html, 0);
         break;
     }
   }
