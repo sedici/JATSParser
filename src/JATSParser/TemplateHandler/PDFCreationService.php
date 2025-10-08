@@ -54,9 +54,6 @@ class PDFCreationService
     }
 
     foreach ($catalog['build']['item'] as $part) {
-      $pdf->SetHTMLHeader('', 0); # Desactivo el Header
-      $pdf->SetHTMLFooter('', 0); # Desactivo el Footer
-
       $currentFile = $catalog[$part]['file'];
       $currentFileData = [
         'filepath' => $templatesDir . 'SUMARC/' . $templateName . '/' . $currentFile,
@@ -66,6 +63,12 @@ class PDFCreationService
       if (!file_exists($currentFileData['filepath'])) {
         $error .= "$currentFile no encontrado \n";
       }
+
+      // $margins = $this->setCustomMargins($currentFileData['filepath']);
+      // $pdf->WriteHTML($margins);
+
+      $pdf->SetHTMLHeader(''); # Desactivo el Header
+      $pdf->SetHTMLFooter(''); # Desactivo el Footer
 
       $uses = (array) (isset($catalog[$part]['uses']['use']) ? $catalog[$part]['uses']['use'] : []);
 
@@ -105,45 +108,6 @@ class PDFCreationService
     return $pdf;
   }
 
-  private function setCustomMargins($html) {
-    $dom = new DOMDocument('1.0', 'utf-8');
-    libxml_use_internal_errors(true); // Ignorar errores de HTML no válido
-    $dom->loadHTML($html);
-    $xpath = new \DOMXPath($dom);
-
-    $margins = ['top', 'bottom', 'left', 'right'];
-    $marginValues = ['top' => null, 'bottom' => null, 'left' => null, 'right' => null]; # Sacarlos de la config de OJS (cuando exista)
-
-    foreach ($margins as $margin) {
-      $query = "//margin-$margin";
-      $nodes = $xpath->query($query);
-      foreach ($nodes as $node) {
-        $size = $node->getAttribute('size');
-        if ($size) {
-          $marginValues[$margin] = $size;
-        }
-        if ($node->parentNode) {
-          $node->parentNode->removeChild($node);
-        }
-      }
-    }
-
-    $style = "<style>
-      @page {";
-        if($marginValues['top'])
-          $style .= "margin-top: {$marginValues['top']};";
-        if($marginValues['bottom'])
-          $style .= "margin-bottom: {$marginValues['bottom']};";
-        if($marginValues['left'])
-          $style .= "margin-left: {$marginValues['left']};";
-        if($marginValues['right'])
-          $style .= "margin-right: {$marginValues['right']};";
-      $style .= "}
-    </style>";
-
-    return $style . $dom->saveHTML();
-  }
-
   private function genericUses($filepath, $pdf, $type)
   {
     $html = $this->templateManager->fetch($filepath);
@@ -151,10 +115,10 @@ class PDFCreationService
     $html = str_replace('<totalpages />', '{nb}', $html);
     switch ($type) {
       case "header":
-        $pdf->SetHTMLHeader($html, 0);
+        $pdf->SetHTMLHeader($html, 'O');
         break;
       case "footer":
-        $pdf->SetHTMLFooter($html, 0);
+        $pdf->SetHTMLFooter($html, 'O');
         break;
     }
   }
@@ -184,7 +148,6 @@ class PDFCreationService
   private function defaultProcessing($pdf, $filepath)
   { # Este método sirve para renderizar cualquier cosa genérica que use metadatos  
     $html = $this->templateManager->fetch($filepath);
-    $html = $this->setCustomMargins($html);
     $pdf->WriteHTML($html);
   }
 
@@ -281,7 +244,6 @@ class PDFCreationService
   private function processBody($xpath, $dom, $htmlString, $pdf, $config, $citeProc, $path)
   {
     $styles = $this->templateManager->fetch($path);
-    $styles = $this->setCustomMargins($styles);
     $pdf->WriteHTML($styles);
 
     $referencesNodes = $xpath->evaluate('//a[contains(@class, "bibr")]'); # Procesar todas las citas, incluso si son múltiples
@@ -337,6 +299,43 @@ class PDFCreationService
     }
 
     return $items;
+  }
+
+  private function setCustomMargins($filepath) {
+      $html = $this->templateManager->fetch($filepath);
+
+      $dom = new DOMDocument('1.0', 'utf-8');
+      libxml_use_internal_errors(true);
+      $dom->loadHTML($html);
+      $xpath = new \DOMXPath($dom);
+
+      $margins = ['top', 'bottom', 'left', 'right'];
+      $marginValues = ['top' => '25mm', 'bottom' => '30mm', 'left' => '20mm', 'right' => '20mm'];
+
+      foreach ($margins as $margin) {
+          $query = "//margin-$margin";
+          $nodes = $xpath->query($query);
+          foreach ($nodes as $node) {
+              $size = $node->getAttribute('size');
+              if ($size) {
+                  $marginValues[$margin] = $size;
+              }
+              if ($node->parentNode) {
+                  $node->parentNode->removeChild($node);
+              }
+          }
+      }
+
+      $style = "<style>
+          @page {
+              margin-top: {$marginValues['top']};
+              margin-bottom: {$marginValues['bottom']};
+              margin-left: {$marginValues['left']};
+              margin-right: {$marginValues['right']};
+          }
+      </style>";
+
+      return $style;
   }
 
   public static function test()
