@@ -235,11 +235,25 @@ class PDFCreationService
       $newDoc = new \DOMDocument();
       $refsNode = $newDoc->importNode($refs, true);
       $newDoc->appendChild($refsNode);
+
+      $this->processExternalLinks($newDoc, $referencesXpath);
+
       $r = $newDoc->saveHTML();
 
       $pdf->WriteHTML($r);
     }
+  }
 
+  private function processExternalLinks(\DOMDocument $dom, \DOMXPath $xpath): void
+  {
+    $externalLinks = $xpath->evaluate('//ext-link');
+    foreach ($externalLinks as $link) {
+      $a = $dom->createElement('a', $link->textContent);
+      if ($link->hasAttribute('xlink:href')) {
+        $a->setAttribute('href', $link->getAttribute('xlink:href'));
+      }
+      $link->parentNode->replaceChild($a, $link);
+    }
   }
 
   private function processBody($xpath, $dom, $htmlString, $pdf, $config, $citeProc, $path)
@@ -302,32 +316,33 @@ class PDFCreationService
     return $items;
   }
 
-  private function setCustomMargins($filepath) {
-      $html = $this->templateManager->fetch($filepath);
+  private function setCustomMargins($filepath)
+  {
+    $html = $this->templateManager->fetch($filepath);
 
-      $dom = new DOMDocument('1.0', 'utf-8');
-      libxml_use_internal_errors(true);
-      $dom->loadHTML($html);
-      $xpath = new \DOMXPath($dom);
+    $dom = new DOMDocument('1.0', 'utf-8');
+    libxml_use_internal_errors(true);
+    $dom->loadHTML($html);
+    $xpath = new \DOMXPath($dom);
 
-      $margins = ['top', 'bottom', 'left', 'right'];
-      $marginValues = ['top' => '25mm', 'bottom' => '30mm', 'left' => '20mm', 'right' => '20mm'];
+    $margins = ['top', 'bottom', 'left', 'right'];
+    $marginValues = ['top' => '25mm', 'bottom' => '30mm', 'left' => '20mm', 'right' => '20mm'];
 
-      foreach ($margins as $margin) {
-          $query = "//margin-$margin";
-          $nodes = $xpath->query($query);
-          foreach ($nodes as $node) {
-              $size = $node->getAttribute('size');
-              if ($size) {
-                  $marginValues[$margin] = $size;
-              }
-              if ($node->parentNode) {
-                  $node->parentNode->removeChild($node);
-              }
-          }
+    foreach ($margins as $margin) {
+      $query = "//margin-$margin";
+      $nodes = $xpath->query($query);
+      foreach ($nodes as $node) {
+        $size = $node->getAttribute('size');
+        if ($size) {
+          $marginValues[$margin] = $size;
+        }
+        if ($node->parentNode) {
+          $node->parentNode->removeChild($node);
+        }
       }
+    }
 
-      $style = "<style>
+    $style = "<style>
           @page {
               margin-top: {$marginValues['top']};
               margin-bottom: {$marginValues['bottom']};
@@ -336,7 +351,7 @@ class PDFCreationService
           }
       </style>";
 
-      return $style;
+    return $style;
   }
 
   public static function test()

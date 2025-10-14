@@ -122,7 +122,7 @@ class PDFBodyHelper {
 	 * @param \DOMXPath $xpath The XPath object for DOM traversal
 	 * @param object $config The configuration object
 	 */
-	private static function replaceCitationsContent(\DOMXPath $xpath, $config): void {
+	private static function replaceCitationsContent(\DOMDocument $xpath, $config): void {
 		//Process reference citations
 		$supportedCitationStyles = $config::getSupportedCustomCitationStyles();
 		$actualCitationStyle = $config->getCitationStyle();

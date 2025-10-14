@@ -74,7 +74,12 @@ class PDFProcessingService
     $references = [];
     for ($i = 0; $i < count($referencesNodes); $i++) {
       $id = $referencesNodes[$i]->getAttribute('id');
-      $references[$i] = ["id" => $id, "text" => $referencesAPA[$id]];
+
+      $tempDom = new DOMDocument();
+      $tempNode = $tempDom->importNode($referencesNodes[$i], true);
+      $tempDom->appendChild($tempNode);
+
+      $references[$i] = ["id" => $id, "text" => $tempDom->saveHTML()];
     }
     return $references;
   }
