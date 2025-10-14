@@ -239,6 +239,7 @@ class PDFCreationService
 
       $pdf->WriteHTML($r);
     }
+
   }
 
   private function processBody($xpath, $dom, $htmlString, $pdf, $config, $citeProc, $path)

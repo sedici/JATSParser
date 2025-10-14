@@ -2,6 +2,8 @@
 
 namespace JATSParser\TemplateHandler;
 
+use DOMDocument;
+
 class PDFProcessingService
 {
   public function citeToLink($node, $dom, $xpath, $config)
@@ -81,7 +83,12 @@ class PDFProcessingService
   { # Creo el HTML para las footnotes
     for ($i = 0; $i < count($footnotesNodes); $i++) {
       $id = str_replace('fn-', '', $footnotesNodes[$i]->getAttribute('id'));
-      $footnotes[$i] = ["id" => $id, "text" => $footnotesNodes[$i]->textContent];
+
+      $tempDom = new DOMDocument();
+      $tempNode = $tempDom->importNode($footnotesNodes[$i], true);
+      $tempDom->appendChild($tempNode);
+
+      $footnotes[$i] = ["id" => $id, "text" => $tempDom->saveHTML()];
     }
     return $footnotes;
   }
