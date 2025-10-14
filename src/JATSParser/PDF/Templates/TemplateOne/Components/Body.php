@@ -2,11 +2,18 @@
 
 use JATSParser\PDF\PDFBodyHelper;
 use JATSParser\PDF\Templates\GenericComponent;
+use JATSParser\PDF\Templates\Renderers\Utils\ReferenceExtractor;
+use JATSParser\PDF\Templates\Renderers\Utils\FootnoteExtractor;
+use JATSParser\PDF\Templates\Renderers\Utils\ContentRenderer;
+use JATSParser\PDF\Templates\Renderers\Utils\ReferenceRenderer;
+use JATSParser\PDF\Templates\Renderers\Utils\FootnoteRenderer;
+use JATSParser\PDF\CitationMarker;
 
-class Body extends GenericComponent{
+class Body extends GenericComponent {
 
-    public function render(){
-        $bodyFont = $this->config->getFontConfig('philosopher');
+    public function render() {
+        // Setup basic configuration
+        $bodyFont = $this->config->getFontConfig('freeserif', 11);
         $htmlString = $this->config->getMetadata('html_string');
         $pluginPath = $this->config->getMetadata('plugin_path');
         $leftMargin = $this->config->getMargin('body_left');
@@ -15,150 +22,59 @@ class Body extends GenericComponent{
         $this->pdfTemplate->SetRightMargin($leftMargin);
         $this->pdfTemplate->SetFont($bodyFont['family'], $bodyFont['style'], $bodyFont['size']);
 
-        $refs = [];
-
+        // Add CSS styles
         $htmlString .= "\n" . '<style>' . "\n" . file_get_contents($pluginPath . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'styles' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . 'pdfGalley.css') . '</style>';
-        $htmlString = PDFBodyHelper::_prepareForPdfGalley($htmlString, $this->config, $this->pdfTemplate, $refs);
+        
+        // Initialize links array
+        $links = [];
+        
+        // Prepare HTML for PDF galley
+        $htmlString = PDFBodyHelper::_prepareForPdfGalley($htmlString, $this->config, $this->pdfTemplate, $links);
+        $htmlString = CitationMarker::markCitations($htmlString, $this->config, $this->pdfTemplate, $links);
 
-        // Extraer referencias reales del HTML usando el nuevo método
-        $referencias = $this->extractReferences($htmlString);
+        // Extract references and footnotes
+        $referenceExtractor = new ReferenceExtractor();
+        $references = $referenceExtractor->extract($htmlString);
+        
+        $footnoteExtractor = new FootnoteExtractor();
+        $footnotes = $footnoteExtractor->extract($htmlString);
+        
+        // Remove reference and footnote sections from HTML
+        $htmlString = $this->removeRefsAndFn($htmlString);
+        
+        // Render the main content
+        $contentRenderer = new ContentRenderer($this->pdfTemplate, $this->config, $leftMargin);
+        $contentRenderer->render($htmlString, $links, $footnotes);
+        
+        // Add a new page for references and footnotes
+        $this->pdfTemplate->AddPage();
+        $this->pdfTemplate->SetLeftMargin($leftMargin);
+        $this->pdfTemplate->SetFillColor(255, 255, 255);
 
-        // Extraer endnotes usando el nuevo método
-        $endnotes = $this->extractEndnotes($htmlString);
-
-        error_log(print_r($endnotes, true));
-
+        // Render references
+        $referenceRenderer = new ReferenceRenderer($this->pdfTemplate, $this->config, $leftMargin);
+        $referenceRenderer->render($references, $links);
+        
+        
+        // Render footnotes
+        $this->pdfTemplate->SetFont($bodyFont['family'], $bodyFont['style'], $bodyFont['size'] - 1);
+        $footnoteRenderer = new FootnoteRenderer($this->pdfTemplate, $this->config, $leftMargin);
+        $footnoteRenderer->render($footnotes, $links);
+    }
+    
+    /**
+     * Remove references and footnotes sections from HTML
+     * 
+     * @param string $htmlString The HTML content
+     * @return string HTML without meta sections
+     */
+    private function removeRefsAndFn(string $htmlString): string {
         // Eliminar todo el contenedor de referencias-section y su contenido
         $htmlString = preg_replace('/<div[^>]*class\s*=\s*"[^"]*references-section[^"]*"[^>]*>.*<\/div>/is', '', $htmlString);
-
-        // Eliminar todo el contenedor de footnotes-container y su contenido (greedy)
-        $htmlString = preg_replace('/<div[^>]*class\s*=\s*"[^"]*footnotes-container[^"]*"[^>]*>.*<\/div>/is', '', $htmlString);
-
-        // process citations
-        $partes = preg_split(
-            '/(<table\b[^>]*>(?:(?!<\/table>).)*{{LINK:[^:]+:[^}]+}}(?:(?!<\/table>).)*<\/table>|{{LINK:[^:]+:[^}]+}})/is', $htmlString, -1, PREG_SPLIT_DELIM_CAPTURE);
-
-		file_put_contents(
-            __DIR__ . '/debug_output.txt',
-            print_r($partes, true) . "\n"
-        );
-
-        foreach ($partes as $parte) {
-            if (preg_match('/<table\b[^>]*>(?:(?!<\/table>).)*{{LINK:[^:]+:[^}]+}}(?:(?!<\/table>).)*<\/table>/is', $parte)) {
-                if (preg_match('/{{LINK:([^:]+):(.+?)}}/', $parte, $match)) {
-                    $parte = str_replace('{{LINK:' . $match[1] . ':' . $match[2] . '}}', $match[2], $parte); // 
-                    error_log('{{LINK:' . $match[1] . ':' . $match[2] . '}}');
-                    $this->pdfTemplate->Ln(3);
-                    $this->pdfTemplate->writeHTML($parte, false, false, true, false, '');
-                    $this->pdfTemplate->SetLeftMargin($leftMargin); // temporal fix, margin left error
-                }
-            }
-            else if (preg_match('/{{LINK:([^:]+):(.+?)}}/', $parte, $match)) {
-                $refId = $match[1];
-                $texto = $match[2];
-                $this->pdfTemplate->SetTextColor(0, 102, 204); // #0066cc
-                if (isset($endnotes[$refId])) {
-                    $currentFont = $this->pdfTemplate->getFontFamily();
-                    $currentStyle = $this->pdfTemplate->getFontStyle();
-                    $currentSize = $this->pdfTemplate->getFontSizePt();
-                    $this->pdfTemplate->SetFont($currentFont, $currentStyle, $currentSize * 0.7);
-                    $this->pdfTemplate->Write(0, $texto, $refs[$refId], 0);
-                    $this->pdfTemplate->Write(0, '  ', '', 0); // espacio después del superíndice
-                    $this->pdfTemplate->SetFont($currentFont, $currentStyle, $currentSize);
-                } else {
-                    $this->pdfTemplate->Write(0, ' ' . $texto . ' ', $refs[$refId], 0);
-                }
-                $this->pdfTemplate->SetTextColor(0, 0, 0); 
-                $this->pdfTemplate->SetLeftMargin($leftMargin); // temporal fix, margin left error
-            } else {
-                $this->pdfTemplate->writeHTML($parte, false, false, true, false, '');
-                $this->pdfTemplate->SetLeftMargin($leftMargin); // temporal fix, margin left error
-
-            }
-        }
-
-        //PASO 7
-        $this->pdfTemplate->AddPage(); 
-        $this->pdfTemplate->SetLeftMargin($leftMargin);
-        $this->pdfTemplate->SetFillColor(255, 255, 255); // fondo blanco
-
-        // Título de referencias
-        if (!empty($referencias)) {
-            $this->pdfTemplate->writeHTML('<h2>' . __('plugins.generic.jatsParser.article.references.title') . '</h2>', false, false, true, false, '');
-        }
         
-        $this->pdfTemplate->Ln(5);
-
-        foreach ($refs as $refId => $linkId) {
-            $this->pdfTemplate->SetLink($linkId); // marcar posición
-            if (isset($referencias[$refId])) {
-                $this->pdfTemplate->writeHTML($referencias[$refId], false, false, true, false, '');
-                $this->pdfTemplate->SetLeftMargin($leftMargin); // temporal fix, margin left error
-                $this->pdfTemplate->Ln(10); 
-            }
-        }
-
-        $this->pdfTemplate->Ln(5);
-
-        // Título de footnotes
-        if (!empty($endnotes)) {
-            $this->pdfTemplate->writeHTML('<h2>' . __('plugins.generic.jatsParser.article.footnotes.title') . '</h2>', false, false, true, false, '');
-        }
-        $this->pdfTemplate->Ln(5);
-
-        foreach ($endnotes as $noteId => $noteHtml) {
-            $refKey = $noteId;
-            if (!isset($refs[$refKey]) && strpos($refKey, 'fn-') === 0) {
-                // Si no existe, intenta sin el prefijo
-                $refKeyNoFn = substr($refKey, 3);
-                if (isset($refs[$refKeyNoFn])) {
-                    $this->pdfTemplate->SetLink($refs[$refKeyNoFn]);
-                }
-            } else if (isset($refs[$refKey])) {
-                $this->pdfTemplate->SetLink($refs[$refKey]);
-            }
-            $this->pdfTemplate->writeHTML($noteHtml, false, false, true, false, '');
-            $this->pdfTemplate->SetLeftMargin($leftMargin); // temporal fix, margin left error
-            $this->pdfTemplate->Ln(6);
-        }
-    }
-
-    /**
-     * Extrae las referencias del HTML y las retorna como array [id => html]
-     */
-    private function extractReferences($htmlString) {
-        $domRefs = new \DOMDocument();
-        libxml_use_internal_errors(true);
-        $domRefs->loadHTML('<?xml encoding="utf-8" ?>' . $htmlString);
-        libxml_clear_errors();
-        $xpathRefs = new \DOMXPath($domRefs);
-
-        $referencias = [];
-        foreach ($xpathRefs->query('//li[contains(@class,"citation-item")]') as $li) {
-            $refId = $li->getAttribute('id');
-            $referencias[$refId] = $domRefs->saveHTML($li);
-        }
-        return $referencias;
-    }
-
-    /**
-     * Extrae las endnotes del HTML y las retorna como array [id => html]
-     */
-    private function extractEndnotes($htmlString) {
-        $domNotes = new \DOMDocument();
-        libxml_use_internal_errors(true);
-        $domNotes->loadHTML('<?xml encoding="utf-8" ?>' . $htmlString);
-        libxml_clear_errors();
-        $xpathNotes = new \DOMXPath($domNotes);
-
-        $endnotes = [];
-        foreach ($xpathNotes->query('//div[contains(@class,"footnote-item")]') as $div) {
-            $noteId = $div->getAttribute('id');
-            if (strpos($noteId, 'fn-') === 0) {
-                $noteId = substr($noteId, 3); // quitar 'fn-' si existe
-            }
-            $endnotes[$noteId] = $domNotes->saveHTML($div);
-        }
-        return $endnotes;
+        // Eliminar todo el contenedor de footnotes-container y su contenido
+        $htmlString = preg_replace('/<div[^>]*class\s*=\s*"[^"]*footnotes-container[^"]*"[^>]*>.*<\/div>/is', '', $htmlString);
+        
+        return $htmlString;
     }
 }

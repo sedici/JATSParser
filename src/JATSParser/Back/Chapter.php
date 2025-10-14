@@ -25,7 +25,6 @@ class Chapter extends AbstractReference
 
 	public function __construct(\DOMElement $reference)
 	{
-
 		parent::__construct($reference);
 
 		$this->title = $this->extractFromElement($reference, ".//chapter-title[1]");
@@ -34,6 +33,7 @@ class Chapter extends AbstractReference
 		$this->publisherName = $this->extractFromElement($reference, ".//publisher-name[1]");
 		$this->fpage = $this->extractFromElement($reference, './/fpage[1]');
 		$this->lpage = $this->extractFromElement($reference, './/lpage[1]');
+		$this->url = $this->extractFromElement($reference, './/elocation-id[1]');
 	}
 
 	/**

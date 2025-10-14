@@ -1,5 +1,8 @@
 <?php namespace JATSParser\HTML;
 
+use JATSParser\HTML\UnlpHTML\Figure as FigureUNLP;
+use JATSParser\HTML\UnlpHTML\Table as TableUNLP;
+
 use JATSParser\Body\DispQuote;
 use JATSParser\Body\Document as JATSDocument;
 use JATSParser\HTML\Par as  Par;
@@ -22,6 +25,7 @@ class Document extends \DOMDocument {
 	var $jatsDocument;
 
 	public function __construct(JATSDocument $jatsDocument) {
+
 		parent::__construct('1.0', 'utf-8');
 		$this->preserveWhiteSpace = false;
 		$this->formatOutput = true;
@@ -150,12 +154,15 @@ class Document extends \DOMDocument {
 					$listing->setContent($articleSection);
 					break;
 				case "JATSParser\Body\Table":
-					$table = new Table();
+					// $table = new Table();
+					$table = new TableUNLP();
 					$parentEl->appendChild($table);
 					$table->setContent($articleSection);
 					break;
 				case "JATSParser\Body\Figure":
-					$figure = new Figure();
+					//$figure = new Figure();
+					//instance of our Figure class adapted to UNLP HTML 
+					$figure = new FigureUNLP();
 					$parentEl->appendChild($figure);
 					$figure->setContent($articleSection);
 					break;
@@ -212,6 +219,7 @@ class Document extends \DOMDocument {
 
 		$data = [];
 		$rawData = [];
+
 		foreach ($references as $reference) {
 			$citeProcRef = new Reference($reference);
 			if (!$citeProcRef->refIsEmpty()) {
@@ -226,14 +234,12 @@ class Document extends \DOMDocument {
 		$this->citeProcReferences = $data;
 
 		if($this->citationStyle === 'apa') {
-				$styleName = "apa-no-ampersand";
+			$styleName = __DIR__ . "/../Back/CSL/apa-no-ampersand.csl";
 		}
 		else {
-				$styleName = $this->citationStyle;
+			$styleName = $this->citationStyle;	
 		}
 		$style = StyleSheet::loadStyleSheet($styleName);
-
-		#$style = StyleSheet::loadStyleSheet($this->getCitationStyle());
 
 		$wrapIntoListItem = function($cslItem, $renderedText) {
 			return '<li id="' . $cslItem->id .'">' . $renderedText . '</li>';
@@ -246,14 +252,42 @@ class Document extends \DOMDocument {
 		];
 
 		$citeProc = new CiteProc($style, $this->citationLang, $additionalMarkup);
-		//Le pido a citeproc que me renderice texto plano si italica
-	
-		$htmlString = $citeProc->render($data, 'bibliography');
-		
+
+		$htmlString = $citeProc->render($data, "bibliography");
+
 		if ($this->styleInTextLinks) {
 			$this->setInTextLinks($citeProc, $data);
 		}
 		$this->getCiteBody($htmlString, $rawData);
+
+
+        /* Testing section 
+	
+		$wrapIntoListItem = function($cslItem, $renderedText) {
+			return '<li id="' . $cslItem->id .'">' . $renderedText . '</li>';
+		};
+
+		$additionalMarkup = [
+			'bibliography' => [
+				'csl-entry' => $wrapIntoListItem
+			]
+		];
+
+		$data = file_get_contents(__DIR__ . "/TestingFiles/metadata.json");
+		$decoded = json_decode($data);
+
+		$styleName = $this->getCitationStyle();
+		
+		//get apa 7th edition style from CSL folder
+		$styleName = __DIR__ . "/../Back/CSL/apa-no-ampersand.csl";
+		$style = StyleSheet::loadStyleSheet($styleName);
+
+		$citeProc = new CiteProc($style, 'es', $additionalMarkup);
+		$testHtml = $citeProc->render($decoded, "bibliography");
+		$cssStyles = $citeProc->renderCssStyles();
+		file_put_contents(__DIR__ . '/TestingFiles/cssStyles.html', $cssStyles);
+		file_put_contents(__DIR__ . '/TestingFiles/testOutput.html', $testHtml);
+		*/
 	}
 
 	protected function getCiteBody(string $htmlString, array $rawData) {

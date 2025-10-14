@@ -12,7 +12,7 @@
 
 class JournalLogo {
 
-    public static function renderJournalLogo($config, $pdfTemplate): void {
+    public static function renderJournalLogo($config, $pdfTemplate): bool {
         $journalLogoConfig = $config->getLogoConfig('journal_logo');
 
         $logoPath = null;
@@ -29,7 +29,10 @@ class JournalLogo {
             } else {
                 $pdfTemplate->Image($logoPath, $journalLogoConfig['x_pos'], $journalLogoConfig['y_pos'], $journalLogoConfig['width']);
             }
+            return true;
         }
+
+        return false;
     }
 
 }

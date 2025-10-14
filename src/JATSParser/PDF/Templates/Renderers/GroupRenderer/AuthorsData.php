@@ -5,6 +5,7 @@ use JATSParser\PDF\Templates\Renderers\SingleRenderer\ClickableOrcidLogo;
 class AuthorsData {
 
         public static function renderAuthorsData($pdfTemplate, float $xPosition, float $yPosition, Array $authorsConfig, $localeKey){
+                
             $pdfTemplate->SetXY($xPosition, $yPosition);
             if (count($authorsConfig['authors_data']) > 0) {
                 foreach ($authorsConfig['authors_data'] as $author) {
@@ -34,10 +35,10 @@ class AuthorsData {
                         // Move position to the right of the logo for the author name
                         $pdfTemplate->SetXY($currentX + 5, $currentY); // Adjust the 5 value as needed for spacing
                     }
-                    
+
                     // Now render the author name
                     $pdfTemplate->MultiCell(0, 0, $authorName, 0, 'L', false, 1, '', '', true);
-    
+
                     // Email
                     if ($author->getEmail()) {
                         $email = htmlspecialchars($author->getEmail());

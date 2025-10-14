@@ -2,7 +2,6 @@
 
     class Translations {
         private static $translationsConfig = [
-
             'en' => [
                 'abstract' => 'Abstract',
                 'received' => 'Received',
@@ -25,7 +24,7 @@
                 'number' => 'Núm.',
                 'volume' => 'Vol.',
             ],
-            'pt' => [
+            'pt_BR' => [
                 'abstract' => 'Resumo',
                 'received' => 'Recebido',
                 'accepted' => 'Aceito',
@@ -35,6 +34,24 @@
                 'references_sections_separator' => 'e',
                 'number' => 'n.',
                 'volume' => 'Vol.',
+            ],
+            'fr_CA' => [
+                'abstract' => 'Résumé',
+                'received' => 'Reçu',
+                'accepted' => 'Accepté',
+                'published' => 'Publié',
+                'keywords' => 'Mots-clés',
+                'license_text' => 'Cette œuvre est sous licence Creative Commons',
+                'references_sections_separator' => 'et'
+            ],
+            'fr_FR' => [
+                'abstract' => 'Résumé',
+                'received' => 'Reçu',
+                'accepted' => 'Accepté',
+                'published' => 'Publié',
+                'keywords' => 'Mots-clés',
+                'license_text' => 'Cette œuvre est sous licence Creative Commons',
+                'references_sections_separator' => 'et'
             ],
         ];
 
