@@ -116,41 +116,98 @@ class PDFProcessingService
     }
   }
 
+  public function processFootnotes($footnotesSection, $footnotes, $dom)
+  {
+    $listContainer = $dom->createElement('ul');
+    foreach ($footnotes as $footnote) {
+      $li = $dom->createElement('li');
+
+      $newNode = $dom->createElement('a', '');
+      $newNode->setAttribute('name', $footnote['id']);
+      $newNode->setAttribute('id', $footnote['id']);
+      $li->appendChild($newNode);
+
+      $ref = $dom->createDocumentFragment();
+      $ref->appendXML($footnote['text']);
+
+      # Buscar el primer div dentro del fragmento y agregar la flecha 
+      $tempDom = new \DOMDocument();
+      $tempDom->loadHTML('<?xml encoding="utf-8" ?>' . $footnote['text']);
+      $divs = $tempDom->getElementsByTagName('div');
+      if ($divs->length > 0) {
+        $div = $divs->item(0);
+        $arrowLink = $tempDom->createElement('a', ' ↑');
+        $arrowLink->setAttribute('href', '#citation_' . $footnote['id']);
+        $div->appendChild($arrowLink);
+        $newHtml = '';
+        foreach ($tempDom->getElementsByTagName('body')->item(0)->childNodes as $child) {
+          $newHtml .= $tempDom->saveHTML($child);
+        }
+        $ref = $dom->createDocumentFragment();
+        $ref->appendXML($newHtml);
+      } else {
+        # Si no hay div, agrega la flecha al final
+        $arrowLink = $dom->createElement('a', ' ↑');
+        $arrowLink->setAttribute('href', '#citation_' . $footnote['id']);
+        $ref->appendChild($arrowLink);
+      }
+
+      $li->appendChild($ref);
+      $listContainer->appendChild($li);
+    }
+
+    if ($footnotesSection) $footnotesSection->appendChild($listContainer);
+  }
+
   public function processReferences($referencesSection, $references, $dom)
   {
     $listContainer = $dom->createElement('ul');
     foreach ($references as $reference) {
+      # Si el texto ya es un <li> con la referencia, se parsea y agrega las flechitas
+      if (preg_match('/^<li[^>]*>.*<\/li>$/s', trim($reference['text']))) {
+        $tempDom = new \DOMDocument();
+        $tempDom->loadHTML('<?xml encoding="utf-8" ?>' . $reference['text']);
+        $liNodes = $tempDom->getElementsByTagName('li');
+        if ($liNodes->length > 0) {
+          $li = $liNodes->item(0);
+          # <a> vacío para navegación interna, SI NO SE USA NO ANDAN LOS HREF
+          $anchor = $tempDom->createElement('a', '');
+          $anchor->setAttribute('name', $reference['id']);
+          $anchor->setAttribute('id', $reference['id']);
+          $li->insertBefore($anchor, $li->firstChild);
+          $arrowLink = $tempDom->createElement('a', ' ↑');
+          $arrowLink->setAttribute('href', '#citation_' . $reference['id']);
+          $li->appendChild($arrowLink);
+          $importedLi = $dom->importNode($li, true);
+          $listContainer->appendChild($importedLi);
+          continue;
+        }
+      }
+      # Si no es un <li>, usar el método anterior (nunca debería llegar a pasar)
       $li = $dom->createElement('li');
-
-      $newNode = $dom->createElement('a', '');
-      $newNode->setAttribute('name', $reference['id']);
-      $newNode->setAttribute('id', $reference['id']);
-      $li->appendChild($newNode);
-
+      $anchor = $dom->createElement('a', '');
+      $anchor->setAttribute('name', $reference['id']);
+      $anchor->setAttribute('id', $reference['id']);
+      $li->appendChild($anchor);
       $ref = $dom->createDocumentFragment();
       $ref->appendXML($reference['text']);
       $li->appendChild($ref);
-
-      $href = $dom->createElement('a', ' ↑');
-      $href->setAttribute('href', '#citation_' . $reference['id']);
-      $li->appendChild($href);
-
+      $arrowLink = $dom->createElement('a', ' ↑');
+      $arrowLink->setAttribute('href', '#citation_' . $reference['id']);
+      $li->appendChild($arrowLink);
       $listContainer->appendChild($li);
     }
-    
-    if($referencesSection) $referencesSection->appendChild($listContainer);
+    if ($referencesSection) $referencesSection->appendChild($listContainer);
   }
 
   public function replaceCitationsContent(\DOMXPath $xpath, $config)
   {
-    //Process reference citations
     $supportedCitationStyles = $config::getSupportedCustomCitationStyles();
     $actualCitationStyle = $config->getCitationStyle();
     if ($supportedCitationStyles && in_array(strtolower($actualCitationStyle), $supportedCitationStyles)) {
       $publicationId = $config->getPublicationId();
       $localeKey = $config->getLocaleKeyConfig();
 
-      //Get citations from database ONLY for APA style (for now)
       $customPublicationSettingsDAO = new \CustomPublicationSettingsDAO();
       $settings = $customPublicationSettingsDAO->getSetting($publicationId, 'jatsParser::citationTableData', $localeKey);
 
@@ -170,5 +227,69 @@ class PDFProcessingService
         }
       }
     }
+  }
+
+  public function processExternalLinks(\DOMDocument $dom)
+  {
+    $xpath = new \DOMXPath($dom);
+    $externalLinks = $xpath->evaluate('//ext-link');
+    foreach ($externalLinks as $link) {
+      $a = $dom->createElement('a', $link->textContent);
+      if ($link->hasAttribute('xlink:href')) {
+        $a->setAttribute('href', $link->getAttribute('xlink:href'));
+      }
+      $link->parentNode->replaceChild($a, $link);
+    }
+
+    return $dom->saveHTML();
+  }
+
+  public function setTablesClass($bodyXpath, $term)
+  {
+    $items = $bodyXpath->query('//' . $term);
+
+    foreach ($items as $item) {
+      $item->setAttribute('class', 'table');
+    }
+
+    return $items;
+  }
+
+  private function setCustomMargins($filepath, $templateManager)
+  {
+    $html = $templateManager->fetch($filepath);
+
+    $dom = new DOMDocument('1.0', 'utf-8');
+    libxml_use_internal_errors(true);
+    $dom->loadHTML($html);
+    $xpath = new \DOMXPath($dom);
+
+    $margins = ['top', 'bottom', 'left', 'right'];
+    $marginValues = ['top' => '25mm', 'bottom' => '30mm', 'left' => '20mm', 'right' => '20mm'];
+
+    foreach ($margins as $margin) {
+      $query = "//margin-$margin";
+      $nodes = $xpath->query($query);
+      foreach ($nodes as $node) {
+        $size = $node->getAttribute('size');
+        if ($size) {
+          $marginValues[$margin] = $size;
+        }
+        if ($node->parentNode) {
+          $node->parentNode->removeChild($node);
+        }
+      }
+    }
+
+    $style = "<style>
+          @page {
+              margin-top: {$marginValues['top']};
+              margin-bottom: {$marginValues['bottom']};
+              margin-left: {$marginValues['left']};
+              margin-right: {$marginValues['right']};
+          }
+      </style>";
+
+    return $style;
   }
 }

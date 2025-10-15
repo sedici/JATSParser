@@ -64,8 +64,8 @@ class PDFCreationService
         $error .= "$currentFile no encontrado \n";
       }
 
-      // $margins = $this->setCustomMargins($currentFileData['filepath']);
-      // $pdf->WriteHTML($margins);
+      # $margins = $this->setCustomMargins($currentFileData['filepath']);
+      # $pdf->WriteHTML($margins);
 
       $pdf->SetHTMLHeader(''); # Desactivo el Header
       $pdf->SetHTMLFooter(''); # Desactivo el Footer
@@ -211,7 +211,7 @@ class PDFCreationService
 
     $htmlString = $dom->saveHTML();
 
-    $this->processingService->processReferences($footnotesSection, $footnotes, $dom);
+    $this->processingService->processFootnotes($footnotesSection, $footnotes, $dom);
 
     $htmlString = $dom->saveHTML();
 
@@ -236,23 +236,9 @@ class PDFCreationService
       $refsNode = $newDoc->importNode($refs, true);
       $newDoc->appendChild($refsNode);
 
-      $this->processExternalLinks($newDoc, $referencesXpath);
-
-      $r = $newDoc->saveHTML();
+      $r = $this->processingService->processExternalLinks($newDoc);
 
       $pdf->WriteHTML($r);
-    }
-  }
-
-  private function processExternalLinks(\DOMDocument $dom, \DOMXPath $xpath): void
-  {
-    $externalLinks = $xpath->evaluate('//ext-link');
-    foreach ($externalLinks as $link) {
-      $a = $dom->createElement('a', $link->textContent);
-      if ($link->hasAttribute('xlink:href')) {
-        $a->setAttribute('href', $link->getAttribute('xlink:href'));
-      }
-      $link->parentNode->replaceChild($a, $link);
     }
   }
 
@@ -282,10 +268,10 @@ class PDFCreationService
     $footnotesSection = $bodyXpath->query('//div[contains(@class, "footnotes-container")]');
     $footnotesSection = $footnotesSection->item(0);
 
-    $this->setTablesClass($bodyXpath, 'table'); # A todas les asigno la clase "table" para no pisar el CSS del footer/header
-    $this->setTablesClass($bodyXpath, 'td');
-    $this->setTablesClass($bodyXpath, 'tr');
-    $this->setTablesClass($bodyXpath, 'th');
+    $this->processingService->setTablesClass($bodyXpath, 'table'); # A todas les asigno la clase "table" para no pisar el CSS del footer/header
+    $this->processingService->setTablesClass($bodyXpath, 'td');
+    $this->processingService->setTablesClass($bodyXpath, 'tr');
+    $this->processingService->setTablesClass($bodyXpath, 'th');
 
     if ($referencesSection) {
       while ($referencesSection->hasChildNodes()) {
@@ -302,56 +288,8 @@ class PDFCreationService
     $isolatedBody = $bodyDom->saveHTML();
 
     $pdf->writeHTML($isolatedBody);
+
     return $htmlString;
-  }
-
-  private function setTablesClass($bodyXpath, $term)
-  {
-    $items = $bodyXpath->query('//' . $term);
-
-    foreach ($items as $item) {
-      $item->setAttribute('class', 'table');
-    }
-
-    return $items;
-  }
-
-  private function setCustomMargins($filepath)
-  {
-    $html = $this->templateManager->fetch($filepath);
-
-    $dom = new DOMDocument('1.0', 'utf-8');
-    libxml_use_internal_errors(true);
-    $dom->loadHTML($html);
-    $xpath = new \DOMXPath($dom);
-
-    $margins = ['top', 'bottom', 'left', 'right'];
-    $marginValues = ['top' => '25mm', 'bottom' => '30mm', 'left' => '20mm', 'right' => '20mm'];
-
-    foreach ($margins as $margin) {
-      $query = "//margin-$margin";
-      $nodes = $xpath->query($query);
-      foreach ($nodes as $node) {
-        $size = $node->getAttribute('size');
-        if ($size) {
-          $marginValues[$margin] = $size;
-        }
-        if ($node->parentNode) {
-          $node->parentNode->removeChild($node);
-        }
-      }
-    }
-
-    $style = "<style>
-          @page {
-              margin-top: {$marginValues['top']};
-              margin-bottom: {$marginValues['bottom']};
-              margin-left: {$marginValues['left']};
-              margin-right: {$marginValues['right']};
-          }
-      </style>";
-
-    return $style;
   }
 
   public static function test()
