@@ -1,14 +1,16 @@
 <?php
 
-namespace JATSParser\TemplateHandler;
+namespace JATSParser\TemplateHandler\PDF;
 
 use DOMDocument;
 
 class PDFCreationService
 {
 
+  private $publicTemplateManager;
+  private $privateTemplateManager;
+  
   private $templateManager;
-  private $processingService;
 
   private const PROCESS_MAP = [
     'body' => 'processBody',
@@ -21,15 +23,24 @@ class PDFCreationService
     'header' => 'genericUses'
   ];
 
-  public function __construct($templateManager, $processingService)
+  public function __construct($publicTemplateManager, $privateTemplateManager)
   {
-    $this->templateManager = $templateManager;
-    $this->processingService = $processingService;
+    $this->publicTemplateManager = $publicTemplateManager;
+    $this->privateTemplateManager = $privateTemplateManager;
+
+    $this->templateManager = $publicTemplateManager;
   }
 
-  public function buildPDF($templatesDir, $pdf, $htmlString, $xpath, $dom, $citeProc, $config, $metadata)
+  private function whereToLook() {
+    return $this->publicTemplateManager->getTemplateDir()[0]; # Temporal hasta que determine cómo hacer esto
+  }
+
+  # Sacar $templatesDir, crear un método que se encargue de retornar este valor en base a dónde se debe buscar la template, si la template es UNLP > concatenar CSS
+  public function buildPDF($pdf, $htmlString, $xpath, $dom, $citeProc, $config, $metadata, $selectedTemplate)
   {
-    $content = trim(file_get_contents($templatesDir . 'SUMARC/UNLP/catalog.xml')); # Esto debería ser ruta de OJS, no estar hardcodeado
+    $templatesDir = $this->whereToLook($selectedTemplate);
+
+    $content = trim(file_get_contents("$templatesDir/$selectedTemplate/catalog.xml"));
     $xml = simplexml_load_string($content);
     $catalog = json_decode(json_encode($xml), true);
     $templateName = $catalog['template_name'];
@@ -43,7 +54,7 @@ class PDFCreationService
         $optionalFile = $mediaItem['file'];
         $currentFileData = [
           'dataName' => $optionalName,
-          'filepath' => $templatesDir . 'SUMARC/' . $templateName . '/' . $optionalFile,
+          'filepath' => "$templatesDir/$templateName/$optionalFile",
         ];
         if (!file_exists($currentFileData['filepath'])) {
           $error .= "Archivo opcional $optionalName no encontrado \n";
@@ -56,7 +67,7 @@ class PDFCreationService
     foreach ($catalog['build']['item'] as $part) {
       $currentFile = $catalog[$part]['file'];
       $currentFileData = [
-        'filepath' => $templatesDir . 'SUMARC/' . $templateName . '/' . $currentFile,
+        'filepath' => "$templatesDir/$templateName/$currentFile",
         'type' => $part
       ];
       $fileUses = [];
@@ -65,7 +76,7 @@ class PDFCreationService
       }
 
       # $margins = $this->setCustomMargins($currentFileData['filepath']);
-      # $pdf->WriteHTML($margins);
+      # $pdf->WriteHTML($margins); # Esta función permite la utilización de márgenes propios en cada parte del PDF, pero se rompe header y footer. Dejo comentado el uso pero no elimino la lógica por si a futuro la librería lo arregla
 
       $pdf->SetHTMLHeader(''); # Desactivo el Header
       $pdf->SetHTMLFooter(''); # Desactivo el Footer
@@ -76,21 +87,25 @@ class PDFCreationService
         if (is_string($use) && isset($catalog[$use]) && isset($catalog[$use]['file'])) { # Más chequeos por la conversión de XML...
           $usesFile = $catalog[$use]['file'];
           $usesFileData = [
-            'filepath' => $templatesDir . 'SUMARC/' . $templateName . '/' . $usesFile,
-            'type' => $use
+            'filepath' => "$templatesDir/$templateName/$usesFile",
+            'type' => $use,
+            'role' => $catalog[$use]['role'],
           ];
-          if (!file_exists($templatesDir . 'SUMARC/' . $templateName . '/' . $usesFile)) {
-            $error .= "$usesFile no encontrado \n";
+          if (!file_exists("$templatesDir/$templateName/$usesFile")) {
+            $error .= "Archivo $usesFile no encontrado \n";
           } else {
             $fileUses[] = $usesFileData;
           }
         }
+        else {
+          $error .= "Artefacto $use no encontrado \n";
+        }
       }
 
       foreach ($fileUses as $use) {
-        if (array_key_exists($use['type'], $this::USE_MAP)) {
-          $fn = $this::USE_MAP[$use['type']];
-          $this->$fn($use['filepath'], $pdf, $use['type']);
+        if (array_key_exists($use['role'], $this::USE_MAP)) {
+          $fn = $this::USE_MAP[$use['role']];
+          $this->$fn($use['filepath'], $pdf, $use['role']);
         } else {
           $this->defaultProcessing($use['filepath'], $pdf); # Renderiza y escribe, por eso reuso el procesamiento y no es un método aparte
         }
@@ -105,7 +120,7 @@ class PDFCreationService
     }
 
     file_put_contents(__DIR__ . "/errors.txt", $error); # Ahora marco los errores de archivos faltantes en un txt. A futuro será un mensaje en OJS
-    return $pdf;
+    return $pdf->output('a', 'S');
   }
 
   private function genericUses($filepath, $pdf, $type)
@@ -156,12 +171,12 @@ class PDFCreationService
     $referencesAPA = $citeProc->getRawReferences();
 
     $referencesNodes = $xpath->evaluate('//div[contains(@class,"references-section")]//li');
-    $references = $this->processingService->setReferencesAnchors($referencesAPA, $referencesNodes); # Agrego los tags <a> vacíos para las redirecciones de referencias
+    $references = PDFProcessingService::setReferencesAnchors($referencesAPA, $referencesNodes); # Agrego los tags <a> vacíos para las redirecciones de referencias
 
     $htmlString = $dom->saveHTML();
 
     foreach ($xpath->query('//a[contains(@class, "bibr")]') as $a) { # Agrego los tags <a> a las citas
-      $this->processingService->processCitations($a, $dom, "citation_");
+      PDFProcessingService::processCitations($a, $dom, "citation_");
     }
 
     $htmlString = $dom->saveHTML();
@@ -177,7 +192,7 @@ class PDFCreationService
 
     $htmlString = $dom->saveHTML();
 
-    $this->processingService->processReferences($referencesSection, $references, $dom);
+    PDFProcessingService::processReferences($referencesSection, $references, $dom);
 
     $htmlString = $dom->saveHTML();
 
@@ -190,12 +205,12 @@ class PDFCreationService
   public function processFootnotes($xpath, $dom, $htmlString, $pdf, $config, $citeProc, $path)
   {
     $footnotesNodes = $xpath->evaluate('//div[contains(@class,"footnotes-container")]//div');
-    $footnotes = $this->processingService->setFootnotesAnchors($footnotesNodes); # Same con footnotes
+    $footnotes = PDFProcessingService::setFootnotesAnchors($footnotesNodes); # Same con footnotes
 
     $htmlString = $dom->saveHTML();
 
     foreach ($xpath->query('//div[contains(@class, "footnote-item")]') as $a) { # Agrego los tags <a> a las citas footnote
-      $this->processingService->processCitations($a, $dom, "footnote_");
+      PDFProcessingService::processCitations($a, $dom, "footnote_");
     }
 
     $htmlString = $dom->saveHTML();
@@ -211,7 +226,7 @@ class PDFCreationService
 
     $htmlString = $dom->saveHTML();
 
-    $this->processingService->processFootnotes($footnotesSection, $footnotes, $dom);
+    PDFProcessingService::processFootnotes($footnotesSection, $footnotes, $dom);
 
     $htmlString = $dom->saveHTML();
 
@@ -236,7 +251,7 @@ class PDFCreationService
       $refsNode = $newDoc->importNode($refs, true);
       $newDoc->appendChild($refsNode);
 
-      $r = $this->processingService->processExternalLinks($newDoc);
+      $r = PDFProcessingService::processExternalLinks($newDoc);
 
       $pdf->WriteHTML($r);
     }
@@ -249,12 +264,12 @@ class PDFCreationService
 
     $referencesNodes = $xpath->evaluate('//a[contains(@class, "bibr")]'); # Procesar todas las citas, incluso si son múltiples
     foreach ($referencesNodes as $node) {
-      $this->processingService->citeToLink($node, $dom, $xpath, $config);
+      PDFProcessingService::citeToLink($node, $dom, $xpath, $config);
     }
 
     $footnotesNodes = $xpath->evaluate('//a[contains(@class, "fn")]'); # Same con footnotes
     foreach ($footnotesNodes as $node) {
-      $this->processingService->footnoteToLink($node, $dom);
+      PDFProcessingService::footnoteToLink($node, $dom);
     }
 
     $htmlString = $dom->saveHTML();
@@ -268,10 +283,10 @@ class PDFCreationService
     $footnotesSection = $bodyXpath->query('//div[contains(@class, "footnotes-container")]');
     $footnotesSection = $footnotesSection->item(0);
 
-    $this->processingService->setTablesClass($bodyXpath, 'table'); # A todas les asigno la clase "table" para no pisar el CSS del footer/header
-    $this->processingService->setTablesClass($bodyXpath, 'td');
-    $this->processingService->setTablesClass($bodyXpath, 'tr');
-    $this->processingService->setTablesClass($bodyXpath, 'th');
+    PDFProcessingService::setTablesClass($bodyXpath, 'table'); # A todas les asigno la clase "table" para no pisar el CSS del footer/header
+    PDFProcessingService::setTablesClass($bodyXpath, 'td');
+    PDFProcessingService::setTablesClass($bodyXpath, 'tr');
+    PDFProcessingService::setTablesClass($bodyXpath, 'th');
 
     if ($referencesSection) {
       while ($referencesSection->hasChildNodes()) {

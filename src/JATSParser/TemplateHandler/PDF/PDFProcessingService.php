@@ -1,14 +1,14 @@
 <?php
 
-namespace JATSParser\TemplateHandler;
+namespace JATSParser\TemplateHandler\PDF;
 
 use DOMDocument;
 
-class PDFProcessingService
+abstract class PDFProcessingService
 {
-  public function citeToLink($node, $dom, $xpath, $config)
+  public static function citeToLink($node, $dom, $xpath, $config)
   {
-    $this->replaceCitationsContent($xpath, $config);
+    self::replaceCitationsContent($xpath, $config);
 
     $text = trim($node->textContent, '[\]'); # Elimino los corcheted de cada cita, [1], [1,2]
     $numbers = explode(';', $text); # Guardo los números de la cita sin la coma en un array, [1], "[1, 2]"
@@ -39,7 +39,7 @@ class PDFProcessingService
     $node->parentNode->replaceChild($fragment, $node);
   }
 
-  public function footnoteToLink($node, $dom)
+  public static function footnoteToLink($node, $dom)
   {
     $numbers = explode(',', $node->textContent); # Guardo los números de la fn sin la coma en un array, [1], "[1, 2]"
     $refs = preg_split('/\s+/', $node->getAttribute('href')); # Guardo los href, #parser_0, #parser_0 parser_1
@@ -69,7 +69,7 @@ class PDFProcessingService
     $node->parentNode->replaceChild($fragment, $node);
   }
 
-  public function setReferencesAnchors($referencesAPA, $referencesNodes)
+  public static function setReferencesAnchors($referencesAPA, $referencesNodes)
   { # Creo el HTML para las references
     $references = [];
     for ($i = 0; $i < count($referencesNodes); $i++) {
@@ -84,7 +84,7 @@ class PDFProcessingService
     return $references;
   }
 
-  public function setFootnotesAnchors($footnotesNodes)
+  public static function setFootnotesAnchors($footnotesNodes)
   { # Creo el HTML para las footnotes
     for ($i = 0; $i < count($footnotesNodes); $i++) {
       $id = str_replace('fn-', '', $footnotesNodes[$i]->getAttribute('id'));
@@ -98,7 +98,7 @@ class PDFProcessingService
     return $footnotes;
   }
 
-  public function processCitations($a, $dom, $type)
+  public static function processCitations($a, $dom, $type)
   { # Agrego las tags <a> vacías de las citas
     $id = $a->getAttribute('href');
     $id = trim($id, '#');
@@ -116,7 +116,7 @@ class PDFProcessingService
     }
   }
 
-  public function processFootnotes($footnotesSection, $footnotes, $dom)
+  public static function processFootnotes($footnotesSection, $footnotes, $dom)
   {
     $listContainer = $dom->createElement('ul');
     foreach ($footnotes as $footnote) {
@@ -159,7 +159,7 @@ class PDFProcessingService
     if ($footnotesSection) $footnotesSection->appendChild($listContainer);
   }
 
-  public function processReferences($referencesSection, $references, $dom)
+  public static function processReferences($referencesSection, $references, $dom)
   {
     $listContainer = $dom->createElement('ul');
     foreach ($references as $reference) {
@@ -200,7 +200,7 @@ class PDFProcessingService
     if ($referencesSection) $referencesSection->appendChild($listContainer);
   }
 
-  public function replaceCitationsContent(\DOMXPath $xpath, $config)
+  public static function replaceCitationsContent(\DOMXPath $xpath, $config)
   {
     $supportedCitationStyles = $config::getSupportedCustomCitationStyles();
     $actualCitationStyle = $config->getCitationStyle();
@@ -229,7 +229,7 @@ class PDFProcessingService
     }
   }
 
-  public function processExternalLinks(\DOMDocument $dom)
+  public static function processExternalLinks(\DOMDocument $dom)
   {
     $xpath = new \DOMXPath($dom);
     $externalLinks = $xpath->evaluate('//ext-link');
@@ -244,7 +244,7 @@ class PDFProcessingService
     return $dom->saveHTML();
   }
 
-  public function setTablesClass($bodyXpath, $term)
+  public static function setTablesClass($bodyXpath, $term)
   {
     $items = $bodyXpath->query('//' . $term);
 
