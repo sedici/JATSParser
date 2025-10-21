@@ -45,29 +45,36 @@ class PDFCreationService
 
   # Sacar $templatesDir, crear un método que se encargue de retornar este valor en base a dónde se debe buscar la template, si la template es UNLP > concatenar CSS
   public function buildPDF($pdf, $htmlString, $xpath, $dom, $citeProc, $config, $metadata, $selectedTemplate, $ojsConfiguration)
-  {
-    $building = "";
-
-    $templatesDir = $this->whereToLook($selectedTemplate, "catalog.xml"); # Primero busco el catálogo, lo cual determina el resto del PDF, por eso va por fuera
-    $building .= "$templatesDir || catalog.xml \n";
-
+  { 
+    $templatesDir = $this->publicTemplateManager->getTemplateDir()[0]; # Primero busco el catálogo, el cual se habló que NO puede ser sobreescribible. Si se quiere modificar se deben armar una plantilla nueva de 0.
     $content = trim(file_get_contents("$templatesDir/$selectedTemplate/catalog.xml"));
     $xml = simplexml_load_string($content);
     $catalog = json_decode(json_encode($xml), true);
-    $templateName = $catalog['template_name'];
     $error = "";
+
+
+    # Después verifico la existencia del arcivo opcional de CSS Extra el cual tiene la posibilidad de sobreescribir todo el CSS del PDF, por lo tanto lo hago acá ya que el catálogo NO es modificable
+    $templatesDir = $this->privateTemplateManager->getTemplateDir()[0];
+    $file = "$templatesDir/$selectedTemplate/extraCSS.css";
+    if(file_exists($file)) {
+      $this->publicTemplateManager->assign('extraCSS', $file);
+      $this->privateTemplateManager->assign('extraCSS', $file);
+      # Nota: Todos los archivos que incluyan su propio CSS deben incluir (posteriormente) este de extraCSS.css. ¿Por qué? Hay una mejor explicación en el importCSS.tpl,
+      # Resumidamente, al casi todo lo que viene de JATSParser usar tags sin clases o con clases variantes, es imposible asignarlas en el CSS, por lo tanto los estilos que pisan
+      # deben estar incluídos en todos lados para funcionar correctamente, sino, solo modificaría el header y footer
+      # Esto último pasa ya que el body, frontpage, references y footnotes se escriben de antemano, con el CSS aplicado hasta ese momento.
+    }
 
     $this->assignMetadata($metadata, $config, $ojsConfiguration);
 
     foreach ($catalog['media']['item'] as $mediaItem) {
       if (is_array($mediaItem) && isset($mediaItem['name']) && isset($mediaItem['file'])) {
         $templatesDir = $this->whereToLook($selectedTemplate, $mediaItem['file']);
-        $building .= "$templatesDir || " . $mediaItem['file'] . "\n";
         $optionalName = $mediaItem['name'];
         $optionalFile = $mediaItem['file'];
         $currentFileData = [
           'dataName' => $optionalName,
-          'filepath' => "$templatesDir/$templateName/$optionalFile",
+          'filepath' => "$templatesDir/$selectedTemplate/$optionalFile",
         ];
         if (!file_exists($currentFileData['filepath'])) {
           $error .= "Archivo opcional $optionalName no encontrado \n";
@@ -81,9 +88,8 @@ class PDFCreationService
     foreach ($catalog['build']['item'] as $part) {
       $currentFile = $catalog[$part]['file'];
       $templatesDir = $this->whereToLook($selectedTemplate, $currentFile);
-      $building .= "$templatesDir || $currentFile \n";
       $currentFileData = [
-        'filepath' => "$templatesDir/$templateName/$currentFile",
+        'filepath' => "$templatesDir/$selectedTemplate/$currentFile",
         'type' => $part
       ];
       $fileUses = [];
@@ -103,9 +109,8 @@ class PDFCreationService
         if (is_string($use) && isset($catalog[$use]) && isset($catalog[$use]['file'])) { # Más chequeos por la conversión de XML...
           $usesFile = $catalog[$use]['file'];
           $templatesDir = $this->whereToLook($selectedTemplate, $usesFile);
-          $building .= "$templatesDir || $usesFile \n";
           $usesFileData = [
-            'filepath' => "$templatesDir/$templateName/$usesFile",
+            'filepath' => "$templatesDir/$selectedTemplate/$usesFile",
             'type' => $use,
             'role' => $catalog[$use]['role'],
           ];
@@ -138,7 +143,6 @@ class PDFCreationService
     }
 
     file_put_contents(__DIR__ . "/errors.txt", $error); # Ahora marco los errores de archivos faltantes en un txt. A futuro será un mensaje en OJS
-    file_put_contents(__DIR__ . "/building.txt", $building); 
     return $pdf->output('a', 'S');
   }
 
@@ -194,8 +198,7 @@ class PDFCreationService
     $this->publicTemplateManager->assign('baseFunctions', $baseFunctions);
   }
 
-  private function defaultProcessing($pdf, $filepath)
-  { # Este método sirve para renderizar cualquier cosa genérica que use metadatos  
+  private function defaultProcessing($pdf, $filepath) { # Este método sirve para renderizar cualquier cosa genérica que use metadatos  
     $html = $this->templateManager->fetch($filepath);
     $pdf->WriteHTML($html);
   }
@@ -230,9 +233,6 @@ class PDFCreationService
 
     $htmlString = $dom->saveHTML();
 
-    $styles = $this->templateManager->fetch($path);
-    $pdf->WriteHTML($styles);
-
     $this->writeReferences($htmlString, $pdf, 'references-section', $path, 'references'); # Escribo las references
   }
 
@@ -264,9 +264,6 @@ class PDFCreationService
 
     $htmlString = $dom->saveHTML();
 
-    $styles = $this->templateManager->fetch($path);
-    $pdf->WriteHTML($styles);
-
     $this->writeReferences($htmlString, $pdf, 'footnotes-container', $path, 'footnotes'); # Escibo las footnotes
   }
 
@@ -287,15 +284,15 @@ class PDFCreationService
 
       $r = PDFProcessingService::processExternalLinks($newDoc);
 
+      $html = $this->templateManager->fetch($path);
+      $r = $html . $r;
+
       $pdf->WriteHTML($r);
     }
   }
 
   private function processBody($xpath, $dom, $htmlString, $pdf, $config, $citeProc, $path)
   {
-    $styles = $this->templateManager->fetch($path);
-    $pdf->WriteHTML($styles);
-
     $referencesNodes = $xpath->evaluate('//a[contains(@class, "bibr")]'); # Procesar todas las citas, incluso si son múltiples
     foreach ($referencesNodes as $node) {
       PDFProcessingService::citeToLink($node, $dom, $xpath, $config);
@@ -335,6 +332,8 @@ class PDFCreationService
     }
 
     $isolatedBody = $bodyDom->saveHTML();
+    $html = $this->templateManager->fetch($path);
+    $isolatedBody = $html . $isolatedBody;
 
     $pdf->writeHTML($isolatedBody);
 
