@@ -27,18 +27,29 @@ class PDFCreationService
   {
     $this->publicTemplateManager = $publicTemplateManager;
     $this->privateTemplateManager = $privateTemplateManager;
-
-    $this->templateManager = $publicTemplateManager;
   }
 
-  private function whereToLook() {
-    return $this->publicTemplateManager->getTemplateDir()[0]; # Temporal hasta que determine cómo hacer esto
+  private function whereToLook($selectedTemplate, $file) {
+
+    $privateDir = $this->privateTemplateManager->getTemplateDir()[0];
+    $publicDir = $this->publicTemplateManager->getTemplateDir()[0];
+
+    if(file_exists("$privateDir/$selectedTemplate/$file")) {
+      $this->templateManager = $this->privateTemplateManager;
+      return $privateDir;
+    }
+
+    $this->templateManager = $this->publicTemplateManager;
+    return $publicDir;
   }
 
   # Sacar $templatesDir, crear un método que se encargue de retornar este valor en base a dónde se debe buscar la template, si la template es UNLP > concatenar CSS
-  public function buildPDF($pdf, $htmlString, $xpath, $dom, $citeProc, $config, $metadata, $selectedTemplate)
+  public function buildPDF($pdf, $htmlString, $xpath, $dom, $citeProc, $config, $metadata, $selectedTemplate, $ojsConfiguration)
   {
-    $templatesDir = $this->whereToLook($selectedTemplate);
+    $building = "";
+
+    $templatesDir = $this->whereToLook($selectedTemplate, "catalog.xml"); # Primero busco el catálogo, lo cual determina el resto del PDF, por eso va por fuera
+    $building .= "$templatesDir || catalog.xml \n";
 
     $content = trim(file_get_contents("$templatesDir/$selectedTemplate/catalog.xml"));
     $xml = simplexml_load_string($content);
@@ -46,10 +57,12 @@ class PDFCreationService
     $templateName = $catalog['template_name'];
     $error = "";
 
-    $this->assignMetadata($metadata, $config);
+    $this->assignMetadata($metadata, $config, $ojsConfiguration);
 
     foreach ($catalog['media']['item'] as $mediaItem) {
       if (is_array($mediaItem) && isset($mediaItem['name']) && isset($mediaItem['file'])) {
+        $templatesDir = $this->whereToLook($selectedTemplate, $mediaItem['file']);
+        $building .= "$templatesDir || " . $mediaItem['file'] . "\n";
         $optionalName = $mediaItem['name'];
         $optionalFile = $mediaItem['file'];
         $currentFileData = [
@@ -59,13 +72,16 @@ class PDFCreationService
         if (!file_exists($currentFileData['filepath'])) {
           $error .= "Archivo opcional $optionalName no encontrado \n";
         } else {
-          $this->templateManager->assign($currentFileData['dataName'], $currentFileData['filepath']);
+          $this->publicTemplateManager->assign($currentFileData['dataName'], $currentFileData['filepath']);
+          $this->privateTemplateManager->assign($currentFileData['dataName'], $currentFileData['filepath']);
         }
       }
     }
 
     foreach ($catalog['build']['item'] as $part) {
       $currentFile = $catalog[$part]['file'];
+      $templatesDir = $this->whereToLook($selectedTemplate, $currentFile);
+      $building .= "$templatesDir || $currentFile \n";
       $currentFileData = [
         'filepath' => "$templatesDir/$templateName/$currentFile",
         'type' => $part
@@ -86,12 +102,14 @@ class PDFCreationService
       foreach ($uses as $use) {
         if (is_string($use) && isset($catalog[$use]) && isset($catalog[$use]['file'])) { # Más chequeos por la conversión de XML...
           $usesFile = $catalog[$use]['file'];
+          $templatesDir = $this->whereToLook($selectedTemplate, $usesFile);
+          $building .= "$templatesDir || $usesFile \n";
           $usesFileData = [
             'filepath' => "$templatesDir/$templateName/$usesFile",
             'type' => $use,
             'role' => $catalog[$use]['role'],
           ];
-          if (!file_exists("$templatesDir/$templateName/$usesFile")) {
+          if (!file_exists($usesFileData['filepath'])) {
             $error .= "Archivo $usesFile no encontrado \n";
           } else {
             $fileUses[] = $usesFileData;
@@ -120,6 +138,7 @@ class PDFCreationService
     }
 
     file_put_contents(__DIR__ . "/errors.txt", $error); # Ahora marco los errores de archivos faltantes en un txt. A futuro será un mensaje en OJS
+    file_put_contents(__DIR__ . "/building.txt", $building); 
     return $pdf->output('a', 'S');
   }
 
@@ -138,7 +157,7 @@ class PDFCreationService
     }
   }
 
-  private function assignMetadata($metadata, $config)
+  private function assignMetadata($metadata, $config, $ojsConfiguration)
   {
     foreach ($metadata as $key => $value) {
       if ($key === 'abstract_texts') {
@@ -147,17 +166,32 @@ class PDFCreationService
         $value = str_replace('</p>', '', $value);
       }
 
-      $this->templateManager->assign($key, $value);
+      $this->privateTemplateManager->assign($key, $value);
+      $this->publicTemplateManager->assign($key, $value);
     }
+
+    // foreach ($ojsConfiguration as $key => $value) { # Lo dejo comentado ya que por ahora solo contiene configuración para la creación del PDF, no es necesario esto
+    //   $this->templateManager->assign($key, $value);
+    // }
 
     $licenses = $config->getLicenseConfig();
     $licenseName = array_search($metadata['license_url'], $licenses['links']);
     $licenseImg = $licenses['logos'][$licenseName];
 
-    $this->templateManager->assign('license_logo', $licenseImg);
-    $this->templateManager->assign('authors', $metadata['authors']);
-    $this->templateManager->assign('orcid_logo', $config->getOrcidLogo());
-    $this->templateManager->assign('images', $config->getImages());
+    $this->publicTemplateManager->assign('license_logo', $licenseImg);
+    $this->publicTemplateManager->assign('authors', $metadata['authors']);
+    $this->publicTemplateManager->assign('orcid_logo', $config->getOrcidLogo());
+    $this->publicTemplateManager->assign('images', $config->getImages());
+
+    $this->privateTemplateManager->assign('license_logo', $licenseImg);
+    $this->privateTemplateManager->assign('authors', $metadata['authors']);
+    $this->privateTemplateManager->assign('orcid_logo', $config->getOrcidLogo());
+    $this->privateTemplateManager->assign('images', $config->getImages());
+
+    $baseFunctions = $this->publicTemplateManager->getTemplateDir()[0] . "/baseFunctions.tpl";
+
+    $this->privateTemplateManager->assign('baseFunctions', $baseFunctions);
+    $this->publicTemplateManager->assign('baseFunctions', $baseFunctions);
   }
 
   private function defaultProcessing($pdf, $filepath)

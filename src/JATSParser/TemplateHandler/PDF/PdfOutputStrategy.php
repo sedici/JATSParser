@@ -9,14 +9,14 @@ use JATSParser\HTML\Document as HTMLDocument;
 use APP\facades\Repo;
 use JATSParser\TemplateHandler\OutputStrategy;
 
-class PdfOutputStrategy extends OutputStrategy {
+class PdfOutputStrategy implements OutputStrategy {
 
-  public static function generateOutput($plugin, $fileMgr, $journalId, $localeKey, $fileId, $htmlString, $configuration, $metadata)
+  public static function generateOutput($plugin, $fileMgr, $journalId, $localeKey, $fileId, $htmlString, $configuration, $metadata, $ojsConfiguration)
   {
-    $selectedTemplate = "UNLP";
+    $selectedTemplate = $ojsConfiguration['selected_template'];
 
-		$privateTemplatesDir = $fileMgr->getBasePath() . "/journals/$journalId";
-		$publicTemplatesDir = $plugin->getPluginPath() . "/templates";
+		$privateTemplatesDir = $fileMgr->getBasePath() . "/journals/$journalId/jatsParser_templates";
+		$publicTemplatesDir = $plugin->getPluginPath() . "/templates/SUMARC";
 
 		$publicTemplateManager = new \Smarty(); # Con esta instancia se pueden settear las rutas que se desee de Smarty, así no usamos la global de OJS.
 		$publicTemplateManager->setTemplateDir($publicTemplatesDir); # La ruta es .../jatsParser/templates
@@ -24,15 +24,14 @@ class PdfOutputStrategy extends OutputStrategy {
 		$privateTemplateManager = new \Smarty();
 		$privateTemplateManager->setTemplateDir($privateTemplatesDir);
 
-#		$processingService = new PDFProcessingService();
 		$pdfCreationService = new PDFCreationService($publicTemplateManager, $privateTemplateManager);
 
 		$pdf = new Mpdf([ # Sacar los márgenes de la config de OJS (cuando exista)
 			'mode' => 'utf-8',
 			'PDFA' => true,
 			'PDFAauto' => true,
-			'margin_top' => 25,
-			'margin_bottom' => 30, 
+			'margin_top' => $ojsConfiguration['margin_top'],
+			'margin_bottom' => $ojsConfiguration['margin_bottom'], 
 		]); # Versión 8.1.3. Los genero así para que la salida sea un PDF/A válido
 		$pdf->SetAnchor2Bookmark(1);
 
@@ -47,7 +46,7 @@ class PdfOutputStrategy extends OutputStrategy {
 		$citationStyle = $plugin->getSetting($journalId, 'citationStyle');
 		$citeProc->setReferences($citationStyle, $localeKey, false);
 
-    return $pdfCreationService->buildPDF($pdf, $htmlString, $xpath, $dom, $citeProc, $configuration, $metadata, $selectedTemplate);
+    return $pdfCreationService->buildPDF($pdf, $htmlString, $xpath, $dom, $citeProc, $configuration, $metadata, $selectedTemplate, $ojsConfiguration);
   }
 
 }

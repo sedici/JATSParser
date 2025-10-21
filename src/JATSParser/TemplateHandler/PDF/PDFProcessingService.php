@@ -18,7 +18,7 @@ abstract class PDFProcessingService
     }, $refs); # Elimino el # del href, ya que solo el primero lo tiene (en caso de ser más de uno)
 
     $fragment = $dom->createDocumentFragment();
-    #$fragment->appendChild($dom->createTextNode('[')); # Lo dejo comentado porque en APA no se utilizan los [ ]
+    # $fragment->appendChild($dom->createTextNode('[')); # Lo dejo comentado porque en APA no se utilizan los [ ]
 
     for ($i = 0; $i < count($numbers); $i++) {
       $anchorNode = $dom->createElement('a');
@@ -260,7 +260,6 @@ abstract class PDFProcessingService
     $html = $templateManager->fetch($filepath);
 
     $dom = new DOMDocument('1.0', 'utf-8');
-    libxml_use_internal_errors(true);
     $dom->loadHTML($html);
     $xpath = new \DOMXPath($dom);
 

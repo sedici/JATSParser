@@ -2,8 +2,8 @@
 
 namespace JATSParser\TemplateHandler;
 
-abstract class OutputStrategy {
+interface OutputStrategy {
 
-  public abstract static function generateOutput($plugin, $fileMgr, $journalId, $localeKey, $fileId, $htmlString, $configuration, $metadata);
+  public static function generateOutput($plugin, $fileMgr, $journalId, $localeKey, $fileId, $htmlString, $configuration, $metadata, $ojsConfiguration);
 
 }
