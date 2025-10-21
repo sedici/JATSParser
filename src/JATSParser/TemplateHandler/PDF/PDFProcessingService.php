@@ -183,7 +183,7 @@ abstract class PDFProcessingService
           continue;
         }
       }
-      # Si no es un <li>, usar el método anterior (nunca debería llegar a pasar)
+      # Si no es un <li>, usar el método anterior (nunca debería llegar a pasar, pero quien sabe)
       $li = $dom->createElement('li');
       $anchor = $dom->createElement('a', '');
       $anchor->setAttribute('name', $reference['id']);

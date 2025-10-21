@@ -331,9 +331,10 @@ class PDFCreationService
       }
     }
 
+    $isolatedBody = '<div class="article-body">';
     $isolatedBody = $bodyDom->saveHTML();
     $html = $this->templateManager->fetch($path);
-    $isolatedBody = $html . $isolatedBody;
+    $isolatedBody = $html . $isolatedBody . "</div>";
 
     $pdf->writeHTML($isolatedBody);
 
