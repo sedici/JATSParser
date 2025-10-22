@@ -15,6 +15,10 @@ class PdfOutputStrategy implements OutputStrategy {
   {
     $selectedTemplate = $ojsConfiguration['selected_template'];
 
+		if(!$selectedTemplate) {
+			return; # se habló que si no se tiene una plantilla seleccionada no se debe emitir un PDF bajo ningún criterio, esto debería modificarse para que no genere un error
+		}
+
 		$privateTemplatesDir = $fileMgr->getBasePath() . "/journals/$journalId/jatsParser_templates";
 		$publicTemplatesDir = $plugin->getPluginPath() . "/templates/SUMARC";
 
