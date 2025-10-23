@@ -9,7 +9,7 @@ use JATSParser\HTML\Document as HTMLDocument;
 use APP\facades\Repo;
 use JATSParser\TemplateHandler\OutputStrategy;
 
-class PdfOutputStrategy implements OutputStrategy {
+class PDFOutputStrategy implements OutputStrategy {
 
   public static function generateOutput($plugin, $fileMgr, $journalId, $localeKey, $fileId, $htmlString, $configuration, $metadata, $ojsConfiguration)
   {
