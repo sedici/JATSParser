@@ -43,7 +43,6 @@ class PDFCreationService
     return $publicDir;
   }
 
-  # Sacar $templatesDir, crear un método que se encargue de retornar este valor en base a dónde se debe buscar la template, si la template es UNLP > concatenar CSS
   public function buildPDF($pdf, $htmlString, $xpath, $dom, $citeProc, $config, $metadata, $selectedTemplate, $ojsConfiguration)
   { 
     $templatesDir = $this->publicTemplateManager->getTemplateDir()[0]; # Primero busco el catálogo, el cual se habló que NO puede ser sobreescribible. Si se quiere modificar se deben armar una plantilla nueva de 0.
@@ -339,6 +338,68 @@ class PDFCreationService
     $pdf->writeHTML($isolatedBody);
 
     return $htmlString;
+  }
+
+public function checkTemplateIntegrity($pdf, $htmlString, $xpath, $dom, $citeProc, $config, $metadata, $selectedTemplate, $ojsConfiguration)
+  { 
+    $templatesDir = $this->publicTemplateManager->getTemplateDir()[0];
+    $content = trim(file_get_contents("$templatesDir/$selectedTemplate/catalog.xml"));
+    $xml = simplexml_load_string($content);
+    $catalog = json_decode(json_encode($xml), true);
+    $error = "";
+
+    foreach ($catalog['media']['item'] as $mediaItem) {
+      if (is_array($mediaItem) && isset($mediaItem['name']) && isset($mediaItem['file'])) {
+        $templatesDir = $this->whereToLook($selectedTemplate, $mediaItem['file']);
+        $optionalName = $mediaItem['name'];
+        $optionalFile = $mediaItem['file'];
+        $currentFileData = [
+          'dataName' => $optionalName,
+          'filepath' => "$templatesDir/$selectedTemplate/$optionalFile",
+        ];
+        if (!file_exists($currentFileData['filepath'])) {
+          $error .= "Archivo opcional $optionalName no encontrado \n";
+        }
+      }
+    }
+
+    foreach ($catalog['build']['item'] as $part) {
+      $currentFile = $catalog[$part]['file'];
+      $templatesDir = $this->whereToLook($selectedTemplate, $currentFile);
+      $currentFileData = [
+        'filepath' => "$templatesDir/$selectedTemplate/$currentFile",
+        'type' => $part
+      ];
+      $fileUses = [];
+      if (!file_exists($currentFileData['filepath'])) {
+        $error .= "$currentFile no encontrado \n";
+      }
+
+			$uses = (array) (isset($catalog[$part]['uses']['use']) ? $catalog[$part]['uses']['use'] : []);
+
+      foreach ($uses as $use) {
+        if (is_string($use) && isset($catalog[$use]) && isset($catalog[$use]['file'])) { # Más chequeos por la conversión de XML...
+          $usesFile = $catalog[$use]['file'];
+          $templatesDir = $this->whereToLook($selectedTemplate, $usesFile);
+          $usesFileData = [
+            'filepath' => "$templatesDir/$selectedTemplate/$usesFile",
+            'type' => $use,
+            'role' => $catalog[$use]['role'],
+          ];
+          if (!file_exists($usesFileData['filepath'])) {
+            $error .= "Archivo $usesFile no encontrado \n";
+          } else {
+            $fileUses[] = $usesFileData;
+          }
+        }
+        else {
+          $error .= "Artefacto $use no encontrado \n";
+        }
+      }
+
+    }
+
+    file_put_contents(__DIR__ . "/errors.txt", $error); # Ahora marco los errores de archivos faltantes en un txt. A futuro será un mensaje en OJS
   }
 
   public static function test()
