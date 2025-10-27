@@ -3,6 +3,7 @@
 namespace JATSParser\TemplateHandler\PDF;
 
 use DOMDocument;
+use PKP\core\JSONMessage;
 
 class PDFCreationService
 {
@@ -81,9 +82,7 @@ class PDFCreationService
           'dataName' => $optionalName,
           'filepath' => "$templatesDir/$selectedTemplate/$optionalFile",
         ];
-        if (!file_exists($currentFileData['filepath'])) {
-          $error .= "Archivo opcional $optionalName no encontrado \n";
-        } else {
+        if (file_exists($currentFileData['filepath'])) {
           $this->publicTemplateManager->assign($currentFileData['dataName'], $currentFileData['filepath']);
           $this->privateTemplateManager->assign($currentFileData['dataName'], $currentFileData['filepath']);
         }
@@ -100,6 +99,10 @@ class PDFCreationService
       $fileUses = [];
       if (!file_exists($currentFileData['filepath'])) {
         $error .= "$currentFile no encontrado \n";
+        // return new JSONMessage(
+        //     false,
+        //     __('plugins.generic.jatsParser.file.not.found')
+        // );
       }
 
       # $margins = $this->setCustomMargins($currentFileData['filepath']);
@@ -121,11 +124,19 @@ class PDFCreationService
           ];
           if (!file_exists($usesFileData['filepath'])) {
             $error .= "Archivo $usesFile no encontrado \n";
+            // return new JSONMessage(
+            //   false,
+            //   __('plugins.generic.jatsParser.file.not.found')
+            // );
           } else {
             $fileUses[] = $usesFileData;
           }
         } else {
           $error .= "Artefacto $use no encontrado \n";
+          // return new JSONMessage(
+          //     false,
+          //     __('plugins.generic.jatsParser.file.not.found')
+          // );
         }
       }
 
