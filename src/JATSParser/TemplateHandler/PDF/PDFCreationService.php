@@ -145,7 +145,7 @@ class PDFCreationService
           $fn = $this::USE_MAP[$use['role']];
           $this->$fn($use['filepath'], $pdf, $use['role']);
         } else {
-          $this->defaultProcessing($use['filepath'], $pdf); # Renderiza y escribe, por eso reuso el procesamiento y no es un método aparte
+          $this->genericProcessing($use['filepath'], $pdf); # Renderiza y escribe, por eso reuso el procesamiento y no es un método aparte
         }
       }
 
@@ -153,7 +153,7 @@ class PDFCreationService
         $fn = $this::PROCESS_MAP[$currentFileData['type']];
         $this->$fn($xpath, $dom, $htmlString, $pdf, $config, $citeProc, $currentFileData['filepath']);
       } else {
-        $this->defaultProcessing($pdf, $currentFileData['filepath']);
+        $this->genericProcessing($pdf, $currentFileData['filepath']);
       }
     }
 
@@ -166,6 +166,10 @@ class PDFCreationService
     $html = $this->templateManager->fetch($filepath);
     $html = str_replace('<pagenumber />', '{PAGENO}', $html); # Esto debe hacerse una vez renderizado, sino Smarty tira una Exception
     $html = str_replace('<totalpages />', '{nb}', $html);
+
+    $html = str_replace('<pagenumber/>', '{PAGENO}', $html);
+    $html = str_replace('<totalpages/>', '{nb}', $html);
+
     switch ($type) {
       case "header":
         $pdf->SetHTMLHeader($html, 'O');
@@ -179,8 +183,9 @@ class PDFCreationService
   private function assignMetadata($metadata, $config, $ojsConfiguration)
   {
     foreach ($metadata as $key => $value) {
-      if ($key === 'abstract_texts') {
+      if ($key === 'abstract_texts') { # Desde JATSParser me llegan con estos tags que no son visibles en el PDF pero generan inconsistencias o comportamiento no deseado, por eso lo elimino con lo siguiente:
         $value = str_replace('<br />', ' ', $value);
+        $value = str_replace('<br/>', ' ', $value);
         $value = str_replace('<p>', '', $value);
         $value = str_replace('</p>', '', $value);
       }
@@ -213,9 +218,11 @@ class PDFCreationService
     $this->publicTemplateManager->assign('baseFunctions', $baseFunctions);
   }
 
-  private function defaultProcessing($pdf, $filepath)
+  private function genericProcessing($pdf, $filepath)
   { # Este método sirve para renderizar cualquier cosa genérica que use metadatos  
     $html = $this->templateManager->fetch($filepath);
+
+    $this->checkPageBreak($html, $pdf);
     $pdf->WriteHTML($html);
   }
 
@@ -303,6 +310,7 @@ class PDFCreationService
       $html = $this->templateManager->fetch($path);
       $r = $html . $r;
 
+      $this->checkPageBreak($html, $pdf);
       $pdf->WriteHTML($r);
     }
   }
@@ -352,6 +360,7 @@ class PDFCreationService
     $html = $this->templateManager->fetch($path);
     $isolatedBody = $html . $isolatedBody . "</div>";
 
+    $this->checkPageBreak($html, $pdf);
     $pdf->writeHTML($isolatedBody);
 
     return $htmlString;
@@ -418,6 +427,12 @@ class PDFCreationService
     }
 
     return true;
+  }
+
+  private function checkPageBreak($html, $pdf) {
+    if((str_contains($html, '<pagebreak />')) || (str_contains($html, '<pagebreak/>'))) {
+      $pdf->AddPage();
+    }
   }
 
   public static function test()
