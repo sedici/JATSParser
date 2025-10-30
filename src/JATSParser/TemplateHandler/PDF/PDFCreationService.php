@@ -435,6 +435,63 @@ class PDFCreationService
     }
   }
 
+  public static function getTemplatePartsAndLocation($selectedTemplate, $plugin, $fileManager, $journalId)
+  {
+    $templatesDir = $plugin->getPluginPath() . "/templates/SUMARC";
+    $catalogDir = "$templatesDir/$selectedTemplate/catalog.xml";
+    $filesInformation = [];
+
+    if(!self::checkTemplateIntegrity($selectedTemplate, $plugin, $fileManager, $journalId)) return; # Primero verifico la integirdad de la template
+    # Si está todo en orden, me creo el array con la información de cada archivo en uso (tipo, directorio (público o privado) y el nombre)
+
+    # El tipo me indica y sirve como "label" en la tabla, "Header", "Frontpage", etc.
+    # El directorio me indica si se está usando el directorio privado, es decir, fue sobreescrito, o el directorio público (es el original)
+    # El nombre me sirve para poder nombrar el archivo en caso de que el usuario desee subir uno, de esta manera puedo armar la ruta y darle el nombre apropiado
+
+    # No es la mejor implementación en lo absoluto, pero estas cosas fueron surgiendo de manera informal y no tengo el tiempo de reescribir toda la lógica previa
+
+    $content = trim(file_get_contents($catalogDir));
+    $xml = simplexml_load_string($content);
+    $catalog = json_decode(json_encode($xml), true);
+
+    foreach ($catalog['build']['item'] as $part) {
+      $currentFile = $catalog[$part]['file'];
+      $templatesDir = self::staticWhereToLook($selectedTemplate, $currentFile, $plugin, $fileManager, $journalId);
+      $currentFileData = [
+        'filepath' => "$templatesDir/$selectedTemplate/$currentFile",
+        'type' => $part
+      ];
+
+      $filesInformation[$currentFileData['type']] = [
+        'using' => $templatesDir,
+        'type' => '',
+        'filename' => $currentFile,
+      ];
+
+      $uses = (array) (isset($catalog[$part]['uses']['use']) ? $catalog[$part]['uses']['use'] : []);
+
+      foreach ($uses as $use) {
+        if (is_string($use) && isset($catalog[$use]) && isset($catalog[$use]['file'])) { # Más chequeos por la conversión de XML...
+          $usesFile = $catalog[$use]['file'];
+          $templatesDir = self::staticWhereToLook($selectedTemplate, $currentFile, $plugin, $fileManager, $journalId);
+          $usesFileData = [
+            'filepath' => "$templatesDir/$selectedTemplate/$usesFile",
+            'type' => $use,
+            'role' => $catalog[$use]['role'],
+          ];
+
+          $filesInformation[$usesFileData['type']] = [
+            'using' => $templatesDir,
+            'type' => '',
+            'filename' => $usesFile,
+          ];
+        }
+      }
+    }
+
+    return $filesInformation;
+  }
+
   public static function test()
   {
     return "hello world, leito was here";
