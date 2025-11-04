@@ -409,7 +409,7 @@ class PDFCreationService
       foreach ($uses as $use) {
         if (is_string($use) && isset($catalog[$use]) && isset($catalog[$use]['file'])) { # Más chequeos por la conversión de XML...
           $usesFile = $catalog[$use]['file'];
-          $templatesDir = self::staticWhereToLook($selectedTemplate, $currentFile, $plugin, $fileManager, $journalId);
+          $templatesDir = self::staticWhereToLook($selectedTemplate, $usesFile, $plugin, $fileManager, $journalId);
           $usesFileData = [
             'filepath' => "$templatesDir/$selectedTemplate/$usesFile",
             'type' => $use,
@@ -462,9 +462,10 @@ class PDFCreationService
         'type' => $part
       ];
 
+      
       $filesInformation[$currentFileData['type']] = [
         'using' => $templatesDir,
-        'public' => self::isPrivate($templatesDir, $plugin),
+        'public' => self::isPublic($templatesDir, $plugin),
         'filename' => $currentFile,
       ];
 
@@ -473,7 +474,7 @@ class PDFCreationService
       foreach ($uses as $use) {
         if (is_string($use) && isset($catalog[$use]) && isset($catalog[$use]['file'])) {
           $usesFile = $catalog[$use]['file'];
-          $templatesDir = self::staticWhereToLook($selectedTemplate, $currentFile, $plugin, $fileManager, $journalId);
+          $templatesDir = self::staticWhereToLook($selectedTemplate, $usesFile, $plugin, $fileManager, $journalId);
           $usesFileData = [
             'filepath' => "$templatesDir/$selectedTemplate/$usesFile",
             'type' => $use,
@@ -482,7 +483,7 @@ class PDFCreationService
 
           $filesInformation[$usesFileData['type']] = [
             'using' => $templatesDir,
-            'public' => self::isPrivate($templatesDir, $plugin),
+            'public' => self::isPublic($templatesDir, $plugin),
             'filename' => $usesFile,
           ];
         }
@@ -492,7 +493,7 @@ class PDFCreationService
     return $filesInformation;
   }
 
-  private static function isPrivate($templatesDir, $plugin) {
+  private static function isPublic($templatesDir, $plugin) {
     return str_contains($templatesDir, $plugin->getPluginPath());
   }
 
