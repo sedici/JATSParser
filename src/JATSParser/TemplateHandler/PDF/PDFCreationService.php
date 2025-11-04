@@ -464,14 +464,14 @@ class PDFCreationService
 
       $filesInformation[$currentFileData['type']] = [
         'using' => $templatesDir,
-        'type' => '',
+        'public' => self::isPrivate($templatesDir, $plugin),
         'filename' => $currentFile,
       ];
 
       $uses = (array) (isset($catalog[$part]['uses']['use']) ? $catalog[$part]['uses']['use'] : []);
 
       foreach ($uses as $use) {
-        if (is_string($use) && isset($catalog[$use]) && isset($catalog[$use]['file'])) { # Más chequeos por la conversión de XML...
+        if (is_string($use) && isset($catalog[$use]) && isset($catalog[$use]['file'])) {
           $usesFile = $catalog[$use]['file'];
           $templatesDir = self::staticWhereToLook($selectedTemplate, $currentFile, $plugin, $fileManager, $journalId);
           $usesFileData = [
@@ -482,7 +482,7 @@ class PDFCreationService
 
           $filesInformation[$usesFileData['type']] = [
             'using' => $templatesDir,
-            'type' => '',
+            'public' => self::isPrivate($templatesDir, $plugin),
             'filename' => $usesFile,
           ];
         }
@@ -490,6 +490,10 @@ class PDFCreationService
     }
 
     return $filesInformation;
+  }
+
+  private static function isPrivate($templatesDir, $plugin) {
+    return str_contains($templatesDir, $plugin->getPluginPath());
   }
 
   public static function test()
