@@ -222,7 +222,7 @@ class PDFCreationService
   { # Este método sirve para renderizar cualquier cosa genérica que use metadatos  
     $html = $this->templateManager->fetch($filepath);
 
-    $this->checkPageBreak($html, $pdf);
+    $html = $this->checkPageBreak($html, $pdf);
     $pdf->WriteHTML($html);
   }
 
@@ -308,9 +308,8 @@ class PDFCreationService
       $r = PDFProcessingService::processExternalLinks($newDoc);
 
       $html = $this->templateManager->fetch($path);
+      $html = $this->checkPageBreak($html, $pdf);
       $r = $html . $r;
-
-      $this->checkPageBreak($html, $pdf);
       $pdf->WriteHTML($r);
     }
   }
@@ -358,9 +357,9 @@ class PDFCreationService
     $isolatedBody = '<div class="article-body">';
     $isolatedBody = $bodyDom->saveHTML();
     $html = $this->templateManager->fetch($path);
+    $html = $this->checkPageBreak($html, $pdf);
     $isolatedBody = $html . $isolatedBody . "</div>";
 
-    $this->checkPageBreak($html, $pdf);
     $pdf->writeHTML($isolatedBody);
 
     return $htmlString;
@@ -430,9 +429,11 @@ class PDFCreationService
   }
 
   private function checkPageBreak($html, $pdf) {
-    if((str_contains($html, '<pagebreak />')) || (str_contains($html, '<pagebreak/>'))) {
-      $pdf->AddPage();
+    if((str_contains($html, '<break />')) || (str_contains($html, '<break/>'))) {
+      $html = str_replace('<break />', '<pagebreak />', $html);
+      $html = str_replace('<break/>', '<pagebreak />', $html);
     }
+    return $html;
   }
 
   public static function getTemplatePartsAndLocation($selectedTemplate, $plugin, $fileManager, $journalId)
