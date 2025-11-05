@@ -362,6 +362,8 @@ class PDFCreationService
 
     $pdf->writeHTML($isolatedBody);
 
+    file_put_contents(__DIR__ . "/body.html", $isolatedBody);
+
     return $htmlString;
   }
 
