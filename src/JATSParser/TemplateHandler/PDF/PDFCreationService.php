@@ -3,14 +3,13 @@
 namespace JATSParser\TemplateHandler\PDF;
 
 use DOMDocument;
-use PKP\core\JSONMessage;
 
 class PDFCreationService
 {
 
   private $publicTemplateManager;
   private $privateTemplateManager;
-
+  
   private $templateManager;
 
   private const PROCESS_MAP = [
@@ -28,21 +27,6 @@ class PDFCreationService
   {
     $this->publicTemplateManager = $publicTemplateManager;
     $this->privateTemplateManager = $privateTemplateManager;
-  }
-
-  private function whereToLook($selectedTemplate, $file)
-  {
-
-    $privateDir = $this->privateTemplateManager->getTemplateDir()[0];
-    $publicDir = $this->publicTemplateManager->getTemplateDir()[0];
-
-    if (file_exists("$privateDir/$selectedTemplate/$file")) {
-      $this->templateManager = $this->privateTemplateManager;
-      return $privateDir;
-    }
-
-    $this->templateManager = $this->publicTemplateManager;
-    return $publicDir;
   }
 
   public function buildPDF($pdf, $htmlString, $xpath, $dom, $citeProc, $config, $metadata, $selectedTemplate, $ojsConfiguration)
@@ -99,10 +83,7 @@ class PDFCreationService
       $fileUses = [];
       if (!file_exists($currentFileData['filepath'])) {
         $error .= "$currentFile no encontrado \n";
-        // return new JSONMessage(
-        //     false,
-        //     __('plugins.generic.jatsParser.file.not.found')
-        // );
+        return;
       }
 
       # $margins = $this->setCustomMargins($currentFileData['filepath']);
@@ -124,19 +105,13 @@ class PDFCreationService
           ];
           if (!file_exists($usesFileData['filepath'])) {
             $error .= "Archivo $usesFile no encontrado \n";
-            // return new JSONMessage(
-            //   false,
-            //   __('plugins.generic.jatsParser.file.not.found')
-            // );
+            return;
           } else {
             $fileUses[] = $usesFileData;
           }
         } else {
           $error .= "Artefacto $use no encontrado \n";
-          // return new JSONMessage(
-          //     false,
-          //     __('plugins.generic.jatsParser.file.not.found')
-          // );
+          return;
         }
       }
 
@@ -222,7 +197,7 @@ class PDFCreationService
   { # Este método sirve para renderizar cualquier cosa genérica que use metadatos  
     $html = $this->templateManager->fetch($filepath);
 
-    $html = $this->checkPageBreak($html, $pdf);
+    $html = PDFProcessingService::checkPageBreak($html, $pdf);
     $pdf->WriteHTML($html);
   }
 
@@ -308,7 +283,7 @@ class PDFCreationService
       $r = PDFProcessingService::processExternalLinks($newDoc);
 
       $html = $this->templateManager->fetch($path);
-      $html = $this->checkPageBreak($html, $pdf);
+      $html = PDFProcessingService::checkPageBreak($html, $pdf);
       $r = $html . $r;
       $pdf->WriteHTML($r);
     }
@@ -357,12 +332,10 @@ class PDFCreationService
     $isolatedBody = '<div class="article-body">';
     $isolatedBody = $bodyDom->saveHTML();
     $html = $this->templateManager->fetch($path);
-    $html = $this->checkPageBreak($html, $pdf);
+    $html = PDFProcessingService::checkPageBreak($html, $pdf);
     $isolatedBody = $html . $isolatedBody . "</div>";
 
     $pdf->writeHTML($isolatedBody);
-
-    file_put_contents(__DIR__ . "/body.html", $isolatedBody);
 
     return $htmlString;
   }
@@ -430,19 +403,6 @@ class PDFCreationService
     return true;
   }
 
-  private function checkPageBreak($html, $pdf) {
-    if((str_contains($html, '<pagebreak />')) || (str_contains($html, '<pagebreak/>'))) {
-      $pdf->addPage();
-    }
-    
-    if((str_contains($html, '<break />')) || (str_contains($html, '<break/>'))) {
-      $html = str_replace('<break />', '<pagebreak />', $html);
-      $html = str_replace('<break/>', '<pagebreak />', $html);
-    }
-
-    return $html;
-  }
-
   public static function getTemplatePartsAndLocation($selectedTemplate, $plugin, $fileManager, $journalId)
   {
     $templatesDir = $plugin->getPluginPath() . "/templates/SUMARC";
@@ -503,6 +463,21 @@ class PDFCreationService
 
   private static function isPublic($templatesDir, $plugin) {
     return str_contains($templatesDir, $plugin->getPluginPath());
+  }
+
+  private function whereToLook($selectedTemplate, $file)
+  {
+
+    $privateDir = $this->privateTemplateManager->getTemplateDir()[0];
+    $publicDir = $this->publicTemplateManager->getTemplateDir()[0];
+
+    if (file_exists("$privateDir/$selectedTemplate/$file")) {
+      $this->templateManager = $this->privateTemplateManager;
+      return $privateDir;
+    }
+
+    $this->templateManager = $this->publicTemplateManager;
+    return $publicDir;
   }
 
   public static function test()

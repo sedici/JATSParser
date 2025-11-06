@@ -291,4 +291,17 @@ abstract class PDFProcessingService
 
     return $style;
   }
+
+  public static function checkPageBreak($html, $pdf) {
+    if((str_contains($html, '<pagebreak />')) || (str_contains($html, '<pagebreak/>'))) {
+      $pdf->addPage();
+    }
+    
+    if((str_contains($html, '<break />')) || (str_contains($html, '<break/>'))) {
+      $html = str_replace('<break />', '<pagebreak />', $html);
+      $html = str_replace('<break/>', '<pagebreak />', $html);
+    }
+
+    return $html;
+  }
 }
