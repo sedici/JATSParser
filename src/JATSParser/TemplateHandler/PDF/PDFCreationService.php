@@ -9,7 +9,7 @@ class PDFCreationService
 
   private $publicTemplateManager;
   private $privateTemplateManager;
-  
+
   private $templateManager;
 
   private const PROCESS_MAP = [
@@ -45,10 +45,10 @@ class PDFCreationService
 
     # Después verifico la existencia del arcivo opcional de CSS Extra el cual tiene la posibilidad de sobreescribir todo el CSS del PDF, por lo tanto lo hago acá ya que el catálogo NO es modificable
     $templatesDir = $this->privateTemplateManager->getTemplateDir()[0];
-    $file = "$templatesDir/$selectedTemplate/extraCSS.css";
+    $file = "$templatesDir/$selectedTemplate/custom_css.css";
     if (file_exists($file)) {
-      $this->publicTemplateManager->assign('extraCSS', $file);
-      $this->privateTemplateManager->assign('extraCSS', $file);
+      $this->publicTemplateManager->assign('custom_css', $file);
+      $this->privateTemplateManager->assign('custom_css', $file);
       # Nota: Todos los archivos que incluyan su propio CSS deben incluir (posteriormente) este de extraCSS.css. ¿Por qué? Hay una mejor explicación en el importCSS.tpl,
       # Resumidamente, al casi todo lo que viene de JATSParser usar tags sin clases o con clases variantes, es imposible asignarlas en el CSS, por lo tanto los estilos que pisan
       # deben estar incluídos en todos lados para funcionar correctamente, sino, solo modificaría el header y footer
@@ -409,7 +409,7 @@ class PDFCreationService
     $catalogDir = "$templatesDir/$selectedTemplate/catalog.xml";
     $filesInformation = [];
 
-    if(!self::checkTemplateIntegrity($selectedTemplate, $plugin, $fileManager, $journalId)) return; # Primero verifico la integirdad de la template
+    if (!self::checkTemplateIntegrity($selectedTemplate, $plugin, $fileManager, $journalId)) return; # Primero verifico la integirdad de la template
     # Si está todo en orden, me creo el array con la información de cada archivo en uso (tipo, directorio (público o privado) y el nombre)
 
     # El tipo me indica y sirve como "label" en la tabla, "Header", "Frontpage", etc.
@@ -430,7 +430,7 @@ class PDFCreationService
         'type' => $part
       ];
 
-      
+
       $filesInformation[$currentFileData['type']] = [
         'using' => $templatesDir,
         'public' => self::isPublic($templatesDir, $plugin),
@@ -458,10 +458,29 @@ class PDFCreationService
       }
     }
 
+    foreach ($catalog['media']['item'] as $mediaItem) {
+      if (is_array($mediaItem) && isset($mediaItem['name']) && isset($mediaItem['file'])) {
+        $templatesDir = self::staticWhereToLook($selectedTemplate, $mediaItem['file'], $plugin, $fileManager, $journalId);
+        $optionalName = $mediaItem['name'];
+        $optionalFile = $mediaItem['file'];
+        $currentFileData = [
+          'dataName' => $optionalName,
+          'filepath' => "$templatesDir/$selectedTemplate/$optionalFile",
+        ];
+
+        $filesInformation[$optionalName] = [
+          'using' => $templatesDir,
+          'public' => self::isPublic($templatesDir, $plugin),
+          'filename' => $optionalFile,
+        ];
+      }
+    }
+
     return $filesInformation;
   }
 
-  private static function isPublic($templatesDir, $plugin) {
+  private static function isPublic($templatesDir, $plugin)
+  {
     return str_contains($templatesDir, $plugin->getPluginPath());
   }
 
