@@ -3,6 +3,7 @@
 namespace JATSParser\TemplateHandler\PDF;
 
 use DOMDocument;
+use PKP\file\PrivateFileManager;
 
 class PDFCreationService
 {
@@ -403,10 +404,11 @@ class PDFCreationService
     return true;
   }
 
-  public static function getTemplatePartsAndLocation($selectedTemplate, $plugin, $fileManager, $journalId)
+  public static function getTemplatePartsAndLocation($selectedTemplate, $plugin, $fileManager, $journalId, $request = null)
   {
     $templatesDir = $plugin->getPluginPath() . "/templates/SUMARC";
     $catalogDir = "$templatesDir/$selectedTemplate/catalog.xml";
+    $fileManager = new PrivateFileManager();
     $filesInformation = [];
 
     if (!self::checkTemplateIntegrity($selectedTemplate, $plugin, $fileManager, $journalId)) return; # Primero verifico la integirdad de la template
@@ -473,6 +475,21 @@ class PDFCreationService
           'public' => self::isPublic($templatesDir, $plugin),
           'filename' => $optionalFile,
         ];
+
+        if ($filesInformation[$optionalName]['public'] && $request) {
+          $filesInformation[$optionalName]['url'] = rtrim($request->getBaseUrl(), '/') . '/plugins/generic/jatsParser/templates/SUMARC/' . $selectedTemplate . '/' . $filesInformation[$optionalName]['filename'];
+        } else {
+          $imagePath = $filesInformation[$optionalName]['using'] . "/$selectedTemplate/" . $filesInformation[$optionalName]['filename'];
+          $image = file_get_contents($imagePath);
+
+					$finfo = finfo_open(FILEINFO_MIME_TYPE);
+					$mimeType = finfo_file($finfo, $imagePath);
+					finfo_close($finfo);
+
+					$imageBase64 = base64_encode($image);
+					$filePath = 'data:' . $mimeType . ';base64,' . $imageBase64;
+          $filesInformation[$optionalName]['url'] = $filePath;
+        }
       }
     }
 
