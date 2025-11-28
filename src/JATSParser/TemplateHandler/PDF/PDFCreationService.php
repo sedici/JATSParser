@@ -148,10 +148,10 @@ class PDFCreationService
 
     switch ($type) {
       case "header":
-        $pdf->SetHTMLHeader($html, 'O');
+        $pdf->SetHTMLHeader($html);
         break;
       case "footer":
-        $pdf->SetHTMLFooter($html, 'O');
+        $pdf->SetHTMLFooter($html);
         break;
     }
   }
