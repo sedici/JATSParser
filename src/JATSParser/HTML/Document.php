@@ -265,7 +265,7 @@ class Document extends \DOMDocument {
 		// This prevents removing commas in titles (which come AFTER the year)
 		if($this->citationStyle === 'apa') {
 			file_put_contents(__DIR__."/html-before-regex.html", $htmlString);
-			$htmlString = preg_replace('/([A-Z]\.),\s+y\s+(?=[^(]*\(\d{4})/u', '$1 y ', $htmlString);
+			$htmlString = preg_replace('/,\s+y\s+(?=[^()]*\(\d{4}\))/u', ' y ', $htmlString);
 			file_put_contents(__DIR__."/html-after-regex.html", $htmlString);
 		}
 
