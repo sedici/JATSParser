@@ -254,6 +254,20 @@ class Document extends \DOMDocument {
 		$citeProc = new CiteProc($style, $this->citationLang, $additionalMarkup);
 
 		$htmlString = $citeProc->render($data, "bibliography");
+		
+		// Post-processing: Remove comma before Spanish conjunction "y" in author names
+		// This fixes the citeproc-php bug where delimiter-precedes-last="never" doesn't work properly
+		// Uses APA structure: Authors always appear BEFORE the year in parentheses
+		// Pattern: "Apellido, I., y Apellido2 (2005)" -> "Apellido, I. y Apellido2 (2005)"
+		// Only removes comma before " y " when:
+		//   1. Preceded by an author initial (letter + period)
+		//   2. Followed (eventually) by a year in parentheses (to ensure we're in the author section)
+		// This prevents removing commas in titles (which come AFTER the year)
+		if($this->citationStyle === 'apa') {
+			file_put_contents(__DIR__."/html-before-regex.html", $htmlString);
+			$htmlString = preg_replace('/([A-Z]\.),\s+y\s+(?=[^(]*\(\d{4})/u', '$1 y ', $htmlString);
+			file_put_contents(__DIR__."/html-after-regex.html", $htmlString);
+		}
 
 		if ($this->styleInTextLinks) {
 			$this->setInTextLinks($citeProc, $data);
