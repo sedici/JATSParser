@@ -17,7 +17,7 @@ define('JATSPARSER_REFERENCE_ELEMENT_ID', 'referenceList'); // Document::getRawR
 class Document extends \DOMDocument {
 
     const CITATION_STYLES = [
-        'apa' => __DIR__ . "/../Back/CSL/apa-no-ampersand.csl",
+        // 'apa' is handled dynamically based on locale
         // 'vancouver' => __DIR__ . "/../Back/CSL/vancouver.csl", 
         // Add other styles here as needed
     ];
@@ -239,8 +239,14 @@ class Document extends \DOMDocument {
 
 		$this->citeProcReferences = $data;
 
-		// Check if the requested style exists in our map
-		if (array_key_exists($this->citationStyle, self::CITATION_STYLES)) {
+		// Check if the requested style exists in our map or needs special handling
+		if ($this->citationStyle === 'apa') {
+			if (strpos($this->citationLang, 'es') === 0) {
+				$styleName = __DIR__ . "/../Back/CSL/apa-spanish-SUMARC.csl";
+			} else {
+				$styleName = __DIR__ . "/../Back/CSL/apa-no-ampersand.csl";
+			}
+		} elseif (array_key_exists($this->citationStyle, self::CITATION_STYLES)) {
 			$styleName = self::CITATION_STYLES[$this->citationStyle];
 		} else {
 			// Fallback: check if it's a direct path or try to load it directly
@@ -263,7 +269,7 @@ class Document extends \DOMDocument {
 
 		$htmlString = $citeProc->render($data, "bibliography");
 		
-		// Post-processing: Remove comma before conjunctions (y, and, e) in author names
+// Post-processing: Remove comma before conjunctions (y, and, e) in author names
 		// This fixes the citeproc-php bug where delimiter-precedes-last="never" doesn't work properly
 		// Uses APA structure: Authors always appear BEFORE the year in parentheses
 		// Pattern: "Apellido, I., y Apellido2 (2005)" -> "Apellido, I. y Apellido2 (2005)"
@@ -272,42 +278,13 @@ class Document extends \DOMDocument {
 		//   2. Followed (eventually) by a year in parentheses (to ensure we're in the author section)
 		// This prevents removing commas in titles (which come AFTER the year)
 		if($this->citationStyle === 'apa') {
-			$htmlString = preg_replace('/,\s+(y|and|e)\s+(?=[^()]*\(\d{4}\))/u', ' $1 ', $htmlString);
+			$htmlString = preg_replace('/,\s+(y|and|e)\s+(?=[^()]*\([^)]*\d{4})/u', ' $1 ', $htmlString);
 		}
 
 		if ($this->styleInTextLinks) {
 			$this->setInTextLinks($citeProc, $data);
 		}
 		$this->getCiteBody($htmlString, $rawData);
-
-
-        /* Testing section 
-	
-		$wrapIntoListItem = function($cslItem, $renderedText) {
-			return '<li id="' . $cslItem->id .'">' . $renderedText . '</li>';
-		};
-
-		$additionalMarkup = [
-			'bibliography' => [
-				'csl-entry' => $wrapIntoListItem
-			]
-		];
-
-		$data = file_get_contents(__DIR__ . "/TestingFiles/metadata.json");
-		$decoded = json_decode($data);
-
-		$styleName = $this->getCitationStyle();
-		
-		//get apa 7th edition style from CSL folder
-		$styleName = __DIR__ . "/../Back/CSL/apa-no-ampersand.csl";
-		$style = StyleSheet::loadStyleSheet($styleName);
-
-		$citeProc = new CiteProc($style, 'es', $additionalMarkup);
-		$testHtml = $citeProc->render($decoded, "bibliography");
-		$cssStyles = $citeProc->renderCssStyles();
-		file_put_contents(__DIR__ . '/TestingFiles/cssStyles.html', $cssStyles);
-		file_put_contents(__DIR__ . '/TestingFiles/testOutput.html', $testHtml);
-		*/
 	}
 
 	protected function getCiteBody(string $htmlString, array $rawData) {
