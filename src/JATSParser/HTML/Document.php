@@ -16,6 +16,12 @@ define('JATSPARSER_REFERENCE_ELEMENT_ID', 'referenceList'); // Document::getRawR
 
 class Document extends \DOMDocument {
 
+    const CITATION_STYLES = [
+        'apa' => __DIR__ . "/../Back/CSL/apa-no-ampersand.csl",
+        // 'vancouver' => __DIR__ . "/../Back/CSL/vancouver.csl", 
+        // Add other styles here as needed
+    ];
+
 	/** @var $citationStyle string  */
 	var $citationStyle;
 
@@ -233,11 +239,13 @@ class Document extends \DOMDocument {
 
 		$this->citeProcReferences = $data;
 
-		if($this->citationStyle === 'apa') {
-			$styleName = __DIR__ . "/../Back/CSL/apa-no-ampersand.csl";
-		}
-		else {
-			$styleName = $this->citationStyle;	
+		// Check if the requested style exists in our map
+		if (array_key_exists($this->citationStyle, self::CITATION_STYLES)) {
+			$styleName = self::CITATION_STYLES[$this->citationStyle];
+		} else {
+			// Fallback: check if it's a direct path or try to load it directly
+			// If not found in map, we assume $this->citationStyle might be a valid path itself or we default
+			$styleName = $this->citationStyle;
 		}
 		$style = StyleSheet::loadStyleSheet($styleName);
 
@@ -264,9 +272,7 @@ class Document extends \DOMDocument {
 		//   2. Followed (eventually) by a year in parentheses (to ensure we're in the author section)
 		// This prevents removing commas in titles (which come AFTER the year)
 		if($this->citationStyle === 'apa') {
-			file_put_contents(__DIR__."/html-before-regex.html", $htmlString);
 			$htmlString = preg_replace('/,\s+y\s+(?=[^()]*\(\d{4}\))/u', ' y ', $htmlString);
-			file_put_contents(__DIR__."/html-after-regex.html", $htmlString);
 		}
 
 		if ($this->styleInTextLinks) {
