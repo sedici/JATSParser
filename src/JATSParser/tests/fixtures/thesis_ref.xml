@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<article xmlns:xlink="http://www.w3.org/1999/xlink">
+  <back>
+    <ref-list>
+      <ref id="B1">
+        <element-citation publication-type="thesis">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Doe</surname>
+              <given-names>John</given-names>
+            </name>
+          </person-group>
+          <article-title>A Groundbreaking Thesis</article-title>
+          <year iso-8601-date="2023">2023</year>
+          <degree>PhD Thesis</degree>
+          <publisher-name>Old Publisher Name</publisher-name>
+          <publisher-loc>Old Publisher Loc</publisher-loc>
+          <institution-name>University of Example</institution-name>
+          <institution-loc>Example City</institution-loc>
+          <publication-number>123456</publication-number>
+          <comment>Master's Thesis</comment>
+        </element-citation>
+      </ref>
+    </ref-list>
+  </back>
+</article>

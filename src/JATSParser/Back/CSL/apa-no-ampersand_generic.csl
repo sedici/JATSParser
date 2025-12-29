@@ -860,19 +860,15 @@
         <else-if type="thesis">
           <!-- Thesis type and institution -->
           <group delimiter="; ">
-            <choose>
-              <if variable="number" match="none">
-                <group delimiter=", ">
-                  <text variable="genre" text-case="capitalize-first"/>
-                  <choose>
-                    <if variable="archive DOI URL" match="any">
-                      <!-- Include the university in brackets if thesis is published -->
-                      <text variable="publisher"/>
-                    </if>
-                  </choose>
-                </group>
-              </if>
-            </choose>
+            <group delimiter=", ">
+              <text variable="genre" text-case="capitalize-first"/>
+              <choose>
+                <if variable="archive DOI URL" match="any">
+                  <!-- Include the university in brackets if thesis is published -->
+                  <text variable="publisher"/>
+                </if>
+              </choose>
+            </group>
             <text variable="medium" text-case="capitalize-first"/>
           </group>
         </else-if>
@@ -1322,25 +1318,25 @@
   <macro name="number">
     <choose>
       <if variable="number">
-        <group delimiter=", ">
-          <group delimiter=" ">
-            <text variable="genre" text-case="title"/>
+        <choose>
+          <if type="thesis">
             <group delimiter=" ">
               <label variable="number" form="short" text-case="capitalize-first"/>
               <text variable="number"/>
             </group>
-          </group>
-          <choose>
-            <if type="thesis">
-              <choose>
-                <!-- Include the university in brackets if thesis is published -->
-                <if variable="archive DOI URL" match="any">
-                  <text variable="publisher"/>
-                </if>
-              </choose>
-            </if>
-          </choose>
-        </group>
+          </if>
+          <else>
+            <group delimiter=", ">
+              <group delimiter=" ">
+                <text variable="genre" text-case="title"/>
+                <group delimiter=" ">
+                  <label variable="number" form="short" text-case="capitalize-first"/>
+                  <text variable="number"/>
+                </group>
+              </group>
+            </group>
+          </else>
+        </choose>
       </if>
     </choose>
   </macro>
@@ -1463,7 +1459,17 @@
   </macro>
   <macro name="format">
     <choose>
-      <if variable="genre medium" match="any">
+      <if type="thesis">
+        <group delimiter=", ">
+          <text variable="genre" text-case="capitalize-first"/>
+          <choose>
+            <if variable="archive DOI URL" match="any">
+              <text variable="publisher"/>
+            </if>
+          </choose>
+        </group>
+      </if>
+      <else-if variable="genre medium" match="any">
         <group delimiter="; ">
           <choose>
             <if variable="number" match="none">
@@ -1472,7 +1478,7 @@
           </choose>
           <text variable="medium" text-case="capitalize-first"/>
         </group>
-      </if>
+      </else-if>
       <else>
         <text macro="generic-type-label"/>
       </else>

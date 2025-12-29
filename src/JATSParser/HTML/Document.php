@@ -241,11 +241,7 @@ class Document extends \DOMDocument {
 
 		// Check if the requested style exists in our map or needs special handling
 		if ($this->citationStyle === 'apa') {
-			if (strpos($this->citationLang, 'es') === 0) {
-				$styleName = __DIR__ . "/../Back/CSL/apa-spanish-SUMARC.csl";
-			} else {
-				$styleName = __DIR__ . "/../Back/CSL/apa-no-ampersand.csl";
-			}
+			$styleName = __DIR__ . "/../Back/CSL/apa-spanish-SUMARC.csl";
 		} elseif (array_key_exists($this->citationStyle, self::CITATION_STYLES)) {
 			$styleName = self::CITATION_STYLES[$this->citationStyle];
 		} else {
@@ -269,7 +265,7 @@ class Document extends \DOMDocument {
 
 		$htmlString = $citeProc->render($data, "bibliography");
 		
-// Post-processing: Remove comma before conjunctions (y, and, e) in author names
+		// Post-processing: Remove comma before conjunctions (y, and, e) in author names
 		// This fixes the citeproc-php bug where delimiter-precedes-last="never" doesn't work properly
 		// Uses APA structure: Authors always appear BEFORE the year in parentheses
 		// Pattern: "Apellido, I., y Apellido2 (2005)" -> "Apellido, I. y Apellido2 (2005)"

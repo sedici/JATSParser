@@ -150,6 +150,7 @@ class Reference {
 				/* @var $jatsReference Thesis */
 				$this->content->type = 'thesis';
 				$this->setSimpleProperty('genre', 'getGenre');
+				$this->setSimpleProperty('number', 'getPublicationNumber');
 				break;
 
 			case "JATSParser\Back\Magazine":
