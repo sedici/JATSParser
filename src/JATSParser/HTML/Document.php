@@ -9,6 +9,7 @@ use JATSParser\HTML\Par as  Par;
 use JATSParser\HTML\Listing as Listing;
 use Seboettg\CiteProc\StyleSheet;
 use Seboettg\CiteProc\CiteProc;
+use JATSParser\HTML\CSL\DateFormatter;
 
 define('JATSPARSER_CITEPROC_STYLE_DEFAULT', 'vancouver');
 define('JATSPARSER_CITEPROC_LANG_DEFAULT', 'en-US');
@@ -46,12 +47,12 @@ class Document extends \DOMDocument {
 	 * @param string $lang language for citation styling
 	 * @param bool $styleInTextLinks whether to style in-text links to references
 	 */
-	public function setReferences(string $citationStyle = JATSPARSER_CITEPROC_STYLE_DEFAULT, string $lang = JATSPARSER_CITEPROC_LANG_DEFAULT, bool $styleInTextLinks = false): void {
+	public function setReferences(string $citationStyle = JATSPARSER_CITEPROC_STYLE_DEFAULT, string $lang = JATSPARSER_CITEPROC_LANG_DEFAULT, bool $styleInTextLinks = false, string $dateFormat = null): void {
 		$this->citationStyle = $citationStyle;
 		$this->citationLang = $lang;
 		$this->styleInTextLinks = $styleInTextLinks;
 		if (!empty($this->jatsDocument->getReferences())) {
-			$this->extractReferences($this->jatsDocument->getReferences());
+			$this->extractReferences($this->jatsDocument->getReferences(), $dateFormat);
 		}
 	}
 
@@ -215,7 +216,7 @@ class Document extends \DOMDocument {
 		}
 	}
 
-	protected function extractReferences (array $references): void {
+	protected function extractReferences (array $references, string $dateFormat = null): void {
 
 		$referencesHeading = $this->createElement("h2");
 		$referencesHeading->setAttribute("class", "article-section-title");
@@ -249,7 +250,32 @@ class Document extends \DOMDocument {
 			// If not found in map, we assume $this->citationStyle might be a valid path itself or we default
 			$styleName = $this->citationStyle;
 		}
+
+		$tempStyleFile = null;
+
+		if ($dateFormat) {
+			error_log("Document::setReferences received dateFormat: " . $dateFormat);
+			$cslContent = file_get_contents($styleName);
+			if ($cslContent) {
+				$dateFormatter = new DateFormatter();
+				$cslContent = $dateFormatter->injectOJSDateFormat($cslContent, $dateFormat);
+				
+				$tempStyleFile = tempnam(sys_get_temp_dir(), 'csl_') . '.csl';
+				file_put_contents($tempStyleFile, $cslContent);
+				error_log("Wrote temp CSL file to: " . $tempStyleFile);
+				$styleName = $tempStyleFile;
+			} else {
+				error_log("Failed to read CSL content from: " . $styleName);
+			}
+		} else {
+			error_log("Document::setReferences received NO dateFormat.");
+		}
+
 		$style = StyleSheet::loadStyleSheet($styleName);
+		
+		if ($tempStyleFile && file_exists($tempStyleFile)) {
+			unlink($tempStyleFile);
+		}
 
 		$wrapIntoListItem = function($cslItem, $renderedText) {
 			return '<li id="' . $cslItem->id .'">' . $renderedText . '</li>';
@@ -423,5 +449,27 @@ class Document extends \DOMDocument {
 		}
 
 		return $references;
+	}
+
+	private function mapPhpDateToCsl(string $format): string {
+		$xml = '';
+		
+		// Handle strftime format (e.g. %Y-%m-%d) used by some OJS locales
+		if (strpos($format, '%') !== false) {
+			$strftimeMap = [
+				'%Y' => 'Y', // 2023
+				'%y' => 'y', // 23
+				'%m' => 'm', // 01-12
+				'%d' => 'd', // 01-31
+				'%e' => 'j', // 1-31
+				'%B' => 'F', // January
+				'%b' => 'M', // Jan
+				'%h' => 'M', // Jan (alias)
+			];
+			$format = strtr($format, $strftimeMap);
+			// Remove any remaining % that wasn't mapped (or leave it as literal? Better to strip commonly)
+			$format = str_replace('%', '', $format);
+		}
+		// Helper methods moved to JATSParser\HTML\CSL\DateFormatter
 	}
 }
