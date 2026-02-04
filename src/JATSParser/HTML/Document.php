@@ -254,7 +254,6 @@ class Document extends \DOMDocument {
 		$tempStyleFile = null;
 
 		if ($dateFormat) {
-			error_log("Document::setReferences received dateFormat: " . $dateFormat);
 			$cslContent = file_get_contents($styleName);
 			if ($cslContent) {
 				$dateFormatter = new DateFormatter();
@@ -262,13 +261,8 @@ class Document extends \DOMDocument {
 				
 				$tempStyleFile = tempnam(sys_get_temp_dir(), 'csl_') . '.csl';
 				file_put_contents($tempStyleFile, $cslContent);
-				error_log("Wrote temp CSL file to: " . $tempStyleFile);
 				$styleName = $tempStyleFile;
-			} else {
-				error_log("Failed to read CSL content from: " . $styleName);
 			}
-		} else {
-			error_log("Document::setReferences received NO dateFormat.");
 		}
 
 		$style = StyleSheet::loadStyleSheet($styleName);

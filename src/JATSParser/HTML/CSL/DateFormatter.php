@@ -9,9 +9,6 @@ class DateFormatter {
     public function injectOJSDateFormat(string $cslContent, string $dateFormat): string {
         $generatedDateXml = $this->mapPhpDateToCsl($dateFormat);
 
-        // Debug logging (can be removed later)
-        error_log("DateFormatter: Generated CSL Date XML: " . $generatedDateXml);
-
         $newMacroContent = '<group delimiter=" " prefix="(" suffix=")">' .
                            '<choose>' .
                            '<if variable="issued">' .
