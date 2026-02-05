@@ -23,6 +23,9 @@ class Chapter extends AbstractReference
 	/* @var $lpage string */
 	private $lpage;
 
+	/* @var $pageRange string */
+	private $pageRange;
+
 	public function __construct(\DOMElement $reference)
 	{
 		parent::__construct($reference);
@@ -33,6 +36,7 @@ class Chapter extends AbstractReference
 		$this->publisherName = $this->extractFromElement($reference, ".//publisher-name[1]");
 		$this->fpage = $this->extractFromElement($reference, './/fpage[1]');
 		$this->lpage = $this->extractFromElement($reference, './/lpage[1]');
+		$this->pageRange = $this->extractFromElement($reference, './/page-range[1]');
 		$this->url = $this->extractFromElement($reference, './/elocation-id[1]');
 	}
 
@@ -130,5 +134,22 @@ class Chapter extends AbstractReference
 	public function getPublisherLoc(): string
 	{
 		return $this->publisherLoc;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getPages(): string
+	{
+		if (!empty($this->pageRange)) {
+			return $this->pageRange;
+		}
+		if (!empty($this->fpage) && !empty($this->lpage)) {
+			return $this->fpage . '-' . $this->lpage;
+		}
+		if (!empty($this->fpage)) {
+			return $this->fpage;
+		}
+		return '';
 	}
 }

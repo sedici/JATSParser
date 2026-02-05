@@ -129,9 +129,16 @@ class Reference {
 				break;
 
 			case "JATSParser\Back\Chapter":
-
 				/* @var $jatsReference Chapter */
 				$this->content->type = 'chapter';
+				
+				// Fix: genre is erroneously set to publisher-loc by default
+				unset($this->content->genre);
+
+				// Fix: elocation-id mapped to URL causes numbers to appear as URLs
+				if (isset($this->content->URL) && is_numeric($this->content->URL)) {
+					unset($this->content->URL);
+				}
 				break;
 
 			case "JATSParser\Back\Conference":
