@@ -165,6 +165,7 @@ abstract class AbstractReference implements Reference
 						case "accession":
 						case "ark":
 						case "archive":
+						case "isbn":
 							$pubIdType[$pubIdKey] = trim($pubIdValue);
 							break;
 					}

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and Interchange DTD v1.2 20190208//EN" "JATS-archivearticle1.dtd">
+<article xmlns:xlink="http://www.w3.org/1999/xlink">
+  <back>
+    <ref-list>
+      <ref id="chapter-ref-57e5e105d0e7e7bb8085d863fb2d11ea">
+        <element-citation publication-type="chapter">
+          <edition>2</edition>
+          <elocation-id>eLocationId</elocation-id>
+          <fpage>10</fpage>
+          <lpage>80</lpage>
+          <page-range>80-100</page-range>
+          <publisher-loc>Publisher Location</publisher-loc>
+          <publisher-name>Empresa de renovación urbana</publisher-name>
+          <volume>10</volume>
+          <year>2006</year>
+          <pub-id pub-id-type="isbn">12321321313</pub-id>
+          <pub-id pub-id-type="doi">123123</pub-id>
+          <pub-id pub-id-type="pmid">3213121</pub-id>
+          <person-group person-group-type="author">
+            <name>
+              <surname>Renteria Salazar</surname>
+              <given-names>Pablo</given-names>
+            </name>
+          </person-group>
+          <person-group person-group-type="editor">
+            <name>
+              <surname>Flórez Góngora</surname>
+              <given-names>Maria Ana</given-names>
+            </name>
+          </person-group>
+          <source>Bogotá: Renovación Urbana, Renovacón Humana</source>
+          <chapter-title>El comienzo de la renovación</chapter-title>
+        </element-citation>
+      </ref>
+    </ref-list>
+  </back>
+</article>

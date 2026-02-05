@@ -101,6 +101,9 @@ class Reference {
 			if (array_key_exists('accession', $ids)) {
 				$this->content->{'archive_location'} = $ids['accession'];
 			}
+			if (array_key_exists('isbn', $ids)) {
+				$this->content->{'ISBN'} = $ids['isbn'];
+			}
 		}
 
 		$this->setSimpleProperty('publisher', 'getPublisherName');

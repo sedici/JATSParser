@@ -26,6 +26,15 @@ class Chapter extends AbstractReference
 	/* @var $pageRange string */
 	private $pageRange;
 
+	/* @var $volume string */
+	private $volume;
+
+	/* @var $issue string */
+	private $issue;
+
+	/* @var $edition string */
+	private $edition;
+
 	public function __construct(\DOMElement $reference)
 	{
 		parent::__construct($reference);
@@ -38,6 +47,9 @@ class Chapter extends AbstractReference
 		$this->lpage = $this->extractFromElement($reference, './/lpage[1]');
 		$this->pageRange = $this->extractFromElement($reference, './/page-range[1]');
 		$this->url = $this->extractFromElement($reference, './/elocation-id[1]');
+		$this->volume = $this->extractFromElement($reference, './/volume[1]');
+		$this->issue = $this->extractFromElement($reference, './/issue[1]');
+		$this->edition = $this->extractFromElement($reference, './/edition[1]');
 	}
 
 	/**
@@ -151,5 +163,29 @@ class Chapter extends AbstractReference
 			return $this->fpage;
 		}
 		return '';
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getVolume(): string
+	{
+		return $this->volume;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getIssue(): string
+	{
+		return $this->issue;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getEdition(): string
+	{
+		return $this->edition;
 	}
 }
