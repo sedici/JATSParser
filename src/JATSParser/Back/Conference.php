@@ -17,11 +17,15 @@ class Conference extends AbstractReference {
 	/* @var $confDate string */
 	private $confDate;
 
+	/* @var $source string */
+	private $source;
+
 	public function __construct(\DOMElement $reference) {
 
 		parent::__construct($reference);
 
-		$this->title = $this->extractFromElement($reference, ".//source");
+		$this->title = $this->extractFromElement($reference, ".//article-title");
+		$this->source = $this->extractFromElement($reference, ".//source");
 		$this->confName = $this->extractFromElement($reference, ".//conf-name");
 		$this->confLoc = $this->extractFromElement($reference, ".//conf-loc");
 		$this->confDate = $this->extractFromElement($reference, ".//conf-date");
@@ -99,6 +103,14 @@ class Conference extends AbstractReference {
 	public function getConfName(): string
 	{
 		return $this->confName;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getSource(): string
+	{
+		return $this->source;
 	}
 
 	/**
