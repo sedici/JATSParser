@@ -46,7 +46,7 @@ class Chapter extends AbstractReference
 		$this->fpage = $this->extractFromElement($reference, './/fpage[1]');
 		$this->lpage = $this->extractFromElement($reference, './/lpage[1]');
 		$this->pageRange = $this->extractFromElement($reference, './/page-range[1]');
-		$this->url = $this->extractFromElement($reference, './/elocation-id[1]');
+		$this->url = $this->extractFromElement($reference, './/elocation-id[1]|.//ext-link[@ext-link-type="uri"][1]|.//uri[1]');
 		$this->volume = $this->extractFromElement($reference, './/volume[1]');
 		$this->issue = $this->extractFromElement($reference, './/issue[1]');
 		$this->edition = $this->extractFromElement($reference, './/edition[1]');

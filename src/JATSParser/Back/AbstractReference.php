@@ -57,7 +57,7 @@ abstract class AbstractReference implements Reference
 		$this->id = $this->extractId($reference);
 		$this->year = $this->extractFromElement($reference, './/year[1]');
 
-		$this->url = $this->extractFromElement($reference, './/ext-link[@ext-link-type="uri"][1]|.//elocation-id[1]');
+		$this->url = $this->extractFromElement($reference, './/ext-link[@ext-link-type="uri"][1]|.//elocation-id[1]|.//uri[1]');
 		$this->pubIdType = $this->extractPubIdType($reference);
 
 		$citNode = $this->getFirstChildElement($reference);

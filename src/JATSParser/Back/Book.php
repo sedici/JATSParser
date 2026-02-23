@@ -20,7 +20,7 @@ class Book extends AbstractReference {
 		$this->title = $this->extractFromElement($reference, ".//source[1]");
 		$this->publisherLoc = $this->extractFromElement($reference, ".//publisher-loc[1]");
 		$this->publisherName = $this->extractFromElement($reference, ".//publisher-name[1]");
-		$this->url = $this->extractFromElement($reference, ".//ext-link[1]");
+		$this->url = $this->extractFromElement($reference, './/ext-link[1]|.//ext-link[@ext-link-type="uri"][1]|.//elocation-id[1]|.//uri[1]');
 	}
 
 	/**

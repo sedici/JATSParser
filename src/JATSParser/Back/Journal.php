@@ -33,7 +33,7 @@ class Journal extends AbstractReference
 		$this->issue = $this->extractFromElement($reference, ".//issue[1]");
 		$this->fpage = $this->extractFromElement($reference, ".//fpage[1]");
 		$this->lpage = $this->extractFromElement($reference, ".//lpage[1]");
-		$this->url = $this->extractFromElement($reference, './/elocation-id[1]');
+		$this->url = $this->extractFromElement($reference, './/elocation-id[1]|.//ext-link[@ext-link-type="uri"][1]|.//uri[1]');
 	}
 
 	/**
