@@ -17,12 +17,26 @@ class ReferenceMethods {
 					$domElement->appendChild($htmlSurname);
 				}
 
-				if ($author->getGivenNames() && $key + 1 < count($jatsReference->getAuthors())) {
-					$htmlGivenName = $domElement->ownerDocument->createTextNode(" " . $author->getGivenNames() . ", ");
-					$domElement->appendChild($htmlGivenName);
-				} elseif ($author->getGivenNames() && $key + 1 === count($jatsReference->getAuthors())) {
-					$htmlGivenName = $domElement->ownerDocument->createTextNode(" " . $author->getGivenNames() . ".");
-					$domElement->appendChild($htmlGivenName);
+				if ($author->getGivenNames()) {
+					if ($author->getSurname()) {
+						// There is a surname, prepend a space
+						if ($key + 1 < count($jatsReference->getAuthors())) {
+							$htmlGivenName = $domElement->ownerDocument->createTextNode(" " . $author->getGivenNames() . ", ");
+							$domElement->appendChild($htmlGivenName);
+						} else {
+							$htmlGivenName = $domElement->ownerDocument->createTextNode(" " . $author->getGivenNames() . ".");
+							$domElement->appendChild($htmlGivenName);
+						}
+					} else {
+						// Institutional author (no surname)
+						if ($key + 1 < count($jatsReference->getAuthors())) {
+							$htmlGivenName = $domElement->ownerDocument->createTextNode($author->getGivenNames() . ", ");
+							$domElement->appendChild($htmlGivenName);
+						} else {
+							$htmlGivenName = $domElement->ownerDocument->createTextNode($author->getGivenNames() . ".");
+							$domElement->appendChild($htmlGivenName);
+						}
+					}
 				}
 			} elseif (get_class($author) === "JATSParser\Back\Collaboration") {
 
@@ -105,12 +119,24 @@ class ReferenceMethods {
 					$domElement->appendChild($htmlSurname);
 				}
 
-				if ($author->getGivenNames() && $key + 1 < count($jatsReference->getEditors())) {
-					$htmlGivenName = $domElement->ownerDocument->createTextNode(" " . $author->getGivenNames() . ", ");
-					$domElement->appendChild($htmlGivenName);
-				} elseif ($author->getGivenNames() && $key + 1 === count($jatsReference->getEditors())) {
-					$htmlGivenName = $domElement->ownerDocument->createTextNode(" " . $author->getGivenNames() . ".");
-					$domElement->appendChild($htmlGivenName);
+				if ($author->getGivenNames()) {
+					if ($author->getSurname()) {
+						if ($key + 1 < count($jatsReference->getEditors())) {
+							$htmlGivenName = $domElement->ownerDocument->createTextNode(" " . $author->getGivenNames() . ", ");
+							$domElement->appendChild($htmlGivenName);
+						} else {
+							$htmlGivenName = $domElement->ownerDocument->createTextNode(" " . $author->getGivenNames() . ".");
+							$domElement->appendChild($htmlGivenName);
+						}
+					} else {
+						if ($key + 1 < count($jatsReference->getEditors())) {
+							$htmlGivenName = $domElement->ownerDocument->createTextNode($author->getGivenNames() . ", ");
+							$domElement->appendChild($htmlGivenName);
+						} else {
+							$htmlGivenName = $domElement->ownerDocument->createTextNode($author->getGivenNames() . ".");
+							$domElement->appendChild($htmlGivenName);
+						}
+					}
 				}
 			} elseif (get_class($author) === "JATSParser\Back\Collaboration") {
 

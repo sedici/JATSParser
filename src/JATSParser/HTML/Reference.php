@@ -36,12 +36,16 @@ class Reference {
 			foreach ($this->jatsReference->getAuthors() as $individual) {
 				if (get_class($individual) == 'JATSParser\Back\Individual') { /** @var $individual Individual */
 					$author = new \stdClass();
-					if (!empty($individual->getGivenNames())) {
-						$author->family = $individual->getSurname();
-					}
+					$given = $individual->getGivenNames();
+					$surname = $individual->getSurname();
 
-					if (!empty($individual->getSurname())) {
-						$author->given = $individual->getGivenNames();
+					if (!empty($surname) && !empty($given)) {
+						$author->family = $surname;
+						$author->given = $given;
+					} elseif (!empty($surname)) {
+						$author->family = $surname;
+					} elseif (!empty($given)) {
+						$author->family = $given; // CiteProc-PHP exige que exista 'family' si es un nombre. Las instituciones caen aquí.
 					}
 
 					$this->content->author[] = $author;
@@ -54,12 +58,16 @@ class Reference {
 			foreach ($this->jatsReference->getEditors() as $individual) {
 				if (get_class($individual) == 'JATSParser\Back\Individual') { /** @var $individual Individual */
 					$editor = new \stdClass();
-					if (!empty($individual->getGivenNames())) {
-						$editor->family = $individual->getSurname();
-					}
+					$given = $individual->getGivenNames();
+					$surname = $individual->getSurname();
 
-					if (!empty($individual->getSurname())) {
-						$editor->given = $individual->getGivenNames();
+					if (!empty($surname) && !empty($given)) {
+						$editor->family = $surname;
+						$editor->given = $given;
+					} elseif (!empty($surname)) {
+						$editor->family = $surname;
+					} elseif (!empty($given)) {
+						$editor->family = $given;
 					}
 
 					$this->content->editor[] = $editor;
