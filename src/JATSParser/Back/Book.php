@@ -16,6 +16,9 @@ class Book extends AbstractReference {
 	/* @var $volume string */
 	private $volume;
 
+	/* @var $edition string */
+	private $edition;
+
 	public function __construct(\DOMElement $reference) {
 
 		parent::__construct($reference);
@@ -25,6 +28,7 @@ class Book extends AbstractReference {
 		$this->publisherName = $this->extractFromElement($reference, ".//publisher-name[1]");
 		$this->url = $this->extractFromElement($reference, './/ext-link[1]|.//ext-link[@ext-link-type="uri"][1]|.//elocation-id[1]|.//uri[1]');
 		$this->volume = $this->extractFromElement($reference, ".//volume[1]");
+		$this->edition = $this->extractFromElement($reference, ".//edition[1]");
 	}
 
 	/**
@@ -105,5 +109,13 @@ class Book extends AbstractReference {
 	public function getVolume(): string
 	{
 		return $this->volume;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getEdition(): string
+	{
+		return $this->edition;
 	}
 }
