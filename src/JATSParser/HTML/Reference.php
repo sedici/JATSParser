@@ -123,6 +123,7 @@ class Reference {
 		$this->setSimpleProperty('event-place', 'getConfLoc');
 		$this->setSimpleProperty('genre', 'getPublisherLoc'); 
 		$this->setSimpleProperty('edition', 'getEdition');
+		$this->setDate('original-date', 'getComment');
 		$this->setSimpleProperty('part-title', 'getPartTitle');
 
 		switch (get_class($this->jatsReference)) {
