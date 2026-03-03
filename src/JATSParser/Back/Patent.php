@@ -6,7 +6,7 @@ class Patent extends AbstractReference
 {
 	/* @var string */
 	private $title;
-	private $source;
+ 	private $source;
 	private $containerTitle;
 	private $assignee;
 	private $authority;
