@@ -31,7 +31,10 @@ class Patent extends AbstractReference
 
 		// authority + number
 		$this->authority = $this->extractFromElement($reference, ".//patent[1]/@country");
-		$this->number = $this->extractFromElement($reference, ".//patent[1]");
+		
+		$reportNum = $this->extractFromElement($reference, ".//pub-id[@pub-id-type='custom' and @custom-type='report-number'][1]");
+		$patentNum = $this->extractFromElement($reference, ".//patent[1]");
+		$this->number = $reportNum ?: $patentNum;
 
 		// date parts
 		$this->month = $this->extractFromElement($reference, ".//month[1]");
