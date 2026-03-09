@@ -23,6 +23,9 @@ class Journal extends AbstractReference
 	/* @var $lpage string */
 	private $lpage;
 
+	/* @var $elocationId string */
+	private $elocationId;
+
 	public function __construct(\DOMElement $reference)
 	{
 		parent::__construct($reference);
@@ -33,7 +36,8 @@ class Journal extends AbstractReference
 		$this->issue = $this->extractFromElement($reference, ".//issue[1]");
 		$this->fpage = $this->extractFromElement($reference, ".//fpage[1]");
 		$this->lpage = $this->extractFromElement($reference, ".//lpage[1]");
-		$this->url = $this->extractFromElement($reference, './/elocation-id[1]|.//ext-link[@ext-link-type="uri"][1]|.//uri[1]');
+		$this->elocationId = $this->extractFromElement($reference, ".//elocation-id[1]");
+		$this->url = $this->extractFromElement($reference, './/ext-link[@ext-link-type="uri"][1]|.//uri[1]');
 	}
 
 	/**
@@ -140,5 +144,13 @@ class Journal extends AbstractReference
 		if (!empty($this->getFpage()) && !empty($this->getLpage())) $pages = $this->getFpage() . '-' . $this->getLpage();
 
 		return $pages;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getElocationId(): string
+	{
+		return $this->elocationId;
 	}
 }

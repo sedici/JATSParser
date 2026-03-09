@@ -52,21 +52,83 @@
       <term name="hearing" form="verb">testimony of</term>
       <term name="review-of" form="long">review of the</term>
       <term name="review-of" form="short">review of</term>
+      <term name="edition" form="short">ed.</term>
+      <term name="volume" form="short">
+        <single>Vol.</single>
+        <multiple>Vol.</multiple>
+      </term>
+      <term name="number" form="short">No.</term>
+      <term name="illustrator" form="short">
+        <single>Illus.</single>
+        <multiple>Illus.</multiple>
+      </term>
+      <term name="compiler" form="short">
+        <single>Comp.</single>
+        <multiple>Comps.</multiple>
+      </term>
+      <term name="curator" form="short">
+        <single>Cur.</single>
+        <multiple>Curs.</multiple>
+      </term>
+      <term name="director" form="short">
+        <single>Dir.</single>
+        <multiple>Dirs.</multiple>
+      </term>
+      <term name="editor" form="short">
+        <single>Ed.</single>
+        <multiple>Eds.</multiple>
+      </term>
     </terms>
   </locale>
   <locale xml:lang="da">
     <terms>
       <term name="et-al">et al.</term>
+      <term name="number" form="short">No.</term>
     </terms>
   </locale>
   <locale xml:lang="de">
     <terms>
       <term name="et-al">et al.</term>
+      <term name="number" form="short">No.</term>
     </terms>
   </locale>
   <locale xml:lang="es">
     <terms>
       <term name="from">de</term>
+      <term name="compiler" form="short">
+        <single>Comp.</single>
+        <multiple>Comps.</multiple>
+      </term>
+      <term name="curator" form="short">
+        <single>Cur.</single>
+        <multiple>Curs.</multiple>
+      </term>
+      <term name="director" form="short">
+        <single>Coord.</single>
+        <multiple>Coords.</multiple>
+      </term>
+      <term name="illustrator" form="short">
+        <single>Ilus.</single>
+        <multiple>Ilus.</multiple>
+      </term>
+      <term name="editor" form="short">
+        <single>Ed.</single>
+        <multiple>Eds.</multiple>
+      </term>
+      <term name="translator" form="short">
+        <single>Trad.</single>
+        <multiple>Trads.</multiple>
+      </term>
+      <term name="editortranslator" form="short">
+        <single>Ed. y Trad.</single>
+        <multiple>Eds. y Trads.</multiple>
+      </term>
+      <term name="edition" form="short">ed.</term>
+      <term name="volume" form="short">
+        <single>Vol.</single>
+        <multiple>Vol.</multiple>
+      </term>
+      <term name="number" form="short">No.</term>
     </terms>
   </locale>
   <locale xml:lang="fr">
@@ -75,26 +137,31 @@
         <single>éd.</single>
         <multiple>éds.</multiple>
       </term>
+      <term name="number" form="short">No.</term>
     </terms>
   </locale>
   <locale xml:lang="nb">
     <terms>
       <term name="et-al">et al.</term>
+      <term name="number" form="short">No.</term>
     </terms>
   </locale>
   <locale xml:lang="nl">
     <terms>
       <term name="et-al">et al.</term>
+      <term name="number" form="short">No.</term>
     </terms>
   </locale>
   <locale xml:lang="nn">
     <terms>
       <term name="et-al">et al.</term>
+      <term name="number" form="short">No.</term>
     </terms>
   </locale>
   <locale xml:lang="ro">
     <terms>
       <term name="et-al">et al.</term>
+      <term name="number" form="short">No.</term>
     </terms>
   </locale>
   <!-- For Indigeneous Knowledge, assume the item is stored as `document` or `speech`
@@ -230,6 +297,10 @@
             <label form="short" prefix=" (" suffix=")" text-case="title"/>
           </names>
           <names variable="editorial-director">
+            <name name-as-sort-order="all" and="text" sort-separator=", " initialize-with=". " delimiter=", " delimiter-precedes-last="always"/>
+            <label form="short" prefix=" (" suffix=")" text-case="title"/>
+          </names>
+          <names variable="translator">
             <name name-as-sort-order="all" and="text" sort-separator=", " initialize-with=". " delimiter=", " delimiter-precedes-last="always"/>
             <label form="short" prefix=" (" suffix=")" text-case="title"/>
           </names>
@@ -406,24 +477,30 @@
         <choose>
           <if variable="issued">
             <choose>
-              <if type="article-magazine article-newspaper broadcast collection document event interview motion_picture pamphlet performance personal_communication post post-weblog song speech webpage" match="any">
-                <!-- Many video and audio examples in manual give full dates. Err on the side of too much information. -->
-                <date variable="issued">
-                  <date-part name="day" suffix=" de "/>
-                  <date-part name="month" suffix=" de "/>
-                  <date-part name="year"/>
-                </date>
+              <if type="article-magazine article-newspaper broadcast collection document event interview motion_picture pamphlet performance personal_communication post post-weblog song speech webpage patent" match="any">
+                <group delimiter=", ">
+                  <date variable="issued">
+                    <date-part name="year"/>
+                  </date>
+                  <date variable="issued">
+                    <date-part name="month"/>
+                    <date-part name="day" prefix=" "/>
+                  </date>
+                </group>
                 <text variable="year-suffix"/>
               </if>
               <else-if type="paper-conference">
-                <!-- Capture 'speech' stored as 'paper-conference' -->
                 <choose>
-                  <if variable="collection-editor compiler editor editorial-director issue page volume" match="none">
-                    <date variable="issued">
-                      <date-part name="day" suffix=" de "/>
-                      <date-part name="month" suffix=" de "/>
-                      <date-part name="year"/>
-                    </date>
+                  <if variable="collection-editor compiler editor editorial-director issue page volume director curator" match="none">
+                    <group delimiter=", ">
+                      <date variable="issued">
+                        <date-part name="year"/>
+                      </date>
+                      <date variable="issued">
+                        <date-part name="month"/>
+                        <date-part name="day" prefix=" "/>
+                      </date>
+                    </group>
                     <text variable="year-suffix"/>
                   </if>
                   <else>
@@ -435,8 +512,6 @@
                 </choose>
               </else-if>
               <else>
-                <!-- Only year: article article-journal book chapter classic entry entry-dictionary entry-encyclopedia dataset figure graphic
-                     manuscript map musical_score paper-conference[published] patent periodical report review review-book software standard thesis -->
                 <group>
                   <date variable="issued" date-parts="year" form="numeric"/>
                   <text variable="year-suffix"/>
@@ -468,7 +543,7 @@
       <else-if type="paper-conference">
         <!-- Capture 'speech' stored as 'paper-conference' -->
         <choose>
-          <if variable="collection-editor compiler editor editorial-director issue page volume" match="any">
+          <if variable="collection-editor compiler editor editorial-director issue page volume director curator" match="any">
             <date variable="issued" date-parts="year" form="numeric"/>
           </if>
           <else>
@@ -607,7 +682,7 @@
       <else-if type="paper-conference">
         <!-- Treat paper-conference as book-like if it has an editor, otherwise as periodical-like -->
         <choose>
-          <if variable="collection-editor compiler editor editorial-director" match="any">
+          <if variable="collection-editor compiler editor editorial-director curator director" match="any">
             <text macro="booklike-title"/>
           </if>
           <else>
@@ -819,23 +894,20 @@
             </else>
           </choose>
         </else-if>
-        <else-if variable="container-title">
-          <group delimiter="; ">
-            <text macro="secondary-contributors"/>
-            <choose>
-              <if type="broadcast graphic map motion_picture song" match="any">
-                <!-- For audiovisual media, number information comes after title, not container-title (ex. 94) -->
-                <text macro="number"/>
-              </if>
-            </choose>
-          </group>
-        </else-if>
         <else>
           <group delimiter="; ">
             <text macro="secondary-contributors"/>
             <text macro="database-location"/>
-            <text macro="number"/>
-            <text macro="locators-booklike"/>
+            <choose>
+              <if type="article-journal article-magazine article-newspaper article" match="none">
+                <text macro="number"/>
+              </if>
+            </choose>
+            <choose>
+              <if variable="container-title" match="none">
+                <text macro="locators-booklike"/>
+              </if>
+            </choose>
           </group>
         </else>
       </choose>
@@ -848,8 +920,8 @@
           <group delimiter="; ">
             <text macro="database-location"/>
             <choose>
-              <if type="broadcast graphic map motion_picture song" match="none">
-                <!-- For audiovisual media, number information comes after title, not container-title (ex. 94) -->
+              <if type="broadcast graphic map motion_picture song patent dataset" match="none">
+                <!-- For audiovisual media and patents, number information comes after title, not container-title (ex. 94) -->
                 <text macro="number"/>
               </if>
             </choose>
@@ -1059,7 +1131,7 @@
           <choose>
             <if type="event paper-conference performance speech" match="any">
               <choose>
-                <if variable="collection-editor compiler editor editorial-director issue page volume" match="any">
+                <if variable="collection-editor compiler editor editorial-director issue page volume director curator" match="any">
                   <text macro="format"/>
                 </if>
               </choose>
@@ -1193,7 +1265,7 @@
         <if type="event paper-conference performance speech" match="any">
           <!-- Conference presentations should describe the session [container] in bracketed unless published in a proceedings -->
           <choose>
-            <if variable="collection-editor compiler editor editorial-director issue page volume" match="none">
+            <if variable="collection-editor compiler editor editorial-director issue page volume director curator" match="none">
               <text macro="format"/>
             </if>
           </choose>
@@ -1212,11 +1284,11 @@
   <macro name="secondary-contributors">
     <choose>
       <if type="article-journal article-magazine article-newspaper periodical post-weblog review review-book" match="any">
-        <text macro="secondary-contributors-periodical"/>
+        <text macro="secondary-contributors-booklike"/>
       </if>
       <else-if type="paper-conference">
         <choose>
-          <if variable="collection-editor compiler editor editorial-director" match="any">
+          <if variable="collection-editor compiler editor editorial-director curator director" match="any">
             <text macro="secondary-contributors-booklike"/>
           </if>
           <else>
@@ -1239,7 +1311,11 @@
           </names>
         </if>
       </choose>
-      <names variable="translator narrator" delimiter="; ">
+      <names variable="translator" delimiter="; ">
+        <name and="text" initialize-with=". " delimiter=", "/>
+        <label form="short" prefix=", " text-case="title"/>
+      </names>
+      <names variable="narrator" delimiter="; ">
         <name and="text" initialize-with=". " delimiter=", "/>
         <label form="short" prefix=", " text-case="title"/>
       </names>
@@ -1256,51 +1332,53 @@
         </if>
       </choose>
       <choose>
-        <if type="post webpage" match="none">
+        <if type="article-journal article-magazine article-newspaper article conference paper-conference chapter dataset" match="any">
+          <!-- Supressed here because they are printed entirely in container-booklike after "In" -->
+        </if>
+        <else-if type="post webpage" match="none">
           <!-- Webpages treat container-title like publisher -->
           <group delimiter="; ">
             <names variable="illustrator narrator" delimiter="; ">
               <name and="symbol" initialize-with=". " delimiter=", "/>
               <label form="short" prefix=", " text-case="title"/>
             </names>
+            <names variable="chair organizer curator series-creator executive-producer director" delimiter="; ">
+              <name and="symbol" initialize-with=". " delimiter=", "/>
+              <label form="short" prefix=", " text-case="title"/>
+            </names>
+            <names variable="compiler" delimiter="; ">
+              <name and="symbol" initialize-with=". " delimiter=", "/>
+              <label form="short" prefix=", " text-case="title"/>
+            </names>
             <choose>
-              <if variable="container-title" match="none">
-                <group delimiter="; ">
-                  <names variable="container-author">
-                    <label form="verb-short" suffix=" " text-case="title"/>
-                    <name and="symbol" initialize-with=". " delimiter=", "/>
-                  </names>
-                  <names variable="editor translator" delimiter="; ">
-                    <name and="symbol" initialize-with=". " delimiter=", "/>
-                    <label form="short" prefix=", " text-case="title"/>
-                  </names>
-                  <names variable="compiler chair organizer curator series-creator executive-producer" delimiter="; ">
-                    <name and="symbol" initialize-with=". " delimiter=", "/>
-                    <label form="long" prefix=", " text-case="title"/>
-                  </names>
-                </group>
+              <if type="chapter paper-conference" match="none">
+                <names variable="editor" delimiter="; ">
+                  <name and="symbol" initialize-with=". " delimiter=", "/>
+                  <label form="short" prefix=", " text-case="title"/>
+                </names>
               </if>
-              <else>
-                <choose>
-                  <!-- TODO: Check logic once processors start to automatically populate editor-translator. -->
-                  <if variable="editor-translator" match="none">
-                    <names variable="translator" delimiter="; ">
-                      <name and="symbol" initialize-with=". " delimiter=", "/>
-                      <label form="short" prefix=", " text-case="title"/>
-                    </names>
-                  </if>
-                </choose>
-              </else>
             </choose>
+            <names variable="translator" delimiter="; ">
+              <name and="symbol" initialize-with=". " delimiter=", "/>
+              <label form="short" prefix=", " text-case="title"/>
+            </names>
           </group>
-        </if>
+        </else-if>
         <else>
           <group delimiter="; ">
             <names variable="container-author">
               <label form="verb-short" suffix=" " text-case="title"/>
               <name and="text" initialize-with=". " delimiter=", "/>
             </names>
-            <names variable="editor translator" delimiter="; ">
+            <choose>
+              <if type="chapter paper-conference" match="none">
+                <names variable="editor" delimiter="; ">
+                  <name and="text" initialize-with=". " delimiter=", "/>
+                  <label form="short" prefix=", " text-case="title"/>
+                </names>
+              </if>
+            </choose>
+            <names variable="translator" delimiter="; ">
               <name and="text" initialize-with=". " delimiter=", "/>
               <label form="short" prefix=", " text-case="title"/>
             </names>
@@ -1308,9 +1386,9 @@
               <name and="text" initialize-with=". " delimiter=", "/>
               <label form="short" prefix=", " text-case="title"/>
             </names>
-            <names variable="compiler chair organizer curator series-creator executive-producer" delimiter="; ">
+            <names variable="compiler chair organizer curator series-creator executive-producer director" delimiter="; ">
               <name and="text" initialize-with=". " delimiter=", "/>
-              <label form="long" prefix=", " text-case="title"/>
+              <label form="short" prefix=", " text-case="title"/>
             </names>
           </group>
         </else>
@@ -1331,7 +1409,7 @@
         <choose>
           <if type="thesis">
             <group delimiter=" ">
-              <label variable="number" form="short" text-case="capitalize-first"/>
+              <label variable="number" form="short" text-case="capitalize-first" plural="never"/>
               <text variable="number"/>
             </group>
           </if>
@@ -1340,7 +1418,7 @@
               <group delimiter=" ">
                 <text variable="genre" text-case="title"/>
                 <group delimiter=" ">
-                  <label variable="number" form="short" text-case="capitalize-first"/>
+                  <label variable="number" form="short" text-case="capitalize-first" plural="never"/>
                   <text variable="number"/>
                 </group>
               </group>
@@ -1355,7 +1433,7 @@
       <if type="article-journal article-magazine article-newspaper broadcast event interview patent performance periodical post post-weblog review review-book speech webpage" match="any"/>
       <else-if type="paper-conference">
         <choose>
-          <if variable="collection-editor compiler editor editorial-director" match="any">
+          <if variable="collection-editor compiler editor editorial-director curator director" match="any">
             <group delimiter=", ">
               <text macro="version"/>
               <text macro="edition"/>
@@ -1384,7 +1462,7 @@
       <if is-numeric="edition">
         <group delimiter=" ">
           <number variable="edition" form="ordinal"/>
-          <label variable="edition" form="short"/>
+          <label variable="edition" form="short" plural="never"/>
         </group>
       </if>
       <else>
@@ -1415,7 +1493,7 @@
             <else-if is-numeric="volume" match="none"/>
             <else>
               <group delimiter=" ">
-                <label variable="volume" form="short" text-case="capitalize-first"/>
+                <label variable="volume" form="short" plural="never"/>
                 <number variable="volume" form="numeric"/>
               </group>
             </else>
@@ -1577,8 +1655,8 @@
           </else>
         </choose>
       </else-if>
-      <else-if type="post webpage" match="none">
-        <!-- post and webpage treat container-title like publisher -->
+      <else-if type="post webpage patent" match="none">
+        <!-- post, webpage and patent treat container-title like publisher or authority -->
         <text macro="container-booklike"/>
       </else-if>
     </choose>
@@ -1586,7 +1664,17 @@
   <macro name="container-periodical">
     <group delimiter=". ">
       <group delimiter=", ">
-        <text variable="container-title" font-style="italic" text-case="title"/>
+        <group delimiter=" ">
+          <choose>
+            <if variable="container-author executive-producer series-creator editor-translator compiler editor editorial-director curator collection-editor translator director illustrator" match="any">
+              <text term="in" text-case="capitalize-first"/>
+            </if>
+          </choose>
+          <group delimiter=", ">
+            <text macro="container-contributors"/>
+            <text variable="container-title" font-style="italic" text-case="title"/>
+          </group>
+        </group>
         <choose>
           <if variable="volume">
             <group>
@@ -1595,7 +1683,7 @@
             </group>
           </if>
           <else>
-            <text variable="issue" font-style="italic"/>
+            <text variable="issue" prefix="(" suffix=")"/>
           </else>
         </choose>
         <choose>
@@ -1612,6 +1700,11 @@
         </choose>
       </group>
       <choose>
+        <if variable="container-title" match="none">
+           <text macro="parenthetical"/>
+        </if>
+      </choose>
+      <choose>
         <if variable="issued">
           <choose>
             <if variable="issue number page volume" match="none">
@@ -1621,6 +1714,58 @@
           </choose>
         </if>
       </choose>
+    </group>
+  </macro>
+  <macro name="container-contributors">
+    <group delimiter="; ">
+      <names variable="container-author">
+        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <label form="short" text-case="title" prefix=" (" suffix=")"/>
+      </names>
+      <names variable="executive-producer">
+        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <label form="short" text-case="title" prefix=" (" suffix=")"/>
+      </names>
+      <names variable="series-creator">
+        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <label form="short" text-case="title" prefix=" (" suffix=")"/>
+      </names>
+      <names variable="editor-translator">
+        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <label form="short" text-case="title" prefix=" (" suffix=")"/>
+      </names>
+      <names variable="compiler">
+        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <label form="short" text-case="title" prefix=" (" suffix=")"/>
+      </names>
+      <names variable="editor">
+        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <label form="short" text-case="title" prefix=" (" suffix=")"/>
+      </names>
+      <names variable="editorial-director">
+        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <label form="short" text-case="title" prefix=" (" suffix=")"/>
+      </names>
+      <names variable="curator">
+        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <label form="short" text-case="title" prefix=" (" suffix=")"/>
+      </names>
+      <names variable="collection-editor">
+        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <label form="short" text-case="title" prefix=" (" suffix=")"/>
+      </names>
+      <names variable="translator">
+        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <label form="short" text-case="title" prefix=" (" suffix=")"/>
+      </names>
+      <names variable="director">
+        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <label form="short" text-case="title" prefix=" (" suffix=")"/>
+      </names>
+      <names variable="illustrator">
+        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <label form="short" text-case="title" prefix=" (" suffix=")"/>
+      </names>
     </group>
   </macro>
   <macro name="container-booklike">
@@ -1636,41 +1781,7 @@
             </else>
           </choose>
           <group delimiter=", ">
-            <names variable="executive-producer">
-              <name and="text" initialize-with=". " delimiter=", "/>
-              <label form="long" text-case="title" prefix=" (" suffix=")"/>
-              <substitute>
-                <names variable="series-creator"/>
-                <names variable="editor-translator">
-                  <name and="text" initialize-with=". " delimiter=", "/>
-                  <label form="short" text-case="title" prefix=" (" suffix=")"/>
-                </names>
-                <!-- TODO: Translator omitted here on the assumption that editor-translators are uncommon 
-                           for chapter citations. If needed, direct entry or automatic population of
-                           `editor-translator` can produce combined labels. -->
-                <names variable="editor">
-                  <name and="text" initialize-with=". " delimiter=", "/>
-                  <label form="short" text-case="title" prefix=" (" suffix=")"/>
-                </names>
-                <names variable="editorial-director">
-                  <name and="text" initialize-with=". " delimiter=", "/>
-                  <label form="short" text-case="title" prefix=" (" suffix=")"/>
-                </names>
-                <names variable="compiler"/>
-                <choose>
-                  <if type="event performance speech" match="any">
-                    <names variable="chair"/>
-                    <names variable="organizer"/>
-                  </if>
-                </choose>
-                <names variable="curator"/>
-                <names variable="collection-editor">
-                  <name and="text" initialize-with=". " delimiter=", "/>
-                  <label form="short" text-case="title" prefix=" (" suffix=")"/>
-                </names>
-                <names variable="container-author"/>
-              </substitute>
-            </names>
+            <text macro="container-contributors"/>
             <group delimiter=": " font-style="italic">
               <text variable="container-title"/>
               <text macro="volume-title"/>
@@ -1702,7 +1813,7 @@
         <else-if type="paper-conference">
           <!-- For paper-conference, don't print publisher if in a journal-like proceedings -->
           <choose>
-            <if variable="collection-editor compiler editor editorial-director" match="any">
+            <if variable="collection-editor compiler editor editorial-director curator director" match="any">
               <text variable="publisher"/>
             </if>
           </choose>
@@ -1775,7 +1886,7 @@
         <choose>
           <if type="paper-conference">
             <choose>
-              <if variable="collection-editor compiler editor editorial-director issue page volume" match="none">
+              <if variable="collection-editor compiler editor editorial-director issue page volume director curator" match="none">
                 <!-- Don't print event info for conference papers published in a proceedings -->
                 <group delimiter=", ">
                   <text macro="event-title"/>
