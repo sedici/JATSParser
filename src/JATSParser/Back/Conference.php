@@ -20,6 +20,12 @@ class Conference extends AbstractReference {
 	/* @var $source string */
 	private $source;
 
+	/* @var $month string */
+	private $month;
+
+	/* @var $day string */
+	private $day;
+
 	public function __construct(\DOMElement $reference) {
 
 		parent::__construct($reference);
@@ -29,6 +35,8 @@ class Conference extends AbstractReference {
 		$this->confName = $this->extractFromElement($reference, ".//conf-name");
 		$this->confLoc = $this->extractFromElement($reference, ".//conf-loc");
 		$this->confDate = $this->extractFromElement($reference, ".//conf-date");
+		$this->month = $this->extractFromElement($reference, ".//month[1]");
+		$this->day = $this->extractFromElement($reference, ".//day[1]");
 		$this->url = $this->extractFromElement($reference, './/elocation-id[1]|.//ext-link[@ext-link-type="uri"][1]|.//uri[1]');
 	}
 
@@ -119,6 +127,18 @@ class Conference extends AbstractReference {
 	public function getPubIdType(): array
 	{
 		return $this->pubIdType;
+	}
+
+	public function getMonth(): string { return $this->month; }
+	public function getDay(): string { return $this->day; }
+
+	// YYYY[-MM[-DD]]
+	public function getIssuedDate(): string
+	{
+		$parts = array_values(array_filter([$this->year, $this->month, $this->day], static function($v) {
+			return $v !== null && $v !== '';
+		}));
+		return implode('-', $parts);
 	}
 }
 

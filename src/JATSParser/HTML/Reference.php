@@ -127,6 +127,7 @@ class Reference {
 
 				/* @var $jatsReference Conference */
 				$this->content->type = 'conference';
+				$this->setDate('issued', 'getIssuedDate');
 				break;
 
 			case "JATSParser\Back\Webpage":
