@@ -32,40 +32,17 @@ class Reference {
 
 		$this->setSimpleProperty('id', 'getId');
 
-		if (!empty($this->jatsReference->getAuthors())) {
-			foreach ($this->jatsReference->getAuthors() as $individual) {
-				if (get_class($individual) == 'JATSParser\Back\Individual') { /** @var $individual Individual */
-					$author = new \stdClass();
-					if (!empty($individual->getGivenNames())) {
-						$author->family = $individual->getSurname();
-					}
+		$this->setContributors('getAuthors', 'author');
+		$this->setContributors('getEditors', 'editor');
+		$this->setContributors('getTranslators', 'translator');
+		$this->setContributors('getCompilers', 'compiler');
+		$this->setContributors('getCurators', 'curator');
+		$this->setContributors('getGuestEditors', 'editor'); // En apa guest editors can fallback to editor o guest-editor
+		$this->setContributors('getCoordinators', 'director'); // director is standard mapping for coordinator
+		$this->setContributors('getIllustrators', 'illustrator');
+		$this->setPublisherFromAssignees(); // Assignees are often institutions or publishers, mapping as string to avoid CiteProc crash
+		$this->setContributors('getDirectors', 'director');
 
-					if (!empty($individual->getSurname())) {
-						$author->given = $individual->getGivenNames();
-					}
-
-					$this->content->author[] = $author;
-
-				}
-			}
-		}
-
-		if (!empty($this->jatsReference->getEditors())) {
-			foreach ($this->jatsReference->getEditors() as $individual) {
-				if (get_class($individual) == 'JATSParser\Back\Individual') { /** @var $individual Individual */
-					$editor = new \stdClass();
-					if (!empty($individual->getGivenNames())) {
-						$editor->family = $individual->getSurname();
-					}
-
-					if (!empty($individual->getSurname())) {
-						$editor->given = $individual->getGivenNames();
-					}
-
-					$this->content->editor[] = $editor;
-				}
-			}
-		}
 
 		$this->setSimpleProperty('URL', 'getUrl');
 		$this->setSimpleProperty('title', 'getTitle');
@@ -101,6 +78,9 @@ class Reference {
 			if (array_key_exists('accession', $ids)) {
 				$this->content->{'archive_location'} = $ids['accession'];
 			}
+			if (array_key_exists('isbn', $ids)) {
+				$this->content->{'ISBN'} = $ids['isbn'];
+			}
 		}
 
 		$this->setSimpleProperty('publisher', 'getPublisherName');
@@ -112,6 +92,7 @@ class Reference {
 		$this->setSimpleProperty('event-place', 'getConfLoc');
 		$this->setSimpleProperty('genre', 'getPublisherLoc'); 
 		$this->setSimpleProperty('edition', 'getEdition');
+		$this->setDate('original-date', 'getComment');
 		$this->setSimpleProperty('part-title', 'getPartTitle');
 
 		switch (get_class($this->jatsReference)) {
@@ -120,6 +101,7 @@ class Reference {
 
 				/* @var $jatsReference Journal */
 				$this->content->type = 'article-journal';
+				$this->setSimpleProperty('number', 'getElocationId');
 				break;
 
 			case "JATSParser\Back\Book":
@@ -129,15 +111,23 @@ class Reference {
 				break;
 
 			case "JATSParser\Back\Chapter":
-
 				/* @var $jatsReference Chapter */
 				$this->content->type = 'chapter';
+				
+				// Fix: genre is erroneously set to publisher-loc by default
+				unset($this->content->genre);
+
+				// Fix: elocation-id mapped to URL causes numbers to appear as URLs
+				if (isset($this->content->URL) && is_numeric($this->content->URL)) {
+					unset($this->content->URL);
+				}
 				break;
 
 			case "JATSParser\Back\Conference":
 
 				/* @var $jatsReference Conference */
 				$this->content->type = 'conference';
+				$this->setDate('issued', 'getIssuedDate');
 				break;
 
 			case "JATSParser\Back\Webpage":
@@ -150,6 +140,7 @@ class Reference {
 				/* @var $jatsReference Thesis */
 				$this->content->type = 'thesis';
 				$this->setSimpleProperty('genre', 'getGenre');
+				$this->setSimpleProperty('number', 'getPublicationNumber');
 				break;
 
 			case "JATSParser\Back\Magazine":
@@ -187,6 +178,57 @@ class Reference {
 				/* @var $jatsReference Newspaper */
 				$this->content->type = 'article-newspaper';
 				break;
+		}
+	}
+
+	protected function setContributors(string $method, string $cslProperty): void {
+		if (method_exists($this->jatsReference, $method) && !empty($this->jatsReference->$method())) {
+			foreach ($this->jatsReference->$method() as $individual) {
+				if (get_class($individual) == 'JATSParser\Back\Individual') { /** @var $individual Individual */
+					$contributor = new \stdClass();
+					$given = $individual->getGivenNames();
+					$surname = $individual->getSurname();
+
+					if (!empty($surname) && !empty($given)) {
+						$contributor->family = $surname;
+						$contributor->given = $given;
+					} elseif (!empty($surname)) {
+						$contributor->family = $surname;
+					} elseif (!empty($given)) {
+						$contributor->family = $given; // CiteProc-PHP exige que exista 'family' si es un nombre. Las instituciones caen aquí.
+					}
+
+					$this->content->{$cslProperty}[] = $contributor;
+
+				} elseif (get_class($individual) == 'JATSParser\Back\Collaboration') { /* @var $individual \JATSParser\Back\Collaboration */
+					$contributor = new \stdClass();
+					$contributor->family = trim($individual->getName());
+					$this->content->{$cslProperty}[] = $contributor;
+				}
+			}
+		}
+	}
+	protected function setPublisherFromAssignees(): void {
+		if (method_exists($this->jatsReference, 'getAssignees') && !empty($assignees = $this->jatsReference->getAssignees())) {
+			$names = [];
+			foreach ($assignees as $individual) {
+				if (get_class($individual) == 'JATSParser\Back\Individual') { /** @var $individual Individual */
+					$given = $individual->getGivenNames();
+					$surname = $individual->getSurname();
+					if (!empty($surname) && !empty($given)) {
+						$names[] = $surname . ', ' . $given;
+					} elseif (!empty($surname)) {
+						$names[] = $surname;
+					} elseif (!empty($given)) {
+						$names[] = $given;
+					}
+				} elseif (get_class($individual) == 'JATSParser\Back\Collaboration') { /* @var $individual \JATSParser\Back\Collaboration */
+					$names[] = trim($individual->getName());
+				}
+			}
+			if (!empty($names)) {
+				$this->content->publisher = implode('; ', $names);
+			}
 		}
 	}
 

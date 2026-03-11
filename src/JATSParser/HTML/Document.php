@@ -9,12 +9,19 @@ use JATSParser\HTML\Par as  Par;
 use JATSParser\HTML\Listing as Listing;
 use Seboettg\CiteProc\StyleSheet;
 use Seboettg\CiteProc\CiteProc;
+use JATSParser\HTML\CSL\DateFormatter;
 
 define('JATSPARSER_CITEPROC_STYLE_DEFAULT', 'vancouver');
 define('JATSPARSER_CITEPROC_LANG_DEFAULT', 'en-US');
 define('JATSPARSER_REFERENCE_ELEMENT_ID', 'referenceList'); // Document::getRawReferences() linked to this id
 
 class Document extends \DOMDocument {
+
+    const CITATION_STYLES = [
+        // 'apa' is handled dynamically based on locale
+        // 'vancouver' => __DIR__ . "/../Back/CSL/vancouver.csl", 
+        // Add other styles here as needed
+    ];
 
 	/** @var $citationStyle string  */
 	var $citationStyle;
@@ -40,12 +47,12 @@ class Document extends \DOMDocument {
 	 * @param string $lang language for citation styling
 	 * @param bool $styleInTextLinks whether to style in-text links to references
 	 */
-	public function setReferences(string $citationStyle = JATSPARSER_CITEPROC_STYLE_DEFAULT, string $lang = JATSPARSER_CITEPROC_LANG_DEFAULT, bool $styleInTextLinks = false): void {
+	public function setReferences(string $citationStyle = JATSPARSER_CITEPROC_STYLE_DEFAULT, string $lang = JATSPARSER_CITEPROC_LANG_DEFAULT, bool $styleInTextLinks = false, string $dateFormat = null): void {
 		$this->citationStyle = $citationStyle;
 		$this->citationLang = $lang;
 		$this->styleInTextLinks = $styleInTextLinks;
 		if (!empty($this->jatsDocument->getReferences())) {
-			$this->extractReferences($this->jatsDocument->getReferences());
+			$this->extractReferences($this->jatsDocument->getReferences(), $dateFormat);
 		}
 	}
 
@@ -209,7 +216,7 @@ class Document extends \DOMDocument {
 		}
 	}
 
-	protected function extractReferences (array $references): void {
+	protected function extractReferences (array $references, string $dateFormat = null): void {
 
 		$referencesHeading = $this->createElement("h2");
 		$referencesHeading->setAttribute("class", "article-section-title");
@@ -233,13 +240,36 @@ class Document extends \DOMDocument {
 
 		$this->citeProcReferences = $data;
 
-		if($this->citationStyle === 'apa') {
-			$styleName = __DIR__ . "/../Back/CSL/apa-no-ampersand.csl";
+		// Check if the requested style exists in our map or needs special handling
+		if ($this->citationStyle === 'apa') {
+			$styleName = __DIR__ . "/../Back/CSL/apa-spanish-SUMARC.csl";
+		} elseif (array_key_exists($this->citationStyle, self::CITATION_STYLES)) {
+			$styleName = self::CITATION_STYLES[$this->citationStyle];
+		} else {
+			// Fallback: check if it's a direct path or try to load it directly
+			// If not found in map, we assume $this->citationStyle might be a valid path itself or we default
+			$styleName = $this->citationStyle;
 		}
-		else {
-			$styleName = $this->citationStyle;	
+
+		$tempStyleFile = null;
+
+		if ($dateFormat) {
+			$cslContent = file_get_contents($styleName);
+			if ($cslContent) {
+				$dateFormatter = new DateFormatter();
+				$cslContent = $dateFormatter->injectOJSDateFormat($cslContent, $dateFormat);
+				
+				$tempStyleFile = tempnam(sys_get_temp_dir(), 'csl_') . '.csl';
+				file_put_contents($tempStyleFile, $cslContent);
+				$styleName = $tempStyleFile;
+			}
 		}
+
 		$style = StyleSheet::loadStyleSheet($styleName);
+		
+		if ($tempStyleFile && file_exists($tempStyleFile)) {
+			unlink($tempStyleFile);
+		}
 
 		$wrapIntoListItem = function($cslItem, $renderedText) {
 			return '<li id="' . $cslItem->id .'">' . $renderedText . '</li>';
@@ -254,40 +284,23 @@ class Document extends \DOMDocument {
 		$citeProc = new CiteProc($style, $this->citationLang, $additionalMarkup);
 
 		$htmlString = $citeProc->render($data, "bibliography");
+		
+		// Post-processing: Remove comma before conjunctions (y, and, e) in author names
+		// This fixes the citeproc-php bug where delimiter-precedes-last="never" doesn't work properly
+		// Uses APA structure: Authors always appear BEFORE the year in parentheses
+		// Pattern: "Apellido, I., y Apellido2 (2005)" -> "Apellido, I. y Apellido2 (2005)"
+		// Only removes comma before " y ", " and ", " e " when:
+		//   1. Preceded by an author initial (letter + period)
+		//   2. Followed (eventually) by a year in parentheses (to ensure we're in the author section)
+		// This prevents removing commas in titles (which come AFTER the year)
+		if($this->citationStyle === 'apa') {
+			$htmlString = preg_replace('/,\s+(y|and|e)\s+(?=[^()]*\([^)]*\d{4})/u', ' $1 ', $htmlString);
+		}
 
 		if ($this->styleInTextLinks) {
 			$this->setInTextLinks($citeProc, $data);
 		}
 		$this->getCiteBody($htmlString, $rawData);
-
-
-        /* Testing section 
-	
-		$wrapIntoListItem = function($cslItem, $renderedText) {
-			return '<li id="' . $cslItem->id .'">' . $renderedText . '</li>';
-		};
-
-		$additionalMarkup = [
-			'bibliography' => [
-				'csl-entry' => $wrapIntoListItem
-			]
-		];
-
-		$data = file_get_contents(__DIR__ . "/TestingFiles/metadata.json");
-		$decoded = json_decode($data);
-
-		$styleName = $this->getCitationStyle();
-		
-		//get apa 7th edition style from CSL folder
-		$styleName = __DIR__ . "/../Back/CSL/apa-no-ampersand.csl";
-		$style = StyleSheet::loadStyleSheet($styleName);
-
-		$citeProc = new CiteProc($style, 'es', $additionalMarkup);
-		$testHtml = $citeProc->render($decoded, "bibliography");
-		$cssStyles = $citeProc->renderCssStyles();
-		file_put_contents(__DIR__ . '/TestingFiles/cssStyles.html', $cssStyles);
-		file_put_contents(__DIR__ . '/TestingFiles/testOutput.html', $testHtml);
-		*/
 	}
 
 	protected function getCiteBody(string $htmlString, array $rawData) {
@@ -430,5 +443,27 @@ class Document extends \DOMDocument {
 		}
 
 		return $references;
+	}
+
+	private function mapPhpDateToCsl(string $format): string {
+		$xml = '';
+		
+		// Handle strftime format (e.g. %Y-%m-%d) used by some OJS locales
+		if (strpos($format, '%') !== false) {
+			$strftimeMap = [
+				'%Y' => 'Y', // 2023
+				'%y' => 'y', // 23
+				'%m' => 'm', // 01-12
+				'%d' => 'd', // 01-31
+				'%e' => 'j', // 1-31
+				'%B' => 'F', // January
+				'%b' => 'M', // Jan
+				'%h' => 'M', // Jan (alias)
+			];
+			$format = strtr($format, $strftimeMap);
+			// Remove any remaining % that wasn't mapped (or leave it as literal? Better to strip commonly)
+			$format = str_replace('%', '', $format);
+		}
+		// Helper methods moved to JATSParser\HTML\CSL\DateFormatter
 	}
 }
