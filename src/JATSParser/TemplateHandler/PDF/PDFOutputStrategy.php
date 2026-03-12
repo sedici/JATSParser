@@ -37,7 +37,8 @@ class PDFOutputStrategy implements OutputStrategy {
 			'margin_top' => $ojsConfiguration['margin_top'],
 			'margin_bottom' => $ojsConfiguration['margin_bottom'], 
 		]); # Versión 8.1.3. Los genero así para que la salida sea un PDF/A válido
-		$pdf->SetAnchor2Bookmark(1);
+		
+		//$pdf->SetAnchor2Bookmark(1);
 
 		$submissionFile = Repo::submissionFile()->get($fileId);
 		$jatsDocument = new Document($fileMgr->getBasePath() . DIRECTORY_SEPARATOR . $submissionFile->getData('path'));
