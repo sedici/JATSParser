@@ -21,33 +21,17 @@ class Table extends \DOMElement {
 
 		 // Get the parent node to add elements before and after the table
 		$parentNode = $this->parentNode;
-		if ($parentNode) {
-		    // Add spacing BEFORE the caption (between previous content and table title)
-		    $topSpacer = $this->ownerDocument->createElement("p");
-		    $parentNode->insertBefore($topSpacer, $this);
-		    
-			// Create caption div BEFORE the table
-			$captionDiv = $this->ownerDocument->createElement("div");
-			$captionDiv->setAttribute("class", "caption");
-			$parentNode->insertBefore($captionDiv, $this);
-
-			// Create actual caption element inside the div
+		
+		// Set table title inside the table element (as first child)
+		if (count($jatsTable->getTitle()) > 0) {
 			$captionElement = $this->ownerDocument->createElement("caption");
-			$captionDiv->appendChild($captionElement);
+			$this->appendChild($captionElement);
 			
-			/* Set table title
-			* @var $tableTitle JATSText
-			*/
-			if (count($jatsTable->getTitle()) > 0) {
-				$spanTitle = $this->ownerDocument->createElement("span");
-				$spanTitle->setAttribute("class", "title");
-				$captionElement->appendChild($spanTitle);
-				foreach ($jatsTable->getTitle() as $tableTitle) {
-					HTMLText::extractText($tableTitle, $spanTitle);
-				}
-				// Add spacing between caption and table
-				$spacer = $this->ownerDocument->createElement("br");
-				$parentNode->insertBefore($spacer, $this);
+			$spanTitle = $this->ownerDocument->createElement("span");
+			$spanTitle->setAttribute("class", "title");
+			$captionElement->appendChild($spanTitle);
+			foreach ($jatsTable->getTitle() as $tableTitle) {
+				HTMLText::extractText($tableTitle, $spanTitle);
 			}
 		}
 

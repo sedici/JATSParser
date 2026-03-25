@@ -58,6 +58,20 @@ class PDFCreationService
 
     $this->assignMetadata($metadata, $config, $ojsConfiguration);
 
+    # APLICAR POLÍTICA DE SEGURIDAD SMARTY 
+    $security = new \Smarty_Security($this->publicTemplateManager);
+    $security->php_functions = array('isset');
+    $security->static_classes = array(null);
+    $security->php_modifiers = array('escape', 'count', 'date_format', 'replace', 'trim'); 
+    $security->allow_php_templates = false;
+    $security->allow_constants = false;
+    $security->allow_super_globals = false;
+    $security->allow_php_tag = false;
+
+    // Aplicar a ambos managers
+    $this->publicTemplateManager->enableSecurity($security);
+    $this->privateTemplateManager->enableSecurity($security);
+
     foreach ($catalog['media']['item'] as $mediaItem) {
       if (is_array($mediaItem) && isset($mediaItem['name']) && isset($mediaItem['file'])) {
         $templatesDir = $this->whereToLook($selectedTemplate, $mediaItem['file']);
