@@ -68,6 +68,12 @@ class PDFCreationService
     $security->allow_super_globals = false;
     $security->allow_php_tag = false;
 
+    // Fuerza la recompilación de todas las plantillas (públicas y privadas).
+    // Esto sirve para asegurar que los archivos antiguos
+    // en 'templates_c/' no bypasseen las nuevas restricciones.
+    $this->publicTemplateManager->clearCompiledTemplate();
+    $this->privateTemplateManager->clearCompiledTemplate();
+
     // Aplicar a ambos managers
     $this->publicTemplateManager->enableSecurity($security);
     $this->privateTemplateManager->enableSecurity($security);
