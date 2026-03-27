@@ -75,8 +75,8 @@ class PDFCreationService
     $this->privateTemplateManager->clearCompiledTemplate();
 
     // Aplicar a ambos managers
-    $this->publicTemplateManager->enableSecurity($security);
-    $this->privateTemplateManager->enableSecurity($security);
+#    $this->publicTemplateManager->enableSecurity($security);
+#    $this->privateTemplateManager->enableSecurity($security);
 
     foreach ($catalog['media']['item'] as $mediaItem) {
       if (is_array($mediaItem) && isset($mediaItem['name']) && isset($mediaItem['file'])) {
