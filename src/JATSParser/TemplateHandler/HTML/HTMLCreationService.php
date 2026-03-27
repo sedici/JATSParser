@@ -312,6 +312,7 @@ class HTMLCreationService
     HTMLProcessingService::setTablesClass($bodyXpath, 'tr');
     HTMLProcessingService::setTablesClass($bodyXpath, 'th');
 
+    /*
     if ($referencesSection) {
       while ($referencesSection->hasChildNodes()) {
         $referencesSection->removeChild($referencesSection->firstChild);
@@ -323,6 +324,7 @@ class HTMLCreationService
         $footnotesSection->removeChild($footnotesSection->firstChild);
       }
     }
+    */
 
     $isolatedBody = '<div class="article-body">';
     $isolatedBody = $bodyDom->saveHTML();
