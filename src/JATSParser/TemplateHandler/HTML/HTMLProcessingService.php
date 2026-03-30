@@ -255,4 +255,58 @@ abstract class HTMLProcessingService
     return $items;
   }
 
+  /**
+   * Inyecta navegación bidireccional de footnotes en un HTML string.
+   * - Agrega anclas invisibles junto a cada cita de footnote en el texto
+   * - Agrega flechas de retorno (↑) al final de cada footnote
+   * 
+   * Reutilizable desde cualquier flujo (preview, galley, etc.)
+   * 
+   * @param string $htmlString El HTML completo con citas y footnotes
+   * @return string El HTML con la navegación inyectada
+   */
+  public static function injectFootnoteNavigation(string $htmlString): string
+  {
+    $dom = new \DOMDocument('1.0', 'utf-8');
+    libxml_use_internal_errors(true);
+    $dom->loadHTML('<?xml encoding="utf-8" ?>' . $htmlString);
+    libxml_clear_errors();
+    $xpath = new \DOMXPath($dom);
+
+    // 1. Agregar ancla invisible junto a cada cita de footnote en el texto
+    //    para poder volver desde la nota al pie con la flecha ↑
+    foreach ($xpath->query('//a[contains(@class, "fn")]') as $a) {
+      $href = ltrim($a->getAttribute('href'), '#'); // e.g. "footnote-xxx"
+      $anchorId = 'citation_' . $href;              // "citation_footnote-xxx"
+
+      $anchor = $dom->createElement('a', '');
+      $anchor->setAttribute('name', $anchorId);
+      $anchor->setAttribute('id', $anchorId);
+
+      if ($a->nextSibling) {
+        $a->parentNode->insertBefore($anchor, $a->nextSibling);
+      } else {
+        $a->parentNode->appendChild($anchor);
+      }
+    }
+
+    // 2. Agregar flecha ↑ al final de cada footnote apuntando a la cita
+    foreach ($xpath->query('//div[contains(@class, "footnote-item")]') as $fn) {
+      $fnId = $fn->getAttribute('id'); // e.g. "footnote-xxx"
+      $arrow = $dom->createElement('a', ' ↑');
+      $arrow->setAttribute('href', '#citation_' . $fnId);
+      $arrow->setAttribute('class', 'return-arrow');
+      $fn->appendChild($arrow);
+    }
+
+    // Exportar y limpiar tags estructurales de DOMDocument
+    $result = $dom->saveHTML();
+    $result = str_replace('<?xml encoding="utf-8" ?>', '', $result);
+    $result = preg_replace('/<!DOCTYPE[^>]*>/i', '', $result);
+    $result = preg_replace('/<\/?(?:html|body)[^>]*>/i', '', $result);
+    $result = preg_replace('/<head[^>]*>.*?<\/head>/is', '', $result);
+
+    return $result;
+  }
+
 }
