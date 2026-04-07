@@ -266,6 +266,12 @@ abstract class HTMLProcessingService
   {
     foreach ($xpath->query('//table[@id]') as $tableNode) {
       $tableId = $tableNode->getAttribute('id');
+
+      // Ancla explícita para compatibilidad de navegación de ida
+      $tableAnchor = $dom->createElement('a');
+      $tableAnchor->setAttribute('name', $tableId);
+      $tableNode->parentNode->insertBefore($tableAnchor, $tableNode);
+
       $citations = $xpath->query('//a[@data-citation-anchor and @href="#' . $tableId . '"]');
       if ($citations->length === 0) continue;
 
@@ -283,9 +289,11 @@ abstract class HTMLProcessingService
       $arrowContainer->setAttribute('class', 'table-return-arrows');
       $caption->appendChild($arrowContainer);
 
-      foreach ($citations as $citation) {
-        $anchorId = $citation->getAttribute('data-citation-anchor');
-        if (!$anchorId) continue;
+      // Usar solo la primera cita encontrada para la flecha de retorno
+      $firstCitation = $citations->item(0);
+      $anchorId = $firstCitation->getAttribute('data-citation-anchor');
+      
+      if ($anchorId) {
         $arrow = $dom->createElement('a');
         $arrow->appendChild($dom->createTextNode(' ↑'));
         $arrow->setAttribute('href', '#' . $anchorId);
