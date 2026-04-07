@@ -36,6 +36,8 @@ class PDFOutputStrategy implements OutputStrategy {
 			'PDFAauto' => true,
 			'margin_top' => $ojsConfiguration['margin_top'],
 			'margin_bottom' => $ojsConfiguration['margin_bottom'], 
+			'margin_left' => $ojsConfiguration['margin_left'] ?? 25,
+			'margin_right' => $ojsConfiguration['margin_right'] ?? 25,
 		]); # Versión 8.1.3. Los genero así para que la salida sea un PDF/A válido
 		
 		//$pdf->SetAnchor2Bookmark(1);
