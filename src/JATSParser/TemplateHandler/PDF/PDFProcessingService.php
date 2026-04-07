@@ -245,6 +245,57 @@ abstract class PDFProcessingService
     return $dom->saveHTML();
   }
 
+  public static function tableToLink($node, $dom, $xpath = null)
+  {
+    $tableId  = ltrim($node->getAttribute('href'), '#'); // e.g. "T1"
+    $anchorId = 'citation_table_' . bin2hex(random_bytes(4)); // ID único por cita
+
+    $anchorNode = $dom->createElement('a');
+    $anchorNode->setAttribute('name', $anchorId);
+    $anchorNode->setAttribute('id', $anchorId);
+
+    if ($node->nextSibling) {
+      $node->parentNode->insertBefore($anchorNode, $node->nextSibling);
+    } else {
+      $node->parentNode->appendChild($anchorNode);
+    }
+
+    $node->setAttribute('data-citation-anchor', $anchorId);
+  }
+
+  public static function addTableReturnArrows($dom, $xpath)
+  {
+    foreach ($xpath->query('//table[@id]') as $tableNode) {
+      $tableId = $tableNode->getAttribute('id');
+      $citations = $xpath->query('//a[@data-citation-anchor and @href="#' . $tableId . '"]');
+      if ($citations->length === 0) continue;
+
+      $caption = $xpath->query('.//caption', $tableNode)->item(0);
+      if (!$caption) {
+        $caption = $dom->createElement('caption');
+        if ($tableNode->firstChild) {
+          $tableNode->insertBefore($caption, $tableNode->firstChild);
+        } else {
+          $tableNode->appendChild($caption);
+        }
+      }
+
+      $arrowContainer = $dom->createElement('span');
+      $arrowContainer->setAttribute('class', 'table-return-arrows');
+      $caption->appendChild($arrowContainer);
+
+      foreach ($citations as $citation) {
+        $anchorId = $citation->getAttribute('data-citation-anchor');
+        if (!$anchorId) continue;
+        $arrow = $dom->createElement('a');
+        $arrow->appendChild($dom->createTextNode(' ↑'));
+        $arrow->setAttribute('href', '#' . $anchorId);
+        $arrow->setAttribute('class', 'return-arrow');
+        $arrowContainer->appendChild($arrow);
+      }
+    }
+  }
+
   public static function setTablesClass($bodyXpath, $term)
   {
     $items = $bodyXpath->query('//' . $term);
