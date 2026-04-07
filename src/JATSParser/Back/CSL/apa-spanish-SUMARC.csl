@@ -1791,7 +1791,7 @@
           </group>
           <text macro="parenthetical-container"/>
           <text macro="bracketed-container"/>
-        </group>
+        </group> 
       </if>
     </choose>
   </macro>
