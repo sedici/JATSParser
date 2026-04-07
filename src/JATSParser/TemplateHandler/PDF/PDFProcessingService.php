@@ -304,6 +304,69 @@ abstract class PDFProcessingService
     }
   }
 
+  public static function figureToLink($node, $dom, $xpath = null)
+  {
+    $figureId = ltrim($node->getAttribute('href'), '#'); // e.g. "F1"
+    $anchorId = 'citation_figure_' . bin2hex(random_bytes(4)); // ID único por cita
+
+    $anchorNode = $dom->createElement('a');
+    $anchorNode->setAttribute('name', $anchorId);
+    $anchorNode->setAttribute('id', $anchorId);
+
+    if ($node->nextSibling) {
+      $node->parentNode->insertBefore($anchorNode, $node->nextSibling);
+    } else {
+      $node->parentNode->appendChild($anchorNode);
+    }
+
+    $node->setAttribute('data-citation-anchor', $anchorId);
+  }
+
+  public static function addFigureReturnArrows($dom, $xpath)
+  {
+    foreach ($xpath->query('//figure[@id]') as $figureNode) {
+      $figureId = $figureNode->getAttribute('id');
+
+      // Ancla explícita para navegación de ida (mPDF)
+      $figureAnchor = $dom->createElement('a');
+      $figureAnchor->setAttribute('name', $figureId);
+      $figureNode->parentNode->insertBefore($figureAnchor, $figureNode);
+
+      $citations = $xpath->query('//a[@data-citation-anchor and @href="#' . $figureId . '"]');
+      if ($citations->length === 0) continue;
+
+      // Intentamos adjuntar la flecha directamente al título o al label, para que no quede al final de las notas
+      $targetForArrow = $xpath->query('.//span[contains(@class, "title")]', $figureNode)->item(0);
+      if (!$targetForArrow) {
+        $targetForArrow = $xpath->query('.//span[contains(@class, "label")]', $figureNode)->item(0);
+      }
+      if (!$targetForArrow) {
+        $targetForArrow = $xpath->query('.//p[contains(@class, "caption")]', $figureNode)->item(0);
+      }
+      if (!$targetForArrow) {
+        $targetForArrow = $dom->createElement('p');
+        $targetForArrow->setAttribute('class', 'caption');
+        $figureNode->appendChild($targetForArrow);
+      }
+
+      $arrowContainer = $dom->createElement('span');
+      $arrowContainer->setAttribute('class', 'figure-return-arrows');
+      $targetForArrow->appendChild($arrowContainer);
+
+      // En PDF usamos solo la primera cita encontrada para la flecha de retorno como fallback
+      $firstCitation = $citations->item(0);
+      $anchorId = $firstCitation->getAttribute('data-citation-anchor');
+      
+      if ($anchorId) {
+        $arrow = $dom->createElement('a');
+        $arrow->appendChild($dom->createTextNode(' ↑'));
+        $arrow->setAttribute('href', '#' . $anchorId);
+        $arrow->setAttribute('class', 'return-arrow');
+        $arrowContainer->appendChild($arrow);
+      }
+    }
+  }
+
   public static function setTablesClass($bodyXpath, $term)
   {
     $items = $bodyXpath->query('//' . $term);

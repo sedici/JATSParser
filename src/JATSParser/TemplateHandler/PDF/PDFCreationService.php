@@ -327,6 +327,11 @@ class PDFCreationService
       PDFProcessingService::tableToLink($node, $dom);
     }
 
+    $figNodes = $xpath->evaluate('//a[contains(@class, "fig")]'); # Citas a figuras
+    foreach ($figNodes as $node) {
+      PDFProcessingService::figureToLink($node, $dom);
+    }
+
     $htmlString = $dom->saveHTML();
 
     $bodyDom = new \DOMDocument('1.0', 'utf-8');
@@ -335,6 +340,9 @@ class PDFCreationService
 
     // Agregar flechas de retorno en las tablas con el DOM ya actualizado
     PDFProcessingService::addTableReturnArrows($bodyDom, $bodyXpath);
+
+    // Agregar flechas de retorno en las figuras
+    PDFProcessingService::addFigureReturnArrows($bodyDom, $bodyXpath);
 
     $referencesSection = $bodyXpath->query('//div[contains(@class,"references-section")]');
     $referencesSection = $referencesSection->item(0);
