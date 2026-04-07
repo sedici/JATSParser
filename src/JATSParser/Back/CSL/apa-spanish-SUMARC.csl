@@ -129,6 +129,7 @@
         <multiple>Vol.</multiple>
       </term>
       <term name="number" form="short">No.</term>
+      <term name="and">y</term>
     </terms>
   </locale>
   <locale xml:lang="fr">
@@ -1341,27 +1342,27 @@
           <group delimiter="; ">
             <names variable="illustrator narrator" delimiter="; ">
               <label form="short" suffix=" " text-case="title"/>
-              <name and="symbol" initialize-with=". " delimiter=", "/>
+              <name and="text" initialize-with=". " delimiter=", "/>
             </names>
             <names variable="chair organizer curator series-creator executive-producer director" delimiter="; ">
               <label form="short" suffix=" " text-case="title"/>
-              <name and="symbol" initialize-with=". " delimiter=", "/>
+              <name and="text" initialize-with=". " delimiter=", "/>
             </names>
             <names variable="compiler" delimiter="; ">
               <label form="short" suffix=" " text-case="title"/>
-              <name and="symbol" initialize-with=". " delimiter=", "/>
+              <name and="text" initialize-with=". " delimiter=", "/>
             </names>
             <choose>
               <if type="chapter paper-conference" match="none">
                 <names variable="editor" delimiter="; ">
                   <label form="short" suffix=" " text-case="title"/>
-                  <name and="symbol" initialize-with=". " delimiter=", "/>
+                  <name and="text" initialize-with=". " delimiter=", "/>
                 </names>
               </if>
             </choose>
             <names variable="translator" delimiter="; ">
               <label form="short" suffix=" " text-case="title"/>
-              <name and="symbol" initialize-with=". " delimiter=", "/>
+              <name and="text" initialize-with=". " delimiter=", "/>
             </names>
           </group>
         </else-if>
@@ -1720,51 +1721,51 @@
   <macro name="container-contributors">
     <group delimiter="; ">
       <names variable="container-author">
-        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <name and="text" initialize-with=". " delimiter=", "/>
         <label form="short" text-case="title" prefix=" (" suffix=")"/>
       </names>
       <names variable="executive-producer">
-        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <name and="text" initialize-with=". " delimiter=", "/>
         <label form="short" text-case="title" prefix=" (" suffix=")"/>
       </names>
       <names variable="series-creator">
-        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <name and="text" initialize-with=". " delimiter=", "/>
         <label form="short" text-case="title" prefix=" (" suffix=")"/>
       </names>
       <names variable="editor-translator">
-        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <name and="text" initialize-with=". " delimiter=", "/>
         <label form="short" text-case="title" prefix=" (" suffix=")"/>
       </names>
       <names variable="compiler">
-        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <name and="text" initialize-with=". " delimiter=", "/>
         <label form="short" text-case="title" prefix=" (" suffix=")"/>
       </names>
       <names variable="editor">
-        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <name and="text" initialize-with=". " delimiter=", "/>
         <label form="short" text-case="title" prefix=" (" suffix=")"/>
       </names>
       <names variable="editorial-director">
-        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <name and="text" initialize-with=". " delimiter=", "/>
         <label form="short" text-case="title" prefix=" (" suffix=")"/>
       </names>
       <names variable="curator">
-        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <name and="text" initialize-with=". " delimiter=", "/>
         <label form="short" text-case="title" prefix=" (" suffix=")"/>
       </names>
       <names variable="collection-editor">
-        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <name and="text" initialize-with=". " delimiter=", "/>
         <label form="short" text-case="title" prefix=" (" suffix=")"/>
       </names>
       <names variable="translator">
-        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <name and="text" initialize-with=". " delimiter=", "/>
         <label form="short" text-case="title" prefix=" (" suffix=")"/>
       </names>
       <names variable="director">
-        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <name and="text" initialize-with=". " delimiter=", "/>
         <label form="short" text-case="title" prefix=" (" suffix=")"/>
       </names>
       <names variable="illustrator">
-        <name and="symbol" initialize-with=". " delimiter=", "/>
+        <name and="text" initialize-with=". " delimiter=", "/>
         <label form="short" text-case="title" prefix=" (" suffix=")"/>
       </names>
     </group>
