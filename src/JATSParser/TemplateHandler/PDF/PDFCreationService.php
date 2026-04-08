@@ -75,8 +75,10 @@ class PDFCreationService
     $this->privateTemplateManager->clearCompiledTemplate();
 
     // Aplicar a ambos managers
-#    $this->publicTemplateManager->enableSecurity($security);
-#    $this->privateTemplateManager->enableSecurity($security);
+    $this->publicTemplateManager->enableSecurity($security);
+    $this->privateTemplateManager->enableSecurity($security);
+    
+    $security->secure_dir[] = $this->privateTemplateManager->getTemplateDir()[0];
 
     foreach ($catalog['media']['item'] as $mediaItem) {
       if (is_array($mediaItem) && isset($mediaItem['name']) && isset($mediaItem['file'])) {
@@ -153,7 +155,6 @@ class PDFCreationService
       }
     }
 
-    file_put_contents(__DIR__ . "/errors.txt", $error); # Ahora marco los errores de archivos faltantes en un txt. A futuro será un mensaje en OJS
     return $pdf->output('a', 'S');
   }
 
