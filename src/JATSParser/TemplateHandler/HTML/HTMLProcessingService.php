@@ -244,6 +244,133 @@ abstract class HTMLProcessingService
     return $dom->saveHTML();
   }
 
+  public static function tableToLink($node, $dom, $xpath = null)
+  {
+    $tableId  = ltrim($node->getAttribute('href'), '#'); // e.g. "T1"
+    $anchorId = 'citation_table_' . bin2hex(random_bytes(4)); // ID único por cita
+
+    $anchorNode = $dom->createElement('a');
+    $anchorNode->setAttribute('name', $anchorId);
+    $anchorNode->setAttribute('id', $anchorId);
+
+    if ($node->nextSibling) {
+      $node->parentNode->insertBefore($anchorNode, $node->nextSibling);
+    } else {
+      $node->parentNode->appendChild($anchorNode);
+    }
+
+    $node->setAttribute('data-citation-anchor', $anchorId);
+  }
+
+  public static function addTableReturnArrows($dom, $xpath)
+  {
+    foreach ($xpath->query('//table[@id]') as $tableNode) {
+      $tableId = $tableNode->getAttribute('id');
+
+      // Ancla explícita para compatibilidad de navegación de ida
+      $tableAnchor = $dom->createElement('a');
+      $tableAnchor->setAttribute('name', $tableId);
+      $tableNode->parentNode->insertBefore($tableAnchor, $tableNode);
+
+      $citations = $xpath->query('//a[@data-citation-anchor and @href="#' . $tableId . '"]');
+      if ($citations->length === 0) continue;
+
+      $caption = $xpath->query('.//caption', $tableNode)->item(0);
+      if (!$caption) {
+        $caption = $dom->createElement('caption');
+        if ($tableNode->firstChild) {
+          $tableNode->insertBefore($caption, $tableNode->firstChild);
+        } else {
+          $tableNode->appendChild($caption);
+        }
+      }
+
+      $arrowContainer = $dom->createElement('span');
+      $arrowContainer->setAttribute('class', 'table-return-arrows');
+      $caption->appendChild($arrowContainer);
+
+      // Usar solo la primera cita encontrada para la flecha de retorno
+      $firstCitation = $citations->item(0);
+      $anchorId = $firstCitation->getAttribute('data-citation-anchor');
+      
+      if ($anchorId) {
+        $arrow = $dom->createElement('a');
+        $arrow->appendChild($dom->createTextNode(' ↑'));
+        $arrow->setAttribute('href', '#' . $anchorId);
+        $arrow->setAttribute('class', 'return-arrow');
+        $arrowContainer->appendChild($arrow);
+      }
+    }
+  }
+
+  public static function figureToLink($node, $dom, $xpath = null)
+  {
+    $figureId = ltrim($node->getAttribute('href'), '#'); // e.g. "F1"
+    $anchorId = 'citation_figure_' . bin2hex(random_bytes(4)); // ID único por cita
+
+    $anchorNode = $dom->createElement('a');
+    $anchorNode->setAttribute('name', $anchorId);
+    $anchorNode->setAttribute('id', $anchorId);
+
+    if ($node->nextSibling) {
+      $node->parentNode->insertBefore($anchorNode, $node->nextSibling);
+    } else {
+      $node->parentNode->appendChild($anchorNode);
+    }
+
+    $node->setAttribute('data-citation-anchor', $anchorId);
+    
+    // JS para recordar qué cita se clickeó en la figura
+    $node->setAttribute('onmousedown', "sessionStorage.setItem('last_figure_citation_$figureId', '$anchorId');");
+  }
+
+  public static function addFigureReturnArrows($dom, $xpath)
+  {
+    foreach ($xpath->query('//figure[@id]') as $figureNode) {
+      $figureId = $figureNode->getAttribute('id');
+
+      // Ancla explícita
+      $figureAnchor = $dom->createElement('a');
+      $figureAnchor->setAttribute('name', $figureId);
+      $figureNode->parentNode->insertBefore($figureAnchor, $figureNode);
+
+      $citations = $xpath->query('//a[@data-citation-anchor and @href="#' . $figureId . '"]');
+      if ($citations->length === 0) continue;
+
+      // Intentamos adjuntar la flecha directamente al título o al label, para que no quede al final de las notas
+      $targetForArrow = $xpath->query('.//span[contains(@class, "title")]', $figureNode)->item(0);
+      if (!$targetForArrow) {
+        $targetForArrow = $xpath->query('.//span[contains(@class, "label")]', $figureNode)->item(0);
+      }
+      if (!$targetForArrow) {
+        $targetForArrow = $xpath->query('.//p[contains(@class, "caption")]', $figureNode)->item(0);
+      }
+      if (!$targetForArrow) {
+        $targetForArrow = $dom->createElement('p');
+        $targetForArrow->setAttribute('class', 'caption');
+        $figureNode->appendChild($targetForArrow);
+      }
+
+      $arrowContainer = $dom->createElement('span');
+      $arrowContainer->setAttribute('class', 'figure-return-arrows');
+      $targetForArrow->appendChild($arrowContainer);
+
+      // Usar solo la primera cita encontrada para la flecha de retorno como fallback
+      $firstCitation = $citations->item(0);
+      $anchorId = $firstCitation->getAttribute('data-citation-anchor');
+      
+      if ($anchorId) {
+        $arrow = $dom->createElement('a');
+        $arrow->appendChild($dom->createTextNode(' ↑'));
+        $arrow->setAttribute('href', '#' . $anchorId);
+        $arrow->setAttribute('class', 'return-arrow');
+        // JS dinámico: ir a la última cita clickeada guardada
+        $arrow->setAttribute('onmouseover', "var last = sessionStorage.getItem('last_figure_citation_$figureId'); if(last) { this.setAttribute('href', '#' + last); }");
+        $arrowContainer->appendChild($arrow);
+      }
+    }
+  }
+
   public static function setTablesClass($bodyXpath, $term)
   {
     $items = $bodyXpath->query('//' . $term);
@@ -253,6 +380,60 @@ abstract class HTMLProcessingService
     }
 
     return $items;
+  }
+
+  /**
+   * Inyecta navegación bidireccional de footnotes en un HTML string.
+   * - Agrega anclas invisibles junto a cada cita de footnote en el texto
+   * - Agrega flechas de retorno (↑) al final de cada footnote
+   * 
+   * Reutilizable desde cualquier flujo (preview, galley, etc.)
+   * 
+   * @param string $htmlString El HTML completo con citas y footnotes
+   * @return string El HTML con la navegación inyectada
+   */
+  public static function injectFootnoteNavigation(string $htmlString): string
+  {
+    $dom = new \DOMDocument('1.0', 'utf-8');
+    libxml_use_internal_errors(true);
+    $dom->loadHTML('<?xml encoding="utf-8" ?>' . $htmlString);
+    libxml_clear_errors();
+    $xpath = new \DOMXPath($dom);
+
+    // 1. Agregar ancla invisible junto a cada cita de footnote en el texto
+    //    para poder volver desde la nota al pie con la flecha ↑
+    foreach ($xpath->query('//a[contains(@class, "fn")]') as $a) {
+      $href = ltrim($a->getAttribute('href'), '#'); // e.g. "footnote-xxx"
+      $anchorId = 'citation_' . $href;              // "citation_footnote-xxx"
+
+      $anchor = $dom->createElement('a', '');
+      $anchor->setAttribute('name', $anchorId);
+      $anchor->setAttribute('id', $anchorId);
+
+      if ($a->nextSibling) {
+        $a->parentNode->insertBefore($anchor, $a->nextSibling);
+      } else {
+        $a->parentNode->appendChild($anchor);
+      }
+    }
+
+    // 2. Agregar flecha ↑ al final de cada footnote apuntando a la cita
+    foreach ($xpath->query('//div[contains(@class, "footnote-item")]') as $fn) {
+      $fnId = $fn->getAttribute('id'); // e.g. "footnote-xxx"
+      $arrow = $dom->createElement('a', ' ↑');
+      $arrow->setAttribute('href', '#citation_' . $fnId);
+      $arrow->setAttribute('class', 'return-arrow');
+      $fn->appendChild($arrow);
+    }
+
+    // Exportar y limpiar tags estructurales de DOMDocument
+    $result = $dom->saveHTML();
+    $result = str_replace('<?xml encoding="utf-8" ?>', '', $result);
+    $result = preg_replace('/<!DOCTYPE[^>]*>/i', '', $result);
+    $result = preg_replace('/<\/?(?:html|body)[^>]*>/i', '', $result);
+    $result = preg_replace('/<head[^>]*>.*?<\/head>/is', '', $result);
+
+    return $result;
   }
 
 }
