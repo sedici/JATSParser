@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<article>
+<front>
+<article-meta>
+</article-meta>
+</front>
+<body>
+</body>
+<back>
+<ref-list>
+<ref id="thesis-ref-213022dd4c72ec2256b951f189c1d379">
+<element-citation publication-type="thesis">
+<day>10</day>
+<month>12</month>
+<publisher-loc>Publisher Location</publisher-loc>
+<publisher-name>Publisher name</publisher-name>
+<year>2025</year>
+<institution>Awarding Institution</institution>
+<pub-id pub-id-type="other">123122</pub-id>
+<person-group person-group-type="author">
+<name>
+<surname>Tomas</surname>
+<given-names>Messineo</given-names>
+</name>
+</person-group>
+<article-title>Titulo tesis</article-title>
+</element-citation>
+</ref>
+</ref-list>
+</back>
+</article>

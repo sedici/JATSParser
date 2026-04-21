@@ -1,0 +1,121 @@
+[
+  {
+    "id": "retracted-item",
+    "type": "article-journal",
+    "title": "Silence and table manners: When environments activate norms",
+    "author": [
+      {
+        "family": "Joly",
+        "given": "J. F."
+      },
+      {
+        "family": "Stapel",
+        "given": "D. A."
+      },
+      {
+        "family": "Lindenberg",
+        "given": "S. M."
+      }
+    ],
+    "issued": {
+      "date-parts": [
+        [
+          2008
+        ]
+      ]
+    },
+    "container-title": "Personality and Social Psychology Bulletin",
+    "volume": "34",
+    "issue": "8",
+    "page": "1047–1056",
+    "DOI": "10.1177/0146167208318401",
+    "status": "Retraction published 2012, Personality and Social Psychology Bulletin, 38[10], 1378"
+  },
+  {
+    "id": "abstract-item",
+    "type": "article-journal",
+    "title": "Effectiveness and efficiency in small academic peer groups: A case study (Accession No. 200010185)",
+    "author": [
+      {
+        "family": "Hare",
+        "given": "L. R."
+      },
+      {
+        "family": "O’Neill",
+        "given": "K."
+      }
+    ],
+    "issued": {
+      "date-parts": [
+        [
+          2000
+        ]
+      ]
+    },
+    "container-title": "Small Group Research",
+    "volume": "31",
+    "issue": "1",
+    "page": "24-53",
+    "DOI": "10.1177/104649640003100102",
+    "medium": "Abstract from Sociological Abstracts"
+  },
+  {
+    "id": "monograph-item",
+    "type": "article-journal",
+    "title": "The nomological validity of the Type A personality among employed adults",
+    "author": [
+      {
+        "family": "Ganster",
+        "given": "D. C."
+      },
+      {
+        "family": "Schaubroeck",
+        "given": "J."
+      },
+      {
+        "family": "Sime",
+        "given": "W. E."
+      },
+      {
+        "family": "Mayes",
+        "given": "B. T."
+      }
+    ],
+    "issued": {
+      "date-parts": [
+        [
+          1991
+        ]
+      ]
+    },
+    "container-title": "Journal of Applied Psychology",
+    "volume": "76",
+    "issue": "1",
+    "page": "143-168",
+    "DOI": "10.1037/0021-9010.76.1.143",
+    "medium": "Monograph"
+  },
+  {
+    "id": "comment-item",
+    "type": "article-newspaper",
+    "author": [
+      {
+        "family": "Sidney",
+        "given": "F"
+      }
+    ],
+    "issued": {
+      "date-parts": [
+        [
+          2020,
+          10,
+          7
+        ]
+      ]
+    },
+    "title": "Oh, I don’t know; perhaps the common-sense conclusion that packing people together — for hours — like sardines — may be an",
+    "container-title": "The Washington Post",
+    "URL": "https://wapo.st/3757UlS",
+    "medium": "Comment on the article “When will it be safe to travel again?”"
+  }
+]

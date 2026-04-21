@@ -87,6 +87,7 @@ class Document {
 							$chapter = new Chapter($reference);
 							$references[] = $chapter;
 							break;
+						case "confproc": // Add this
 						case "conference":
 							$conference = new Conference($reference);
 							$references[] = $conference;
