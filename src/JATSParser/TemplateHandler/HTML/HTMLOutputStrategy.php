@@ -12,10 +12,13 @@ use JATSParser\TemplateHandler\OutputStrategy;
 class HTMLOutputStrategy implements OutputStrategy {
 
   public static function generateOutput($plugin, $fileMgr, $journalId, $localeKey, $fileId, $htmlString, $configuration, $metadata, $ojsConfiguration)
-  {
-    $selectedTemplate = $ojsConfiguration['selected_template'];
+	{
+		libxml_use_internal_errors(true);
+
+		$selectedTemplate = $ojsConfiguration['selected_template'];
 
 		if(!$selectedTemplate) {
+			libxml_use_internal_errors(false);
 			return; # se habló que si no se tiene una plantilla seleccionada no se debe emitir un PDF bajo ningún criterio, esto debería modificarse para que no genere un error
 		}
 
@@ -45,7 +48,9 @@ class HTMLOutputStrategy implements OutputStrategy {
 		$citationStyle = $plugin->getCitationStyle(\DAORegistry::getDAO('JournalDAO')->getById($journalId));
 		$citeProc->setReferences($citationStyle, $localeKey, false);
 
-    return $HtmlCreationService->buildHTML($htmlString, $xpath, $dom, $citeProc, $configuration, $metadata, $selectedTemplate, $ojsConfiguration);
+    $result = $HtmlCreationService->buildHTML($htmlString, $xpath, $dom, $citeProc, $configuration, $metadata, $selectedTemplate, $ojsConfiguration);
+    libxml_use_internal_errors(false);
+    return $result;
   }
 
 }

@@ -13,9 +13,12 @@ class PDFOutputStrategy implements OutputStrategy {
 
   public static function generateOutput($plugin, $fileMgr, $journalId, $localeKey, $fileId, $htmlString, $configuration, $metadata, $ojsConfiguration)
   {
+    libxml_use_internal_errors(true);
+
     $selectedTemplate = $ojsConfiguration['selected_template'];
 
 		if(!$selectedTemplate) {
+			libxml_use_internal_errors(false);
 			return; # se habló que si no se tiene una plantilla seleccionada no se debe emitir un PDF bajo ningún criterio, esto debería modificarse para que no genere un error
 		}
 
@@ -57,7 +60,9 @@ class PDFOutputStrategy implements OutputStrategy {
 		$citationStyle = $plugin->getCitationStyle(\DAORegistry::getDAO('JournalDAO')->getById($journalId));
 		$citeProc->setReferences($citationStyle, $localeKey, false);
 
-    return $pdfCreationService->buildPDF($pdf, $htmlString, $xpath, $dom, $citeProc, $configuration, $metadata, $selectedTemplate, $ojsConfiguration);
+    $result = $pdfCreationService->buildPDF($pdf, $htmlString, $xpath, $dom, $citeProc, $configuration, $metadata, $selectedTemplate, $ojsConfiguration);
+    libxml_use_internal_errors(false);
+    return $result;
   }
 
 }
