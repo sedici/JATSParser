@@ -22,11 +22,15 @@ class PDFOutputStrategy implements OutputStrategy {
 		$privateTemplatesDir = $fileMgr->getBasePath() . "/journals/$journalId/jatsParser_templates";
 		$publicTemplatesDir = $plugin->getPluginPath() . "/templates/SUMARC";
 
+		$cacheDir = \TemplateManager::getManager()->compile_dir;
+		
 		$publicTemplateManager = new \Smarty(); # Con esta instancia se pueden settear las rutas que se desee de Smarty, así no usamos la global de OJS.
 		$publicTemplateManager->setTemplateDir($publicTemplatesDir); # La ruta es .../jatsParser/templates
+		$publicTemplateManager->setCompileDir($cacheDir);
 
 		$privateTemplateManager = new \Smarty();
 		$privateTemplateManager->setTemplateDir($privateTemplatesDir);
+		$privateTemplateManager->setCompileDir($cacheDir);
 
 		$pdfCreationService = new PDFCreationService($publicTemplateManager, $privateTemplateManager);
 
@@ -50,7 +54,7 @@ class PDFOutputStrategy implements OutputStrategy {
 		$dom->loadHTML($htmlHead . $htmlString);
 		$xpath = new \DOMXPath($dom);
 
-		$citationStyle = $plugin->getCitationStyle(Repo::journal()->get($journalId));
+		$citationStyle = $plugin->getCitationStyle(\DAORegistry::getDAO('JournalDAO')->getById($journalId));
 		$citeProc->setReferences($citationStyle, $localeKey, false);
 
     return $pdfCreationService->buildPDF($pdf, $htmlString, $xpath, $dom, $citeProc, $configuration, $metadata, $selectedTemplate, $ojsConfiguration);
