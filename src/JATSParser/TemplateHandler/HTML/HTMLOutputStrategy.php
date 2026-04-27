@@ -38,7 +38,7 @@ class HTMLOutputStrategy implements OutputStrategy {
 		$dom->loadHTML($htmlHead . $htmlString);
 		$xpath = new \DOMXPath($dom);
 
-		$citationStyle = $plugin->getSetting($journalId, 'citationStyle');
+		$citationStyle = $plugin->getCitationStyle(Repo::journal()->get($journalId));
 		$citeProc->setReferences($citationStyle, $localeKey, false);
 
     return $HtmlCreationService->buildHTML($htmlString, $xpath, $dom, $citeProc, $configuration, $metadata, $selectedTemplate, $ojsConfiguration);

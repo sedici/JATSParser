@@ -50,7 +50,7 @@ class PDFOutputStrategy implements OutputStrategy {
 		$dom->loadHTML($htmlHead . $htmlString);
 		$xpath = new \DOMXPath($dom);
 
-		$citationStyle = $plugin->getSetting($journalId, 'citationStyle');
+		$citationStyle = $plugin->getCitationStyle(Repo::journal()->get($journalId));
 		$citeProc->setReferences($citationStyle, $localeKey, false);
 
     return $pdfCreationService->buildPDF($pdf, $htmlString, $xpath, $dom, $citeProc, $configuration, $metadata, $selectedTemplate, $ojsConfiguration);
