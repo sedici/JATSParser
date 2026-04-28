@@ -12,10 +12,10 @@ use JATSParser\TemplateHandler\OutputStrategy;
 class HTMLOutputStrategy implements OutputStrategy {
 
   public static function generateOutput($plugin, $fileMgr, $journalId, $localeKey, $fileId, $htmlString, $configuration, $metadata, $ojsConfiguration)
-	{
-		libxml_use_internal_errors(true);
+  {
+    libxml_use_internal_errors(true);
 
-		$selectedTemplate = $ojsConfiguration['selected_template'];
+    $selectedTemplate = $ojsConfiguration['selected_template'];
 
 		if(!$selectedTemplate) {
 			libxml_use_internal_errors(false);
