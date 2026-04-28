@@ -86,6 +86,7 @@ abstract class HTMLProcessingService
 
   public static function setFootnotesAnchors($footnotesNodes)
   { # Creo el HTML para las footnotes
+    $footnotes = [];
     for ($i = 0; $i < count($footnotesNodes); $i++) {
       $id = str_replace('fn-', '', $footnotesNodes[$i]->getAttribute('id'));
 

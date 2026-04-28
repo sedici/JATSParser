@@ -18,17 +18,22 @@ class HTMLOutputStrategy implements OutputStrategy {
     $selectedTemplate = $ojsConfiguration['selected_template'];
 
 		if(!$selectedTemplate) {
+			libxml_use_internal_errors(false);
 			return; # se habló que si no se tiene una plantilla seleccionada no se debe emitir un PDF bajo ningún criterio, esto debería modificarse para que no genere un error
 		}
 
 		$privateTemplatesDir = $fileMgr->getBasePath() . "/journals/$journalId/jatsParser_templates";
 		$publicTemplatesDir = $plugin->getPluginPath() . "/templates/SUMARC";
 
+		$cacheDir = \TemplateManager::getManager()->compile_dir;
+
 		$publicTemplateManager = new \Smarty(); # Con esta instancia se pueden settear las rutas que se desee de Smarty, así no usamos la global de OJS.
 		$publicTemplateManager->setTemplateDir($publicTemplatesDir); # La ruta es .../jatsParser/templates
+		$publicTemplateManager->setCompileDir($cacheDir);
 
 		$privateTemplateManager = new \Smarty();
 		$privateTemplateManager->setTemplateDir($privateTemplatesDir);
+		$privateTemplateManager->setCompileDir($cacheDir);
 
 		$HtmlCreationService = new HTMLCreationService($publicTemplateManager, $privateTemplateManager);
 
@@ -40,10 +45,12 @@ class HTMLOutputStrategy implements OutputStrategy {
 		$dom->loadHTML($htmlHead . $htmlString);
 		$xpath = new \DOMXPath($dom);
 
-		$citationStyle = $plugin->getSetting($journalId, 'citationStyle');
+		$citationStyle = $plugin->getCitationStyle(\DAORegistry::getDAO('JournalDAO')->getById($journalId));
 		$citeProc->setReferences($citationStyle, $localeKey, false);
 
-    return $HtmlCreationService->buildHTML($htmlString, $xpath, $dom, $citeProc, $configuration, $metadata, $selectedTemplate, $ojsConfiguration);
+    $result = $HtmlCreationService->buildHTML($htmlString, $xpath, $dom, $citeProc, $configuration, $metadata, $selectedTemplate, $ojsConfiguration);
+    libxml_use_internal_errors(false);
+    return $result;
   }
 
 }
