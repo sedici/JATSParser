@@ -10,6 +10,7 @@
         }
     ],
     "minimum-stability": "dev",
+    "prefer-stable": true,
 	"repositories": [
 		{
 			"type": "package",
@@ -25,12 +26,18 @@
 		}
 	],
     "require": {
-        "php": "^7.3|^8.0",
+        "php": "^7.4|^8.0",
         "tecnickcom/tcpdf": "^6.2.17",
+		"psr/log": "^1.1",
 		"citation-style-language/styles-distribution":"@dev",
 		"seboettg/citeproc-php": "^2.7",
         "mpdf/mpdf": "8.1.3"
     },
+    "config": {
+		"platform": {
+			"php": "7.4.33"
+		}
+	},
     "autoload": {
         "psr-4": {
             "JATSParser\\": "src/JATSParser"
