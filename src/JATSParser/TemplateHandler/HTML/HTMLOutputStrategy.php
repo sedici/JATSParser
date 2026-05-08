@@ -37,7 +37,7 @@ class HTMLOutputStrategy implements OutputStrategy {
 
 		$HtmlCreationService = new HTMLCreationService($publicTemplateManager, $privateTemplateManager);
 
-		$submissionFile = Repo::submissionFile()->get($fileId);
+		$submissionFile = \Services::get('submissionFile')->get($fileId);
 		$jatsDocument = new Document($fileMgr->getBasePath() . DIRECTORY_SEPARATOR . $submissionFile->getData('path'));
 		$citeProc = new HTMLDocument($jatsDocument);
 		$dom = new \DOMDocument('1.0', 'utf-8');

@@ -3,7 +3,7 @@
 namespace JATSParser\TemplateHandler\PDF;
 
 use DOMDocument;
-use PKP\file\PrivateFileManager;
+use PrivateFileManager;
 
 class PDFCreationService
 {
