@@ -2,7 +2,7 @@
 
     class Translations {
         private static $translationsConfig = [
-            'en' => [
+            'en_US' => [
                 'abstract' => 'Abstract',
                 'received' => 'Received',
                 'accepted' => 'Accepted',
@@ -15,7 +15,7 @@
                 'references' => 'References',
                 'footnotes' => 'Footnotes',
             ],
-            'es' => [
+            'es_ES' => [
                 'abstract' => 'Resumen',
                 'received' => 'Recibido',
                 'accepted' => 'Aceptado',

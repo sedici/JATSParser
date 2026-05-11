@@ -37,14 +37,20 @@ class PDFOutputStrategy implements OutputStrategy {
 
 		$pdfCreationService = new PDFCreationService($publicTemplateManager, $privateTemplateManager);
 
+		$mpdfTempDir = sys_get_temp_dir() . '/mpdf';
+		if (!is_dir($mpdfTempDir)) {
+			mkdir($mpdfTempDir, 0755, true);
+		}
+
 		$pdf = new Mpdf([ # Sacar los márgenes de la config de OJS (cuando exista)
 			'mode' => 'utf-8',
 			'PDFA' => true,
 			'PDFAauto' => true,
 			'margin_top' => $ojsConfiguration['margin_top'],
-			'margin_bottom' => $ojsConfiguration['margin_bottom'], 
+			'margin_bottom' => $ojsConfiguration['margin_bottom'],
 			'margin_left' => $ojsConfiguration['margin_left'] ?? 25,
 			'margin_right' => $ojsConfiguration['margin_right'] ?? 25,
+			'tempDir' => $mpdfTempDir,
 		]); # Versión 8.1.3. Los genero así para que la salida sea un PDF/A válido
 		
 		//$pdf->SetAnchor2Bookmark(1);
@@ -58,7 +64,8 @@ class PDFOutputStrategy implements OutputStrategy {
 		$xpath = new \DOMXPath($dom);
 
 		$citationStyle = $plugin->getCitationStyle(\DAORegistry::getDAO('JournalDAO')->getById($journalId));
-		$citeProc->setReferences($citationStyle, $localeKey, false);
+		$citeprocLocale = str_replace('_', '-', $localeKey);
+		$citeProc->setReferences($citationStyle, $citeprocLocale, false);
 
     $result = $pdfCreationService->buildPDF($pdf, $htmlString, $xpath, $dom, $citeProc, $configuration, $metadata, $selectedTemplate, $ojsConfiguration);
     libxml_use_internal_errors(false);
