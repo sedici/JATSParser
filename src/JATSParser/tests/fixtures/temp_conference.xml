@@ -1,0 +1,43 @@
+<article xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mml="http://www.w3.org/1998/Math/MathML" dtd-version="1.0" article-type="research-article" xml:lang="es">
+  <back>
+    <ref-list>
+      <ref id="conference-paper-ref-df3e335237a20d39c2130d452ecbc406">
+        <element-citation publication-type="confproc">
+          <conf-name>Conference name</conf-name>
+          <conf-loc>Conference Location</conf-loc>
+          <day>8</day>
+          <elocation-id>eLocationID</elocation-id>
+          <fpage>10</fpage>
+          <lpage>29</lpage>
+          <month>8</month>
+          <page-range>10-29</page-range>
+          <year>2019</year>
+          <person-group person-group-type="author">
+            <name>
+              <surname>Evans</surname>
+              <given-names>Alexander Carl</given-names>
+            </name>
+            <name>
+              <surname>Jr Garbarino</surname>
+              <given-names>Johnson</given-names>
+            </name>
+            <name>
+              <surname>Bocanegra</surname>
+              <given-names>Esteban</given-names>
+            </name>
+            <name>
+              <surname>Kinscheriff</surname>
+              <given-names>Ronald Tyron</given-names>
+            </name>
+            <name>
+              <surname>Márquez-Greene</surname>
+              <given-names>Norberto</given-names>
+            </name>
+          </person-group>
+          <source>Source</source>
+          <article-title>Gun violence: An event on the power of community</article-title>
+        </element-citation>
+      </ref>
+    </ref-list>
+  </back>
+</article>

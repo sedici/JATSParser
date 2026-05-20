@@ -17,7 +17,7 @@ class Figure extends \DOMElement {
 
         // Set figure id. Needed for links from referenceces to the figure
         $this->setAttribute("id", $jatsFigure->getId());
-        
+
         // Create title paragraph first (to be displayed above the image)
         $titleNode = $this->ownerDocument->createElement("div");
         $titleNode->setAttribute("class", "caption-title");
@@ -57,15 +57,17 @@ class Figure extends \DOMElement {
         * @var $figureContent JATSPar
         */
         if (count($jatsFigure->getContent()) > 0) {
-            // Create a separate paragraph for notes after the image
-            $notesNode = $this->ownerDocument->createElement("div");
+ 
+            $notesNode = $this->ownerDocument->createElement("figcaption");
             $notesNode->setAttribute("class", "caption-notes");
+  
             $this->appendChild($notesNode);
             
             foreach ($jatsFigure->getContent() as $figureContent) {
                 $par = new Par("span");
                 $notesNode->appendChild($par);
                 $par->setAttribute("class", "notes");
+                $par->setAttribute("style", "font-size: 0.85em;");
                 $par->setContent($figureContent);
             }
         }

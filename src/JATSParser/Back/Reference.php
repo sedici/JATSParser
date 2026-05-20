@@ -12,4 +12,22 @@ interface Reference {
 
 	public function getYear();
 
+	public function getTranslators();
+
+	public function getCompilers();
+
+	public function getCurators();
+
+	public function getGuestEditors();
+
+	public function getCoordinators();
+
+	public function getIllustrators();
+
+	public function getInventors();
+
+	public function getAssignees();
+
+	public function getDirectors();
+
 }

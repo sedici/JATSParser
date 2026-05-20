@@ -18,9 +18,16 @@ abstract class AbstractReference implements Reference
 
 	/* @var array can contain instances of Individual and Collaboration class */
 	protected $authors;
-
-	/* @var array can contain instances of Individual and Collaboration class */
 	protected $editors;
+	protected $translators;
+	protected $compilers;
+	protected $curators;
+	protected $guestEditors;
+	protected $coordinators;
+	protected $illustrators;
+	protected $inventors;
+	protected $assignees;
+	protected $directors;
 
 	/* @var $year string */
 	protected $year;
@@ -52,12 +59,21 @@ abstract class AbstractReference implements Reference
 	protected function __construct(\DOMElement $reference)
 	{
 		$this->xpath = Document::getXpath();
-		$this->authors = $this->extractAuthors($reference);
-		$this->editors = $this->extractEditors($reference);
+		$this->authors = $this->extractContributors($reference, ['author', 'inventor'], true);
+		$this->editors = $this->extractContributors($reference, ['editor']);
+		$this->translators = $this->extractContributors($reference, ['translator']);
+		$this->compilers = $this->extractContributors($reference, ['compiler']);
+		$this->curators = $this->extractContributors($reference, ['curator']);
+		$this->guestEditors = $this->extractContributors($reference, ['guest-editor']);
+		$this->coordinators = $this->extractContributors($reference, ['coordinator']);
+		$this->illustrators = $this->extractContributors($reference, ['illustrator']);
+		$this->inventors = $this->extractContributors($reference, ['inventor']);
+		$this->assignees = $this->extractContributors($reference, ['assignee']);
+		$this->directors = $this->extractContributors($reference, ['director']);
 		$this->id = $this->extractId($reference);
 		$this->year = $this->extractFromElement($reference, './/year[1]');
 
-		$this->url = $this->extractFromElement($reference, './/ext-link[@ext-link-type="uri"][1]|.//elocation-id[1]');
+		$this->url = $this->extractFromElement($reference, './/ext-link[@ext-link-type="uri"][1]|.//elocation-id[1]|.//uri[1]');
 		$this->pubIdType = $this->extractPubIdType($reference);
 
 		$citNode = $this->getFirstChildElement($reference);
@@ -88,50 +104,71 @@ abstract class AbstractReference implements Reference
 		return $id;
 	}
 
-	private function extractAuthors(\DOMElement $reference)
+	protected function extractContributors(\DOMElement $reference, array $types, bool $allowNoPersonGroup = false)
 	{
-		$authors = array();
+		$contributors = array();
 
 		$nameNodes = $this->xpath->query(".//name|.//collab", $reference);
 		if ($nameNodes->length > 0) {
 			/* @var $nameNode \DOMElement */
 			foreach ($nameNodes as $nameNode) {
 				$parentOfName = $nameNode->parentNode;
-				if ($nameNode->nodeName === 'name' &&
-					($parentOfName->nodeName !== 'person-group' || in_array($parentOfName->getAttribute('person-group-type'), ['author','inventor'], true))) 
-				{
+				
+				$typeMatches = false;
+				if ($parentOfName->nodeName !== 'person-group') {
+					$typeMatches = $allowNoPersonGroup;
+				} else {
+					$typeMatches = in_array($parentOfName->getAttribute('person-group-type'), $types, true);
+				}
+
+				if ($nameNode->nodeName === 'name' && $typeMatches) {
 					$individual = new Individual($nameNode);
-					$authors[] = $individual;
-				} elseif ($nameNode->nodeName === 'collab' &&
-					($parentOfName->nodeName !== 'person-group' || in_array($parentOfName->getAttribute('person-group-type'), ['author','inventor'], true))) 
-				{
+					$contributors[] = $individual;
+				} elseif ($nameNode->nodeName === 'collab' && $typeMatches) {
 					$collaborator = new Collaboration($nameNode);
-					$authors[] = $collaborator;
+					$contributors[] = $collaborator;
 				}
 			}
 		}
-		return $authors;
+		return $contributors;
 	}
 
-	private function extractEditors(\DOMElement $reference) {
-		$editors = array();
-
-		$nameNodes = $this->xpath->query(".//name|.//collab", $reference);
-		if ($nameNodes->length > 0) {
-			/* @var $nameNode \DOMElement */
-			foreach ($nameNodes as $nameNode) {
-				$parentOfName = $nameNode->parentNode;
-				if ($nameNode->nodeName === 'name' && $parentOfName->getAttribute('person-group-type') === 'editor') {
-					$individual = new Individual($nameNode);
-					$editors[] = $individual;
-				} elseif ($nameNode->nodeName === 'collab' && $parentOfName->getAttribute('person-group-type') === 'editor') {
-					$collaborator = new Collaboration($nameNode);
-					$editors[] = $collaborator;
-				}
-			}
-		}
-		return $editors;
+	public function getTranslators(): array {
+		return $this->translators ?? [];
 	}
+
+	public function getCompilers(): array {
+		return $this->compilers ?? [];
+	}
+
+	public function getCurators(): array {
+		return $this->curators ?? [];
+	}
+
+	public function getGuestEditors(): array {
+		return $this->guestEditors ?? [];
+	}
+
+	public function getCoordinators(): array {
+		return $this->coordinators ?? [];
+	}
+
+	public function getIllustrators(): array {
+		return $this->illustrators ?? [];
+	}
+
+	public function getInventors(): array {
+		return $this->inventors ?? [];
+	}
+
+	public function getAssignees(): array {
+		return $this->assignees ?? [];
+	}
+
+	public function getDirectors(): array {
+		return $this->directors ?? [];
+	}
+
 
 	/**
 	 * @return array
@@ -165,6 +202,7 @@ abstract class AbstractReference implements Reference
 						case "accession":
 						case "ark":
 						case "archive":
+						case "isbn":
 							$pubIdType[$pubIdKey] = trim($pubIdValue);
 							break;
 					}
