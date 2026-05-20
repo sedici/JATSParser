@@ -13,6 +13,15 @@ class Book extends AbstractReference {
 	/* @var $publisherName string */
 	private $publisherName;
 
+	/* @var $volume string */
+	private $volume;
+
+	/* @var $edition string */
+	private $edition;
+
+	/* @var $comment string */
+	private $comment;
+
 	public function __construct(\DOMElement $reference) {
 
 		parent::__construct($reference);
@@ -20,7 +29,10 @@ class Book extends AbstractReference {
 		$this->title = $this->extractFromElement($reference, ".//source[1]");
 		$this->publisherLoc = $this->extractFromElement($reference, ".//publisher-loc[1]");
 		$this->publisherName = $this->extractFromElement($reference, ".//publisher-name[1]");
-		$this->url = $this->extractFromElement($reference, ".//ext-link[1]");
+		$this->url = $this->extractFromElement($reference, './/ext-link[1]|.//ext-link[@ext-link-type="uri"][1]|.//elocation-id[1]|.//uri[1]');
+		$this->volume = $this->extractFromElement($reference, ".//volume[1]");
+		$this->edition = $this->extractFromElement($reference, ".//edition[1]");
+		$this->comment = $this->extractFromElement($reference, ".//comment[1]");
 	}
 
 	/**
@@ -93,5 +105,33 @@ class Book extends AbstractReference {
 	public function getPubIdType(): array
 	{
 		return $this->pubIdType;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getVolume(): string
+	{
+		return $this->volume;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getEdition(): string
+	{
+		return $this->edition;
+	}
+
+	/**
+	 * Extracts the year from the comment text if present (e.g. "(Original work published 1900)")
+	 * @return string
+	 */
+	public function getComment(): string
+	{
+		if (preg_match('/\b(1[0-9]{3}|2[0-9]{3})\b/', $this->comment, $matches)) {
+			return $matches[1];
+		}
+		return "";
 	}
 }
