@@ -89,7 +89,7 @@ abstract class AbstractReference implements Reference
 		$searchNodes = $this->xpath->query($xpathExpression, $reference);
 		if ($searchNodes->length > 0) {
 			foreach ($searchNodes as $searchNode) {
-				$property = htmlspecialchars(trim($searchNode->nodeValue));
+				$property = trim($searchNode->nodeValue);
 			}
 		}
 		return $property;
