@@ -671,10 +671,13 @@
   </macro>
   <macro name="title">
     <choose>
-      <if type="post webpage" match="any">
+      <if type="webpage" match="any">
+        <text macro="title-plus-part-title"/>
+      </if>
+      <else-if type="post" match="any">
         <!-- Webpages are always italicized -->
         <text macro="title-plus-part-title" font-style="italic"/>
-      </if>
+      </else-if>
       <!-- Other types are italicized based on presence of container-title.
              Assume that review and review-book are published in periodicals/blogs,
              not just on a web page (ex. 69) -->
@@ -826,7 +829,10 @@
             <!-- Legislation, regulations, and treaties not italicized or quoted -->
             <text variable="title" form="short" text-case="title"/>
           </else-if>
-          <else-if type="post webpage" match="any">
+          <else-if type="webpage" match="any">
+            <text variable="title" form="short" text-case="title"/>
+          </else-if>
+          <else-if type="post" match="any">
             <!-- Webpages are always italicized -->
             <text variable="title" form="short" font-style="italic" text-case="title"/>
           </else-if>
@@ -1805,7 +1811,14 @@
             </if>
           </choose>
         </if>
-        <else-if type="post webpage" match="any">
+        <else-if type="webpage" match="any">
+          <!-- For websites, treat container title like publisher and italicize it -->
+          <group delimiter="; ">
+            <text variable="container-title" text-case="title" font-style="italic"/>
+            <text variable="publisher"/>
+          </group>
+        </else-if>
+        <else-if type="post" match="any">
           <!-- For websites, treat container title like publisher -->
           <group delimiter="; ">
             <text variable="container-title" text-case="title"/>
