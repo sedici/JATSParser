@@ -137,9 +137,22 @@ abstract class PDFProcessingService
       $divs = $tempDom->getElementsByTagName('div');
       if ($divs->length > 0) {
         $div = $divs->item(0);
-        $arrowLink = $tempDom->createElement('a', ' ↑');
-        $arrowLink->setAttribute('href', '#citation_' . $footnote['id']);
-        $div->appendChild($arrowLink);
+
+        // Evitar agregar la flecha si ya existe una con la clase "return-arrow"
+        $hasReturnArrow = false;
+        foreach ($div->getElementsByTagName('a') as $aNode) {
+          if (strpos($aNode->getAttribute('class'), 'return-arrow') !== false) {
+            $hasReturnArrow = true;
+            break;
+          }
+        }
+
+        if (!$hasReturnArrow) {
+          $arrowLink = $tempDom->createElement('a', ' ↑');
+          $arrowLink->setAttribute('href', '#citation_' . $footnote['id']);
+          $div->appendChild($arrowLink);
+        }
+
         $newHtml = '';
         foreach ($tempDom->getElementsByTagName('body')->item(0)->childNodes as $child) {
           $newHtml .= $tempDom->saveHTML($child);
@@ -147,10 +160,20 @@ abstract class PDFProcessingService
         $ref = $dom->createDocumentFragment();
         $ref->appendXML($newHtml);
       } else {
-        # Si no hay div, agrega la flecha al final
-        $arrowLink = $dom->createElement('a', ' ↑');
-        $arrowLink->setAttribute('href', '#citation_' . $footnote['id']);
-        $ref->appendChild($arrowLink);
+        # Si no hay div, agrega la flecha al final si no existe ya
+        $hasReturnArrow = false;
+        foreach ($tempDom->getElementsByTagName('a') as $aNode) {
+          if (strpos($aNode->getAttribute('class'), 'return-arrow') !== false) {
+            $hasReturnArrow = true;
+            break;
+          }
+        }
+
+        if (!$hasReturnArrow) {
+          $arrowLink = $dom->createElement('a', ' ↑');
+          $arrowLink->setAttribute('href', '#citation_' . $footnote['id']);
+          $ref->appendChild($arrowLink);
+        }
       }
 
       $li->appendChild($ref);
@@ -176,9 +199,22 @@ abstract class PDFProcessingService
           $anchor->setAttribute('name', $reference['id']);
           $anchor->setAttribute('id', $reference['id']);
           $li->insertBefore($anchor, $li->firstChild);
-          $arrowLink = $tempDom->createElement('a', ' ↑');
-          $arrowLink->setAttribute('href', '#citation_' . $reference['id']);
-          $li->appendChild($arrowLink);
+
+          // Evitar agregar la flecha si ya existe una con la clase "return-arrow"
+          $hasReturnArrow = false;
+          foreach ($li->getElementsByTagName('a') as $aNode) {
+            if (strpos($aNode->getAttribute('class'), 'return-arrow') !== false) {
+              $hasReturnArrow = true;
+              break;
+            }
+          }
+
+          if (!$hasReturnArrow) {
+            $arrowLink = $tempDom->createElement('a', ' ↑');
+            $arrowLink->setAttribute('href', '#citation_' . $reference['id']);
+            $li->appendChild($arrowLink);
+          }
+
           $importedLi = $dom->importNode($li, true);
           $listContainer->appendChild($importedLi);
           continue;
@@ -193,9 +229,14 @@ abstract class PDFProcessingService
       $ref = $dom->createDocumentFragment();
       $ref->appendXML($reference['text']);
       $li->appendChild($ref);
-      $arrowLink = $dom->createElement('a', ' ↑');
-      $arrowLink->setAttribute('href', '#citation_' . $reference['id']);
-      $li->appendChild($arrowLink);
+
+      // Evitar agregar la flecha si ya existe una con la clase "return-arrow"
+      if (strpos($reference['text'], 'class="return-arrow"') === false && strpos($reference['text'], "class='return-arrow'") === false) {
+        $arrowLink = $dom->createElement('a', ' ↑');
+        $arrowLink->setAttribute('href', '#citation_' . $reference['id']);
+        $li->appendChild($arrowLink);
+      }
+
       $listContainer->appendChild($li);
     }
     if ($referencesSection) $referencesSection->appendChild($listContainer);
