@@ -681,16 +681,8 @@
       <else-if type="article-journal article-magazine article-newspaper periodical post-weblog review review-book" match="any">
         <text macro="periodical-title"/>
       </else-if>
-      <else-if type="paper-conference">
-        <!-- Treat paper-conference as book-like if it has an editor, otherwise as periodical-like -->
-        <choose>
-          <if variable="collection-editor compiler editor editorial-director curator director" match="any">
-            <text macro="booklike-title"/>
-          </if>
-          <else>
-            <text macro="periodical-title"/>
-          </else>
-        </choose>
+      <else-if type="paper-conference conference" match="any">
+        <text macro="title-plus-part-title" font-style="italic"/>
       </else-if>
       <else>
         <text macro="booklike-title"/>
@@ -1674,7 +1666,14 @@
           </choose>
           <group delimiter=", ">
             <text macro="container-contributors"/>
-            <text variable="container-title" font-style="italic" text-case="title"/>
+            <choose>
+              <if type="paper-conference conference" match="any">
+                <text variable="container-title" text-case="title"/>
+              </if>
+              <else>
+                <text variable="container-title" font-style="italic" text-case="title"/>
+              </else>
+            </choose>
           </group>
         </group>
         <choose>
@@ -1784,10 +1783,20 @@
           </choose>
           <group delimiter=", ">
             <text macro="container-contributors"/>
-            <group delimiter=": " font-style="italic">
-              <text variable="container-title"/>
-              <text macro="volume-title"/>
-            </group>
+            <choose>
+              <if type="paper-conference conference" match="any">
+                <group delimiter=": ">
+                  <text variable="container-title"/>
+                  <text macro="volume-title"/>
+                </group>
+              </if>
+              <else>
+                <group delimiter=": " font-style="italic">
+                  <text variable="container-title"/>
+                  <text macro="volume-title"/>
+                </group>
+              </else>
+            </choose>
           </group>
           <text macro="parenthetical-container"/>
           <text macro="bracketed-container"/>

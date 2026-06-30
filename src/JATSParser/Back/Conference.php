@@ -26,6 +26,9 @@ class Conference extends AbstractReference {
 	/* @var $day string */
 	private $day;
 
+	/* @var $comment string */
+	private $comment;
+
 	public function __construct(\DOMElement $reference) {
 
 		parent::__construct($reference);
@@ -38,6 +41,7 @@ class Conference extends AbstractReference {
 		$this->month = $this->extractFromElement($reference, ".//month[1]");
 		$this->day = $this->extractFromElement($reference, ".//day[1]");
 		$this->url = $this->extractFromElement($reference, './/elocation-id[1]|.//ext-link[@ext-link-type="uri"][1]|.//uri[1]');
+		$this->comment = $this->extractFromElement($reference, ".//comment[@content-type='presentation-type'][1]|.//comment[1]");
 	}
 
 	/**
@@ -139,6 +143,11 @@ class Conference extends AbstractReference {
 			return $v !== null && $v !== '';
 		}));
 		return implode('-', $parts);
+	}
+
+	public function getComment(): string
+	{
+		return $this->comment;
 	}
 }
 
