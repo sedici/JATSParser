@@ -245,16 +245,22 @@ class Document extends \DOMDocument {
 			$styleName = __DIR__ . "/../Back/CSL/apa-spanish-SUMARC.csl";
 		} elseif (array_key_exists($this->citationStyle, self::CITATION_STYLES)) {
 			$styleName = self::CITATION_STYLES[$this->citationStyle];
-		} else {
-			// Fallback: check if it's a direct path or try to load it directly
-			// If not found in map, we assume $this->citationStyle might be a valid path itself or we default
+		} elseif (file_exists($this->citationStyle)) {
+			// Already an absolute path (custom .csl file)
 			$styleName = $this->citationStyle;
+		} else {
+			// Style name (e.g. 'harvard-cite-them-right'): resolve to the bundled vendor file
+			// so that file_get_contents() works for dateFormat injection below.
+			$vendorStylePath = realpath(__DIR__ . '/../../../../vendor')
+				. '/citation-style-language/styles/'
+				. $this->citationStyle . '.csl';
+			$styleName = file_exists($vendorStylePath) ? $vendorStylePath : $this->citationStyle;
 		}
 
 		$tempStyleFile = null;
 
 		if ($dateFormat) {
-			$cslContent = file_get_contents($styleName);
+			$cslContent = file_exists($styleName) ? file_get_contents($styleName) : false;
 			if ($cslContent) {
 				$dateFormatter = new DateFormatter();
 				$cslContent = $dateFormatter->injectOJSDateFormat($cslContent, $dateFormat);
@@ -266,6 +272,7 @@ class Document extends \DOMDocument {
 		}
 
 		$style = StyleSheet::loadStyleSheet($styleName);
+
 		
 		if ($tempStyleFile && file_exists($tempStyleFile)) {
 			unlink($tempStyleFile);
