@@ -1697,7 +1697,7 @@
           <if variable="number">
             <!-- Ex. 6: Journal article with article number or eLocator -->
             <group delimiter=" ">
-              <text term="article-locator" text-case="capitalize-first"/>
+             <!-- <text term="article-locator" text-case="capitalize-first"/> -->
               <text variable="number"/>
             </group>
           </if>
