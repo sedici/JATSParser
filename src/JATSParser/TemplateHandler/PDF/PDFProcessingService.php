@@ -10,59 +10,138 @@ abstract class PDFProcessingService
   {
     self::replaceCitationsContent($xpath, $config);
 
-    $text = trim($node->textContent, '[\]'); # Elimino los corcheted de cada cita, [1], [1,2]
-    $numbers = explode(';', $text); # Guardo los números de la cita sin la coma en un array, [1], "[1, 2]"
-    $refs = preg_split('/\s+/', $node->getAttribute('href')); # Guardo los href, #parser_0, #parser_0 parser_1
-    $refs = array_map(function ($ref) {
-      return str_replace('#', '', $ref);
-    }, $refs); # Elimino el # del href, ya que solo el primero lo tiene (en caso de ser más de uno)
+    $rawHref = urldecode($node->getAttribute('href'));
+    $rawHref = str_replace('#', '', $rawHref);
+    $refs = array_values(array_filter(preg_split('/\s+/', trim($rawHref))));
+
+    if (empty($refs)) {
+      return;
+    }
+
+    $rawText = trim($node->textContent);
+    $prefix = '';
+    $suffix = '';
+
+    if (substr($rawText, 0, 1) === '[' && substr($rawText, -1) === ']') {
+      $prefix = '[';
+      $suffix = ']';
+      $cleanText = trim($rawText, '[]');
+    } elseif (substr($rawText, 0, 1) === '(' && substr($rawText, -1) === ')') {
+      $prefix = '(';
+      $suffix = ')';
+      $cleanText = trim($rawText, '()');
+    } else {
+      $cleanText = $rawText;
+    }
+
+    // Determine text separator: ';' for APA/author-year, ',' for numeric
+    if (strpos($cleanText, ';') !== false) {
+      $textParts = array_map('trim', explode(';', $cleanText));
+      $delim = '; ';
+    } elseif (strpos($cleanText, ',') !== false) {
+      $textParts = array_map('trim', explode(',', $cleanText));
+      $delim = ', ';
+    } else {
+      $textParts = [$cleanText];
+      $delim = '; ';
+    }
 
     $fragment = $dom->createDocumentFragment();
-    # $fragment->appendChild($dom->createTextNode('[')); # Lo dejo comentado porque en APA no se utilizan los [ ]
 
-    for ($i = 0; $i < count($numbers); $i++) {
-      $anchorNode = $dom->createElement('a');
-      $anchorNode->setAttribute('name', 'citation_' . $refs[$i]);
-      $anchorNode->setAttribute('id', 'citation_' . $refs[$i]);
-      $fragment->appendChild($anchorNode);
+    if ($prefix !== '') {
+      $fragment->appendChild($dom->createTextNode($prefix));
+    }
 
-      $newNode = $dom->createElement('a', $numbers[$i]);
-      $newNode->setAttribute('href', '#' . $refs[$i]);
-      $fragment->appendChild($newNode);
+    if (count($textParts) === count($refs)) {
+      for ($i = 0; $i < count($refs); $i++) {
+        $anchorNode = $dom->createElement('a');
+        $anchorNode->setAttribute('name', 'citation_' . $refs[$i]);
+        $anchorNode->setAttribute('id', 'citation_' . $refs[$i]);
+        $fragment->appendChild($anchorNode);
 
-      if ($i < count($numbers) - 1) {
-        $fragment->appendChild($dom->createTextNode(';')); # Agrego los ; si es necesario
+        $newNode = $dom->createElement('a', $textParts[$i]);
+        $newNode->setAttribute('href', '#' . $refs[$i]);
+        $newNode->setAttribute('class', 'citation-link');
+        $fragment->appendChild($newNode);
+
+        if ($i < count($refs) - 1) {
+          $fragment->appendChild($dom->createTextNode($delim));
+        }
+      }
+    } else {
+      // Create anchor tags for all reference IDs so return arrows in bibliography work
+      for ($i = 0; $i < count($refs); $i++) {
+        $anchorNode = $dom->createElement('a');
+        $anchorNode->setAttribute('name', 'citation_' . $refs[$i]);
+        $anchorNode->setAttribute('id', 'citation_' . $refs[$i]);
+        $fragment->appendChild($anchorNode);
+      }
+
+      if (count($textParts) > 1) {
+        for ($i = 0; $i < count($textParts); $i++) {
+          $refId = isset($refs[$i]) ? $refs[$i] : $refs[count($refs) - 1];
+          $newNode = $dom->createElement('a', $textParts[$i]);
+          $newNode->setAttribute('href', '#' . $refId);
+          $newNode->setAttribute('class', 'citation-link');
+          $fragment->appendChild($newNode);
+
+          if ($i < count($textParts) - 1) {
+            $fragment->appendChild($dom->createTextNode($delim));
+          }
+        }
+      } else {
+        // Fallback for single text block mapped to multiple refs
+        for ($i = 0; $i < count($refs); $i++) {
+          $newNode = $dom->createElement('a', $cleanText);
+          $newNode->setAttribute('href', '#' . $refs[$i]);
+          $newNode->setAttribute('class', 'citation-link');
+          $fragment->appendChild($newNode);
+          if ($i < count($refs) - 1) {
+            $fragment->appendChild($dom->createTextNode($delim));
+          }
+        }
       }
     }
 
-    #$fragment->appendChild($dom->createTextNode(']'));
+    if ($suffix !== '') {
+      $fragment->appendChild($dom->createTextNode($suffix));
+    }
+
     $node->parentNode->replaceChild($fragment, $node);
   }
 
   public static function footnoteToLink($node, $dom)
   {
-    $numbers = explode(',', $node->textContent); # Guardo los números de la fn sin la coma en un array, [1], "[1, 2]"
-    $refs = preg_split('/\s+/', $node->getAttribute('href')); # Guardo los href, #parser_0, #parser_0 parser_1
-    $refs = array_map(function ($ref) {
-      return str_replace('#', '', $ref);
-    }, $refs); # Elimino el # del href, ya que solo el primero lo tiene (en caso de ser más de uno)
+    $rawHref = urldecode($node->getAttribute('href'));
+    $rawHref = str_replace(['#', 'fn-'], '', $rawHref);
+    $refs = array_values(array_filter(preg_split('/\s+/', trim($rawHref))));
+
+    if (empty($refs)) {
+      return;
+    }
+
+    $rawText = trim($node->textContent);
+    $numbers = array_map('trim', explode(',', $rawText));
 
     $fragment = $dom->createDocumentFragment();
 
     for ($i = 0; $i < count($numbers); $i++) {
+      $refId = isset($refs[$i]) ? $refs[$i] : $refs[count($refs) - 1];
+
       $anchorNode = $dom->createElement('a');
-      $anchorNode->setAttribute('name', 'citation_' . $refs[$i]);
-      $anchorNode->setAttribute('id', 'citation_' . $refs[$i]);
+      $anchorNode->setAttribute('name', 'citation_' . $refId);
+      $anchorNode->setAttribute('id', 'citation_' . $refId);
       $fragment->appendChild($anchorNode);
 
       $sup = $dom->createElement('sup');
       $newNode = $dom->createElement('a', $numbers[$i]);
-      $newNode->setAttribute('href', '#' . $refs[$i]);
+      $newNode->setAttribute('href', '#' . $refId);
+      $newNode->setAttribute('class', 'footnote-link');
       $sup->appendChild($newNode);
       $fragment->appendChild($sup);
 
       if ($i < count($numbers) - 1) {
-        $fragment->appendChild($dom->createElement('sup', ',')); # Agrego las , si es necesario
+        $fragment->appendChild($dom->createElement('sup', ','));
       }
     }
 
