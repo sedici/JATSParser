@@ -34,8 +34,13 @@ abstract class HTMLProcessingService
       $cleanText = $rawText;
     }
 
-    // Determine text separator: ';' for APA/author-year, ',' for numeric
-    if (strpos($cleanText, ';') !== false) {
+    // Determine text separator: ';' for APA/author-year, ',' for numeric.
+    // If there is only one ref, never split the text: the comma in APA "Autor, Año"
+    // is part of a single citation, not a delimiter between multiple citations.
+    if (count($refs) === 1) {
+      $textParts = [$cleanText];
+      $delim = '; ';
+    } elseif (strpos($cleanText, ';') !== false) {
       $textParts = array_map('trim', explode(';', $cleanText));
       $delim = '; ';
     } elseif (strpos($cleanText, ',') !== false) {
