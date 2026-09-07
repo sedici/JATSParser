@@ -33,7 +33,7 @@
                 'received' => 'Recebido',
                 'accepted' => 'Aceito',
                 'published' => 'Publicado',
-                'keywords' => 'Palavras chave',
+                'keywords' => 'Palavras-chave',
                 'license_text' => 'Este trabalho está sob uma licença Creative Commons',
                 'references_sections_separator' => 'e',
                 'number' => 'n.',

@@ -1,0 +1,87 @@
+<article xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mml="http://www.w3.org/1998/Math/MathML" dtd-version="1.0" article-type="research-article" xml:lang="es">
+  <back>
+    <ref-list>
+      <title>Referencias Bibliográficas (Ejemplos de Conferencias)</title>
+
+      <ref id="conf-oral-2026">
+        <element-citation publication-type="confproc">
+          <person-group person-group-type="author">
+            <name>
+              <surname>García</surname>
+              <given-names>A.</given-names>
+            </name>
+          </person-group>
+          <article-title>Implementación de adaptadores JATS XML en sistemas universitarios</article-title>
+          <comment>Ponencia</comment>
+          <conf-name>Congreso Argentino de Software Libre</conf-name>
+          <conf-loc>La Plata, Argentina</conf-loc>
+          <day>15</day>
+          <month>11</month>
+          <year>2026</year>
+        </element-citation>
+      </ref>
+
+      <ref id="conf-libro-2026">
+        <element-citation publication-type="confproc">
+          <person-group person-group-type="author">
+            <name>
+              <surname>López</surname>
+              <given-names>M.</given-names>
+            </name>
+          </person-group>
+          <article-title>Algoritmos de sincronización por semáforos en entornos concurrentes</article-title>
+          <comment>Ponencia</comment>
+          <source>Memorias del Simposio Iberoamericano de Computación</source>
+          <person-group person-group-type="editor">
+            <name>
+              <surname>Martínez</surname>
+              <given-names>R.</given-names>
+            </name>
+          </person-group>
+          <fpage>45</fpage>
+          <lpage>55</lpage>
+          <publisher-name>Editorial UNLP</publisher-name>
+          <year>2026</year>
+        </element-citation>
+      </ref>
+
+      <ref id="conf-periodica-2026">
+        <element-citation publication-type="confproc">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Pérez</surname>
+              <given-names>J.</given-names>
+            </name>
+          </person-group>
+          <article-title>Modelado de datos para indicadores bibliométricos en SciELO</article-title>
+          <comment>Ponencia</comment>
+          <source>Anales de las Jornadas de Informática Académica</source>
+          <volume>12</volume>
+          <issue>1</issue>
+          <fpage>101</fpage>
+          <lpage>110</lpage>
+          <year>2026</year>
+        </element-citation>
+      </ref>
+
+      <ref id="conference-paper-ref-ebc79edf6a9e4da4c0a256da191bf7a8">
+        <element-citation publication-type="confproc">
+          <conf-name>JAIIO</conf-name>
+          <conf-loc>La Plata</conf-loc>
+          <fpage>10</fpage>
+          <lpage>12</lpage>
+          <year>2015</year>
+          <comment content-type="presentation-type">Ponencia</comment>
+          <person-group person-group-type="author">
+            <name>
+              <surname>juan</surname>
+              <given-names>perez</given-names>
+            </name>
+          </person-group>
+          <source>Proceedings</source>
+          <article-title>nombre presentacion</article-title>
+        </element-citation>
+      </ref>
+    </ref-list>
+  </back>
+</article>

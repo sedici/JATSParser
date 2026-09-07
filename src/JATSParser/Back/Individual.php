@@ -21,14 +21,14 @@ class Individual implements PersonGroup {
 		$surnameNodes = $xpath->query('child::surname[1]', $individualNode);
 		if ($surnameNodes->length > 0) {
 			foreach ($surnameNodes as $surnameNode) {
-				$this->surname = $surnameNode->nodeValue;
+				$this->surname = htmlspecialchars($surnameNode->nodeValue);
 			}
 		}
 
 		$givenNamesNodes = $xpath->query('child::given-names[1]', $individualNode);
 		if ($givenNamesNodes->length > 0) {
 			foreach ($givenNamesNodes as $givenNamesNode) {
-				$this->givenNames = $givenNamesNode->nodeValue;
+				$this->givenNames = htmlspecialchars($givenNamesNode->nodeValue);
 			}
 		}
 

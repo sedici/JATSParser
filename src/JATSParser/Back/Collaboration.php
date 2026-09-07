@@ -11,7 +11,7 @@ class Collaboration implements PersonGroup {
 	private $name;
 
 	public function __construct(\DOMElement $collabNode) {
-		$this->name = $collabNode->nodeValue;
+		$this->name = htmlspecialchars($collabNode->nodeValue);
 
 		$parentNode = $collabNode->parentNode;
 		$personGroupType = $parentNode->getAttribute('person-group-type');
