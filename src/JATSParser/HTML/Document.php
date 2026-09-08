@@ -49,7 +49,7 @@ class Document extends \DOMDocument {
 	 */
 	public function setReferences(string $citationStyle = JATSPARSER_CITEPROC_STYLE_DEFAULT, string $lang = JATSPARSER_CITEPROC_LANG_DEFAULT, bool $styleInTextLinks = false, string $dateFormat = null): void {
 		$this->citationStyle = $citationStyle;
-		$this->citationLang = $lang;
+		$this->citationLang = str_replace('_', '-', $lang);
 		$this->styleInTextLinks = $styleInTextLinks;
 		if (!empty($this->jatsDocument->getReferences())) {
 			$this->extractReferences($this->jatsDocument->getReferences(), $dateFormat);
@@ -281,9 +281,14 @@ class Document extends \DOMDocument {
 			]
 		];
 
-		$citeProc = new CiteProc($style, $this->citationLang, $additionalMarkup);
-
-		$htmlString = $citeProc->render($data, "bibliography");
+		try {
+			$citeProc = new CiteProc($style, $this->citationLang, $additionalMarkup);
+			$htmlString = $citeProc->render($data, "bibliography");
+		} catch (\Exception $e) {
+			error_log('JATSParser CiteProc error with locale ' . $this->citationLang . ': ' . $e->getMessage() . '. Falling back to en-US.');
+			$citeProc = new CiteProc($style, 'en-US', $additionalMarkup);
+			$htmlString = $citeProc->render($data, "bibliography");
+		}
 		
 		// Post-processing: Remove comma before conjunctions (y, and, e) in author names
 		// This fixes the citeproc-php bug where delimiter-precedes-last="never" doesn't work properly

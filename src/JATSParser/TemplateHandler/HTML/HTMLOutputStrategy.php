@@ -46,7 +46,7 @@ class HTMLOutputStrategy implements OutputStrategy {
 		$xpath = new \DOMXPath($dom);
 
 		$citationStyle = $plugin->getCitationStyle(\DAORegistry::getDAO('JournalDAO')->getById($journalId));
-		$citeProc->setReferences($citationStyle, $localeKey, false);
+		$citeProc->setReferences($citationStyle, str_replace('_', '-', $localeKey), false);
 
     $result = $HtmlCreationService->buildHTML($htmlString, $xpath, $dom, $citeProc, $configuration, $metadata, $selectedTemplate, $ojsConfiguration);
     libxml_use_internal_errors(false);
