@@ -50,7 +50,11 @@ class PDFOutputStrategy implements OutputStrategy {
 		//$pdf->SetAnchor2Bookmark(1);
 
 		$submissionFile = Repo::submissionFile()->get($fileId);
-		$jatsDocument = new Document($fileMgr->getBasePath() . DIRECTORY_SEPARATOR . $submissionFile->getData('path'));
+		$xmlPath = $fileMgr->getBasePath() . DIRECTORY_SEPARATOR . $submissionFile->getData('path');
+		$jatsDocument = new Document($xmlPath);
+		if (method_exists($configuration, 'setXmlFilePath')) {
+			$configuration->setXmlFilePath($xmlPath);
+		}
 		$citeProc = new HTMLDocument($jatsDocument);
 		$dom = new \DOMDocument('1.0', 'utf-8');
 		$htmlHead = "<!DOCTYPE html><head><meta http-equiv='Content-Type' content='text/html'; charset=utf-8/></head>";

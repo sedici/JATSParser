@@ -275,5 +275,15 @@ class Configuration {
         return $this->images;
     }
 
+    private $xmlFilePath = null;
+
+    public function setXmlFilePath(?string $path): void {
+        $this->xmlFilePath = $path;
+    }
+
+    public function getXmlFilePath(): ?string {
+        return $this->xmlFilePath;
+    }
+
     // Here you can add more methods to retrieve other configurations or metadata as needed.
 }
