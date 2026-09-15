@@ -124,6 +124,7 @@
         <multiple>Eds. y Trads.</multiple>
       </term>
       <term name="edition" form="short">ed.</term>
+      <term name="ordinal">ª</term>
       <term name="volume" form="short">
         <single>Vol.</single>
         <multiple>Vol.</multiple>
