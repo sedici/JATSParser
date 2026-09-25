@@ -328,9 +328,17 @@ abstract class HTMLProcessingService
 
   public static function replaceCitationsContent(\DOMXPath $xpath, $config)
   {
-    $supportedCitationStyles = $config::getSupportedCustomCitationStyles();
     $actualCitationStyle = $config->getCitationStyle();
-    if ($supportedCitationStyles && in_array(strtolower($actualCitationStyle), $supportedCitationStyles)) {
+    $cslDetectorPath = dirname(__DIR__, 5) . '/classes/components/forms/CitationStyles/Core/CslCategoryDetector.php';
+    if (file_exists($cslDetectorPath)) {
+      require_once $cslDetectorPath;
+    }
+    $supportedCitationStyles = $config::getSupportedCustomCitationStyles();
+    $hasMultipleForms = class_exists('\\PKP\\components\\forms\\CitationStyles\\Core\\CslCategoryDetector')
+      ? \PKP\components\forms\CitationStyles\Core\CslCategoryDetector::hasMultipleCitationForms((string)$actualCitationStyle)
+      : ($supportedCitationStyles && in_array(strtolower($actualCitationStyle), $supportedCitationStyles));
+
+    if ($hasMultipleForms) {
       $publicationId = $config->getPublicationId();
       $localeKey = $config->getLocaleKeyConfig();
 
