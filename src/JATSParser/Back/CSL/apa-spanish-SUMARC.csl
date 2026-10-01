@@ -896,7 +896,7 @@
           </choose>
         </else-if>
         <else>
-          <group delimiter="; ">
+          <group delimiter=", ">
             <text macro="secondary-contributors"/>
             <text macro="database-location"/>
             <choose>
