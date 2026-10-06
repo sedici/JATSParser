@@ -38,7 +38,11 @@ class HTMLOutputStrategy implements OutputStrategy {
 		$HtmlCreationService = new HTMLCreationService($publicTemplateManager, $privateTemplateManager);
 
 		$submissionFile = Repo::submissionFile()->get($fileId);
-		$jatsDocument = new Document($fileMgr->getBasePath() . DIRECTORY_SEPARATOR . $submissionFile->getData('path'));
+		$xmlPath = $submissionFile ? $fileMgr->getBasePath() . DIRECTORY_SEPARATOR . $submissionFile->getData('path') : '';
+		$jatsDocument = new Document($xmlPath);
+		if (method_exists($configuration, 'setXmlFilePath')) {
+			$configuration->setXmlFilePath($xmlPath);
+		}
 		$citeProc = new HTMLDocument($jatsDocument);
 		$dom = new \DOMDocument('1.0', 'utf-8');
 		$htmlHead = "<!DOCTYPE html><head><meta http-equiv='Content-Type' content='text/html'; charset=utf-8/></head>";
@@ -46,7 +50,7 @@ class HTMLOutputStrategy implements OutputStrategy {
 		$xpath = new \DOMXPath($dom);
 
 		$citationStyle = $plugin->getCitationStyle(\DAORegistry::getDAO('JournalDAO')->getById($journalId));
-		$citeProc->setReferences($citationStyle, $localeKey, false);
+		$citeProc->setReferences($citationStyle, str_replace('_', '-', $localeKey), false);
 
     $result = $HtmlCreationService->buildHTML($htmlString, $xpath, $dom, $citeProc, $configuration, $metadata, $selectedTemplate, $ojsConfiguration);
     libxml_use_internal_errors(false);

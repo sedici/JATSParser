@@ -328,27 +328,58 @@ abstract class HTMLProcessingService
 
   public static function replaceCitationsContent(\DOMXPath $xpath, $config)
   {
-    $supportedCitationStyles = $config::getSupportedCustomCitationStyles();
     $actualCitationStyle = $config->getCitationStyle();
-    if ($supportedCitationStyles && in_array(strtolower($actualCitationStyle), $supportedCitationStyles)) {
+    $cslDetectorPath = dirname(__DIR__, 5) . '/classes/components/forms/CitationStyles/Core/CslCategoryDetector.php';
+    if (file_exists($cslDetectorPath)) {
+      require_once $cslDetectorPath;
+    }
+    $supportedCitationStyles = $config::getSupportedCustomCitationStyles();
+    $hasMultipleForms = class_exists('\\PKP\\components\\forms\\CitationStyles\\Core\\CslCategoryDetector')
+      ? \PKP\components\forms\CitationStyles\Core\CslCategoryDetector::hasMultipleCitationForms((string)$actualCitationStyle)
+      : ($supportedCitationStyles && in_array(strtolower($actualCitationStyle), $supportedCitationStyles));
+
+    if ($hasMultipleForms) {
       $publicationId = $config->getPublicationId();
       $localeKey = $config->getLocaleKeyConfig();
 
       $customPublicationSettingsDAO = new \CustomPublicationSettingsDAO();
       $settings = $customPublicationSettingsDAO->getSetting($publicationId, 'jatsParser::citationTableData', $localeKey);
 
-      if ($settings) {
-        $refs = $xpath->evaluate('//a[@href]');
-        foreach ($refs as $ref) {
-          foreach ($settings['fileId'] as $fileId => $xrefData) {
-            if (is_array($xrefData)) {
-              foreach ($xrefData as $xrefId => $citationText) {
-                if ($ref->getAttribute('id') === $xrefId) {
-                  $ref->nodeValue = $citationText;
-                  break;
-                }
+      $resolvedMap = [];
+
+      // 1. Calculate complete map with default APA values from TableHTML if XML path is available
+      $xmlPath = method_exists($config, 'getXmlFilePath') ? $config->getXmlFilePath() : null;
+      if ($xmlPath && file_exists($xmlPath)) {
+        require_once dirname(__DIR__, 5) . '/classes/components/forms/TableHTML.php';
+        $publication = \APP\facades\Repo::publication()->get($publicationId);
+        if ($publication) {
+          $tableHTML = new \PKP\components\forms\TableHTML($actualCitationStyle, $xmlPath, $settings, $publication, $localeKey);
+          if (method_exists($tableHTML, 'getResolvedCitationsMap')) {
+            $resolvedMap = $tableHTML->getResolvedCitationsMap();
+          }
+        }
+      }
+
+      // 2. Overlay any directly saved custom citations from settings
+      if ($settings && !empty($settings['fileId']) && is_array($settings['fileId'])) {
+        foreach ($settings['fileId'] as $fileId => $xrefData) {
+          if (is_array($xrefData)) {
+            foreach ($xrefData as $xrefId => $citationText) {
+              if ($citationText !== null && $citationText !== '') {
+                $resolvedMap[$xrefId] = $citationText;
               }
             }
+          }
+        }
+      }
+
+      // 3. Replace citations content in DOM
+      if (!empty($resolvedMap)) {
+        $refs = $xpath->evaluate('//a[@href]');
+        foreach ($refs as $ref) {
+          $id = $ref->getAttribute('id');
+          if (isset($resolvedMap[$id]) && $resolvedMap[$id] !== '') {
+            $ref->nodeValue = $resolvedMap[$id];
           }
         }
       }

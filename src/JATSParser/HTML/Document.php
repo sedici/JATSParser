@@ -49,7 +49,7 @@ class Document extends \DOMDocument {
 	 */
 	public function setReferences(string $citationStyle = JATSPARSER_CITEPROC_STYLE_DEFAULT, string $lang = JATSPARSER_CITEPROC_LANG_DEFAULT, bool $styleInTextLinks = false, string $dateFormat = null): void {
 		$this->citationStyle = $citationStyle;
-		$this->citationLang = $lang;
+		$this->citationLang = str_replace('_', '-', $lang);
 		$this->styleInTextLinks = $styleInTextLinks;
 		if (!empty($this->jatsDocument->getReferences())) {
 			$this->extractReferences($this->jatsDocument->getReferences(), $dateFormat);
@@ -245,16 +245,22 @@ class Document extends \DOMDocument {
 			$styleName = __DIR__ . "/../Back/CSL/apa-spanish-SUMARC.csl";
 		} elseif (array_key_exists($this->citationStyle, self::CITATION_STYLES)) {
 			$styleName = self::CITATION_STYLES[$this->citationStyle];
-		} else {
-			// Fallback: check if it's a direct path or try to load it directly
-			// If not found in map, we assume $this->citationStyle might be a valid path itself or we default
+		} elseif (file_exists($this->citationStyle)) {
+			// Already an absolute path (custom .csl file)
 			$styleName = $this->citationStyle;
+		} else {
+			// Style name (e.g. 'harvard-cite-them-right'): resolve to the bundled vendor file
+			// so that file_get_contents() works for dateFormat injection below.
+			$vendorStylePath = realpath(__DIR__ . '/../../../../vendor')
+				. '/citation-style-language/styles/'
+				. $this->citationStyle . '.csl';
+			$styleName = file_exists($vendorStylePath) ? $vendorStylePath : $this->citationStyle;
 		}
 
 		$tempStyleFile = null;
 
 		if ($dateFormat) {
-			$cslContent = file_get_contents($styleName);
+			$cslContent = file_exists($styleName) ? file_get_contents($styleName) : false;
 			if ($cslContent) {
 				$dateFormatter = new DateFormatter();
 				$cslContent = $dateFormatter->injectOJSDateFormat($cslContent, $dateFormat);
@@ -281,9 +287,14 @@ class Document extends \DOMDocument {
 			]
 		];
 
-		$citeProc = new CiteProc($style, $this->citationLang, $additionalMarkup);
-
-		$htmlString = $citeProc->render($data, "bibliography");
+		try {
+			$citeProc = new CiteProc($style, $this->citationLang, $additionalMarkup);
+			$htmlString = $citeProc->render($data, "bibliography");
+		} catch (\Exception $e) {
+			error_log('JATSParser CiteProc error with locale ' . $this->citationLang . ': ' . $e->getMessage() . '. Falling back to en-US.');
+			$citeProc = new CiteProc($style, 'en-US', $additionalMarkup);
+			$htmlString = $citeProc->render($data, "bibliography");
+		}
 		
 		// Post-processing: Remove comma before conjunctions (y, and, e) in author names
 		// This fixes the citeproc-php bug where delimiter-precedes-last="never" doesn't work properly
