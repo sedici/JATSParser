@@ -135,7 +135,6 @@ class HTMLCreationService
       }
     }
 
-    file_put_contents(__DIR__ . "/errors.txt", $error); # Ahora marco los errores de archivos faltantes en un txt. A futuro será un mensaje en OJS
     return $this->finalHtml;
   }
 
