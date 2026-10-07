@@ -1,0 +1,92 @@
+/* === Estilos Base EPUB === */
+body {
+    margin: 1em;
+    padding: 0;
+    font-family: serif;
+    line-height: 1.5;
+    text-align: justify;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: sans-serif;
+    font-weight: bold;
+    text-align: left;
+    page-break-after: avoid;
+    break-after: avoid;
+}
+
+h1 { font-size: 1.6em; margin-top: 1.2em; margin-bottom: 0.6em; }
+h2 { font-size: 1.3em; margin-top: 1.0em; margin-bottom: 0.5em; }
+h3 { font-size: 1.1em; margin-top: 0.8em; margin-bottom: 0.4em; }
+
+p {
+    margin-top: 0;
+    margin-bottom: 0.8em;
+    text-indent: 0;
+}
+
+blockquote {
+    margin: 1em 2em;
+    font-style: italic;
+}
+
+/* === Fixes para Kindle / E-readers: Imágenes === */
+img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block;
+    margin: 1em auto;
+}
+
+figure {
+    margin: 1.5em 0;
+    text-align: center;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+figcaption {
+    font-size: 0.9em;
+    font-style: italic;
+    margin-top: 0.5em;
+    text-align: center;
+}
+
+/* === Fixes para Kindle / E-readers: Tablas === */
+table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: fixed !important;
+    display: table !important;
+    overflow: visible !important;
+    border-collapse: collapse;
+    margin: 1.5em 0;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+th, td {
+    border: 1px solid #666;
+    padding: 0.4em;
+    font-size: 0.85em;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    vertical-align: top;
+}
+
+th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+/* === Citas y Referencias Bibliográficas === */
+.references-section, .ref-list {
+    font-size: 0.9em;
+    margin-top: 2em;
+    page-break-before: auto;
+}
+
+.ref-list li {
+    margin-bottom: 0.6em;
+    word-break: break-word;
+}
