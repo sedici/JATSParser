@@ -89,6 +89,8 @@ class EPUBCreationService
 
     private function processBody(DOMXPath $xpath, DOMDocument $dom, $config, $citeProc): void
     {
+        EPUBProcessingService::replaceCitationsContent($xpath, $config);
+
         $referencesNodes = $xpath->evaluate('//a[contains(@class, "bibr")]');
         foreach ($referencesNodes as $node) {
             EPUBProcessingService::citeToLink($node, $dom, $xpath, $config);
