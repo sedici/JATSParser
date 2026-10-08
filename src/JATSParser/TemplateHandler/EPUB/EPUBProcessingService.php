@@ -1,5 +1,600 @@
 <?php
 
-class EPUBProcessingService {
-    
+namespace JATSParser\TemplateHandler\EPUB;
+
+use DOMDocument;
+
+abstract class EPUBProcessingService
+{
+  public static function citeToLink($node, $dom, $xpath, $config)
+  {
+    self::replaceCitationsContent($xpath, $config);
+
+    $rawHref = urldecode($node->getAttribute('href'));
+    $rawHref = str_replace('#', '', $rawHref);
+    $refs = array_values(array_filter(preg_split('/\s+/', trim($rawHref))));
+
+    if (empty($refs)) {
+      return;
+    }
+
+    $rawText = trim($node->textContent);
+    $prefix = '';
+    $suffix = '';
+
+    if (substr($rawText, 0, 1) === '[' && substr($rawText, -1) === ']') {
+      $prefix = '[';
+      $suffix = ']';
+      $cleanText = trim($rawText, '[]');
+    } elseif (substr($rawText, 0, 1) === '(' && substr($rawText, -1) === ')') {
+      $prefix = '(';
+      $suffix = ')';
+      $cleanText = trim($rawText, '()');
+    } else {
+      $cleanText = $rawText;
+    }
+
+    // Determine text separator: ';' for APA/author-year, ',' for numeric.
+    // If there is only one ref, never split the text: the comma in APA "Autor, Año"
+    // is part of a single citation, not a delimiter between multiple citations.
+    if (count($refs) === 1) {
+      $textParts = [$cleanText];
+      $delim = '; ';
+    } elseif (strpos($cleanText, ';') !== false) {
+      $textParts = array_map('trim', explode(';', $cleanText));
+      $delim = '; ';
+    } elseif (strpos($cleanText, ',') !== false) {
+      $textParts = array_map('trim', explode(',', $cleanText));
+      $delim = ', ';
+    } else {
+      $textParts = [$cleanText];
+      $delim = '; ';
+    }
+
+    $fragment = $dom->createDocumentFragment();
+
+    if ($prefix !== '') {
+      $fragment->appendChild($dom->createTextNode($prefix));
+    }
+
+    if (count($textParts) === count($refs)) {
+      for ($i = 0; $i < count($refs); $i++) {
+        $anchorNode = $dom->createElement('a');
+        $anchorNode->setAttribute('name', 'citation_' . $refs[$i]);
+        $anchorNode->setAttribute('id', 'citation_' . $refs[$i]);
+        $fragment->appendChild($anchorNode);
+
+        $newNode = $dom->createElement('a', $textParts[$i]);
+        $newNode->setAttribute('href', '#' . $refs[$i]);
+        $newNode->setAttribute('class', 'citation-link');
+        $fragment->appendChild($newNode);
+
+        if ($i < count($refs) - 1) {
+          $fragment->appendChild($dom->createTextNode($delim));
+        }
+      }
+    } else {
+      // Create anchor tags for all reference IDs so return arrows in bibliography work
+      for ($i = 0; $i < count($refs); $i++) {
+        $anchorNode = $dom->createElement('a');
+        $anchorNode->setAttribute('name', 'citation_' . $refs[$i]);
+        $anchorNode->setAttribute('id', 'citation_' . $refs[$i]);
+        $fragment->appendChild($anchorNode);
+      }
+
+      if (count($textParts) > 1) {
+        for ($i = 0; $i < count($textParts); $i++) {
+          $refId = isset($refs[$i]) ? $refs[$i] : $refs[count($refs) - 1];
+          $newNode = $dom->createElement('a', $textParts[$i]);
+          $newNode->setAttribute('href', '#' . $refId);
+          $newNode->setAttribute('class', 'citation-link');
+          $fragment->appendChild($newNode);
+
+          if ($i < count($textParts) - 1) {
+            $fragment->appendChild($dom->createTextNode($delim));
+          }
+        }
+      } else {
+        // Fallback for single text block mapped to multiple refs
+        for ($i = 0; $i < count($refs); $i++) {
+          $newNode = $dom->createElement('a', $cleanText);
+          $newNode->setAttribute('href', '#' . $refs[$i]);
+          $newNode->setAttribute('class', 'citation-link');
+          $fragment->appendChild($newNode);
+          if ($i < count($refs) - 1) {
+            $fragment->appendChild($dom->createTextNode($delim));
+          }
+        }
+      }
+    }
+
+    if ($suffix !== '') {
+      $fragment->appendChild($dom->createTextNode($suffix));
+    }
+
+    $node->parentNode->replaceChild($fragment, $node);
+  }
+
+  public static function footnoteToLink($node, $dom)
+  {
+    $rawHref = urldecode($node->getAttribute('href'));
+    $rawHref = str_replace(['#', 'fn-'], '', $rawHref);
+    $refs = array_values(array_filter(preg_split('/\s+/', trim($rawHref))));
+
+    if (empty($refs)) {
+      return;
+    }
+
+    $rawText = trim($node->textContent);
+    $numbers = array_map('trim', explode(',', $rawText));
+
+    $fragment = $dom->createDocumentFragment();
+
+    for ($i = 0; $i < count($numbers); $i++) {
+      $refId = isset($refs[$i]) ? $refs[$i] : $refs[count($refs) - 1];
+
+      $anchorNode = $dom->createElement('a');
+      $anchorNode->setAttribute('name', 'citation_' . $refId);
+      $anchorNode->setAttribute('id', 'citation_' . $refId);
+      $fragment->appendChild($anchorNode);
+
+      $sup = $dom->createElement('sup');
+      $newNode = $dom->createElement('a', $numbers[$i]);
+      $newNode->setAttribute('href', '#' . $refId);
+      $newNode->setAttribute('class', 'footnote-link');
+      $newNode->setAttribute('epub:type', 'noteref');
+      $sup->appendChild($newNode);
+      $fragment->appendChild($sup);
+
+      if ($i < count($numbers) - 1) {
+        $fragment->appendChild($dom->createElement('sup', ','));
+      }
+    }
+
+    $node->parentNode->replaceChild($fragment, $node);
+  }
+
+  public static function setReferencesAnchors($referencesAPA, $referencesNodes)
+  { # Creo el HTML para las references
+    $references = [];
+    for ($i = 0; $i < count($referencesNodes); $i++) {
+      $id = $referencesNodes[$i]->getAttribute('id');
+
+      $tempDom = new DOMDocument();
+      $tempNode = $tempDom->importNode($referencesNodes[$i], true);
+      $tempDom->appendChild($tempNode);
+
+      $references[$i] = ["id" => $id, "text" => $tempDom->saveHTML()];
+    }
+    return $references;
+  }
+
+  public static function setFootnotesAnchors($footnotesNodes)
+  { # Creo el HTML para las footnotes
+    $footnotes = [];
+    for ($i = 0; $i < count($footnotesNodes); $i++) {
+      $id = str_replace('fn-', '', $footnotesNodes[$i]->getAttribute('id'));
+
+      $tempDom = new DOMDocument();
+      $tempNode = $tempDom->importNode($footnotesNodes[$i], true);
+      if ($tempNode instanceof \DOMElement && $tempNode->hasAttribute('id')) {
+        $tempNode->removeAttribute('id');
+      }
+      $tempDom->appendChild($tempNode);
+
+      $footnotes[$i] = ["id" => $id, "text" => $tempDom->saveHTML()];
+    }
+    return $footnotes;
+  }
+
+  public static function processCitations($a, $dom, $type)
+  { # Agrego las tags <a> vacías de las citas
+    $id = $a->getAttribute('href');
+    $id = trim($id, '#');
+    $id = trim($id, 'fn-');
+    $id = $type . $id;
+
+    $newTag = $dom->createElement('a', '');
+    $newTag->setAttribute('name', $id);
+    $newTag->setAttribute('id', $id);
+
+    if ($a->nextSibling) {
+      $a->parentNode->insertBefore($newTag, $a->nextSibling);
+    } else {
+      $a->parentNode->appendChild($newTag);
+    }
+  }
+
+  public static function processFootnotes($footnotesSection, $footnotes, $dom)
+  {
+    $listContainer = $dom->createElement('div');
+    $listContainer->setAttribute('class', 'footnotes-list');
+
+    foreach ($footnotes as $footnote) {
+      $aside = $dom->createElement('aside');
+      $aside->setAttribute('epub:type', 'footnote');
+      $aside->setAttribute('id', $footnote['id']);
+      $aside->setAttribute('class', 'footnote-item');
+
+      // Buscar si el texto ya contiene return-arrow
+      $tempDom = new \DOMDocument();
+      $tempDom->loadHTML('<?xml encoding="utf-8" ?>' . $footnote['text']);
+      $body = $tempDom->getElementsByTagName('body')->item(0);
+
+      $hasReturnArrow = false;
+      if ($body) {
+        foreach ($body->getElementsByTagName('a') as $aNode) {
+          if (strpos($aNode->getAttribute('class'), 'return-arrow') !== false) {
+            $hasReturnArrow = true;
+            break;
+          }
+        }
+      }
+
+      if (!$hasReturnArrow) {
+        $arrowLink = $tempDom->createElement('a', ' ↑');
+        $arrowLink->setAttribute('href', '#citation_' . $footnote['id']);
+        $arrowLink->setAttribute('class', 'return-arrow');
+        $arrowLink->setAttribute('title', 'Volver al texto');
+        if ($body && $body->lastChild) {
+          $body->lastChild->appendChild($arrowLink);
+        } elseif ($body) {
+          $body->appendChild($arrowLink);
+        }
+      }
+
+      $newHtml = '';
+      if ($body) {
+        foreach ($body->childNodes as $child) {
+          $newHtml .= $tempDom->saveHTML($child);
+        }
+      } else {
+        $newHtml = $footnote['text'];
+      }
+
+      // Remover id duplicado si venía embebido en el texto
+      $newHtml = preg_replace('/\s+id="[^"]*"/i', '', $newHtml, 1);
+
+      $ref = $dom->createDocumentFragment();
+      $ref->appendXML($newHtml);
+      $aside->appendChild($ref);
+
+      $listContainer->appendChild($aside);
+    }
+
+    if ($footnotesSection) {
+      $footnotesSection->setAttribute('epub:type', 'footnotes');
+      $footnotesSection->appendChild($listContainer);
+    }
+  }
+
+  public static function processReferences($referencesSection, $references, $dom)
+  {
+    $listContainer = $dom->createElement('ul');
+    foreach ($references as $reference) {
+      # Si el texto ya es un <li> con la referencia, se parsea y agrega las flechitas
+      if (preg_match('/^<li[^>]*>.*<\/li>$/s', trim($reference['text']))) {
+        $tempDom = new \DOMDocument();
+        $tempDom->loadHTML('<?xml encoding="utf-8" ?>' . $reference['text']);
+        $liNodes = $tempDom->getElementsByTagName('li');
+        if ($liNodes->length > 0) {
+          $li = $liNodes->item(0);
+          if ($li->hasAttribute('id') && $li->getAttribute('id') === $reference['id']) {
+            $li->removeAttribute('id');
+          }
+          # <a> vacío para navegación interna, SI NO SE USA NO ANDAN LOS HREF
+          $anchor = $tempDom->createElement('a', '');
+          $anchor->setAttribute('name', $reference['id']);
+          $anchor->setAttribute('id', $reference['id']);
+          $li->insertBefore($anchor, $li->firstChild);
+
+          // Evitar agregar la flecha si ya existe una con la clase "return-arrow"
+          $hasReturnArrow = false;
+          foreach ($li->getElementsByTagName('a') as $aNode) {
+            if (strpos($aNode->getAttribute('class'), 'return-arrow') !== false) {
+              $hasReturnArrow = true;
+              break;
+            }
+          }
+
+          if (!$hasReturnArrow) {
+            $arrowLink = $tempDom->createElement('a', ' ↑');
+            $arrowLink->setAttribute('href', '#citation_' . $reference['id']);
+            $li->appendChild($arrowLink);
+          }
+
+          $importedLi = $dom->importNode($li, true);
+          $listContainer->appendChild($importedLi);
+          continue;
+        }
+      }
+      # Si no es un <li>, usar el método anterior (nunca debería llegar a pasar, pero quien sabe)
+      $li = $dom->createElement('li');
+      $anchor = $dom->createElement('a', '');
+      $anchor->setAttribute('name', $reference['id']);
+      $anchor->setAttribute('id', $reference['id']);
+      $li->appendChild($anchor);
+      $ref = $dom->createDocumentFragment();
+      $ref->appendXML($reference['text']);
+      $li->appendChild($ref);
+
+      // Evitar agregar la flecha si ya existe una con la clase "return-arrow"
+      if (strpos($reference['text'], 'class="return-arrow"') === false && strpos($reference['text'], "class='return-arrow'") === false) {
+        $arrowLink = $dom->createElement('a', ' ↑');
+        $arrowLink->setAttribute('href', '#citation_' . $reference['id']);
+        $li->appendChild($arrowLink);
+      }
+
+      $listContainer->appendChild($li);
+    }
+    if ($referencesSection) $referencesSection->appendChild($listContainer);
+  }
+
+  public static function replaceCitationsContent(\DOMXPath $xpath, $config)
+  {
+    $actualCitationStyle = $config->getCitationStyle();
+    $cslDetectorPath = dirname(__DIR__, 5) . '/classes/components/forms/CitationStyles/Core/CslCategoryDetector.php';
+    if (file_exists($cslDetectorPath)) {
+      require_once $cslDetectorPath;
+    }
+    $supportedCitationStyles = $config::getSupportedCustomCitationStyles();
+    $hasMultipleForms = class_exists('\\PKP\\components\\forms\\CitationStyles\\Core\\CslCategoryDetector')
+      ? \PKP\components\forms\CitationStyles\Core\CslCategoryDetector::hasMultipleCitationForms((string)$actualCitationStyle)
+      : ($supportedCitationStyles && in_array(strtolower($actualCitationStyle), $supportedCitationStyles));
+
+    if ($hasMultipleForms) {
+      $publicationId = $config->getPublicationId();
+      $localeKey = $config->getLocaleKeyConfig();
+
+      $customPublicationSettingsDAO = new \CustomPublicationSettingsDAO();
+      $settings = $customPublicationSettingsDAO->getSetting($publicationId, 'jatsParser::citationTableData', $localeKey);
+
+      $resolvedMap = [];
+
+      // 1. Calculate complete map with default APA values from TableHTML if XML path is available
+      $xmlPath = method_exists($config, 'getXmlFilePath') ? $config->getXmlFilePath() : null;
+      if ($xmlPath && file_exists($xmlPath)) {
+        require_once dirname(__DIR__, 5) . '/classes/components/forms/TableHTML.php';
+        $publication = \APP\facades\Repo::publication()->get($publicationId);
+        if ($publication) {
+          $tableHTML = new \PKP\components\forms\TableHTML($actualCitationStyle, $xmlPath, $settings, $publication, $localeKey);
+          if (method_exists($tableHTML, 'getResolvedCitationsMap')) {
+            $resolvedMap = $tableHTML->getResolvedCitationsMap();
+          }
+        }
+      }
+
+      // 2. Overlay any directly saved custom citations from settings
+      if ($settings && !empty($settings['fileId']) && is_array($settings['fileId'])) {
+        foreach ($settings['fileId'] as $fileId => $xrefData) {
+          if (is_array($xrefData)) {
+            foreach ($xrefData as $xrefId => $citationText) {
+              if ($citationText !== null && $citationText !== '') {
+                $resolvedMap[$xrefId] = $citationText;
+              }
+            }
+          }
+        }
+      }
+
+      // 3. Replace citations content in DOM
+      if (!empty($resolvedMap)) {
+        $refs = $xpath->evaluate('//a[@href]');
+        foreach ($refs as $ref) {
+          $id = $ref->getAttribute('id');
+          if (isset($resolvedMap[$id]) && $resolvedMap[$id] !== '') {
+            $ref->nodeValue = $resolvedMap[$id];
+          }
+        }
+      }
+    }
+  }
+
+  public static function processExternalLinks(\DOMDocument $dom)
+  {
+    $xpath = new \DOMXPath($dom);
+    $externalLinks = $xpath->evaluate('//ext-link');
+    foreach ($externalLinks as $link) {
+      $a = $dom->createElement('a', $link->textContent);
+      if ($link->hasAttribute('xlink:href')) {
+        $a->setAttribute('href', $link->getAttribute('xlink:href'));
+      }
+      $link->parentNode->replaceChild($a, $link);
+    }
+
+    return $dom->saveHTML();
+  }
+
+  public static function tableToLink($node, $dom, $xpath = null)
+  {
+    $tableId  = ltrim($node->getAttribute('href'), '#'); // e.g. "T1"
+    $anchorId = 'citation_table_' . bin2hex(random_bytes(4)); // ID único por cita
+
+    $anchorNode = $dom->createElement('a');
+    $anchorNode->setAttribute('name', $anchorId);
+    $anchorNode->setAttribute('id', $anchorId);
+
+    if ($node->nextSibling) {
+      $node->parentNode->insertBefore($anchorNode, $node->nextSibling);
+    } else {
+      $node->parentNode->appendChild($anchorNode);
+    }
+
+    $node->setAttribute('data-citation-anchor', $anchorId);
+  }
+
+  public static function addTableReturnArrows($dom, $xpath)
+  {
+    foreach ($xpath->query('//table[@id]') as $tableNode) {
+      $tableId = $tableNode->getAttribute('id');
+
+      // Ancla explícita para compatibilidad de navegación de ida
+      $tableAnchor = $dom->createElement('a');
+      $tableAnchor->setAttribute('name', $tableId);
+      if (!$tableNode->hasAttribute('id') || $tableNode->getAttribute('id') !== $tableId) {
+        $tableAnchor->setAttribute('id', $tableId);
+      }
+      $tableNode->parentNode->insertBefore($tableAnchor, $tableNode);
+
+      $citations = $xpath->query('//a[@data-citation-anchor and @href="#' . $tableId . '"]');
+      if ($citations->length === 0) continue;
+
+      $caption = $xpath->query('.//caption', $tableNode)->item(0);
+      if (!$caption) {
+        $caption = $dom->createElement('caption');
+        if ($tableNode->firstChild) {
+          $tableNode->insertBefore($caption, $tableNode->firstChild);
+        } else {
+          $tableNode->appendChild($caption);
+        }
+      }
+
+      $arrowContainer = $dom->createElement('span');
+      $arrowContainer->setAttribute('class', 'table-return-arrows');
+      $caption->appendChild($arrowContainer);
+
+      // Usar solo la primera cita encontrada para la flecha de retorno
+      $firstCitation = $citations->item(0);
+      $anchorId = $firstCitation->getAttribute('data-citation-anchor');
+      
+      if ($anchorId) {
+        $arrow = $dom->createElement('a');
+        $arrow->appendChild($dom->createTextNode(' ↑'));
+        $arrow->setAttribute('href', '#' . $anchorId);
+        $arrow->setAttribute('class', 'return-arrow');
+        $arrowContainer->appendChild($arrow);
+      }
+    }
+  }
+
+  public static function figureToLink($node, $dom, $xpath = null)
+  {
+    $figureId = ltrim($node->getAttribute('href'), '#'); // e.g. "F1"
+    $anchorId = 'citation_figure_' . bin2hex(random_bytes(4)); // ID único por cita
+
+    $anchorNode = $dom->createElement('a');
+    $anchorNode->setAttribute('name', $anchorId);
+    $anchorNode->setAttribute('id', $anchorId);
+
+    if ($node->nextSibling) {
+      $node->parentNode->insertBefore($anchorNode, $node->nextSibling);
+    } else {
+      $node->parentNode->appendChild($anchorNode);
+    }
+
+    $node->setAttribute('data-citation-anchor', $anchorId);
+  }
+
+  public static function addFigureReturnArrows($dom, $xpath)
+  {
+    foreach ($xpath->query('//figure[@id]') as $figureNode) {
+      $figureId = $figureNode->getAttribute('id');
+
+      // Ancla explícita
+      $figureAnchor = $dom->createElement('a');
+      $figureAnchor->setAttribute('name', $figureId);
+      if (!$figureNode->hasAttribute('id') || $figureNode->getAttribute('id') !== $figureId) {
+        $figureAnchor->setAttribute('id', $figureId);
+      }
+      $figureNode->parentNode->insertBefore($figureAnchor, $figureNode);
+
+      $citations = $xpath->query('//a[@data-citation-anchor and @href="#' . $figureId . '"]');
+      if ($citations->length === 0) continue;
+
+      // Intentamos adjuntar la flecha directamente al título o al label, para que no quede al final de las notas
+      $targetForArrow = $xpath->query('.//span[contains(@class, "title")]', $figureNode)->item(0);
+      if (!$targetForArrow) {
+        $targetForArrow = $xpath->query('.//span[contains(@class, "label")]', $figureNode)->item(0);
+      }
+      if (!$targetForArrow) {
+        $targetForArrow = $xpath->query('.//p[contains(@class, "caption")]', $figureNode)->item(0);
+      }
+      if (!$targetForArrow) {
+        $targetForArrow = $dom->createElement('p');
+        $targetForArrow->setAttribute('class', 'caption');
+        $figureNode->appendChild($targetForArrow);
+      }
+
+      $arrowContainer = $dom->createElement('span');
+      $arrowContainer->setAttribute('class', 'figure-return-arrows');
+      $targetForArrow->appendChild($arrowContainer);
+
+      // Usar solo la primera cita encontrada para la flecha de retorno como fallback
+      $firstCitation = $citations->item(0);
+      $anchorId = $firstCitation->getAttribute('data-citation-anchor');
+      
+      if ($anchorId) {
+        $arrow = $dom->createElement('a');
+        $arrow->appendChild($dom->createTextNode(' ↑'));
+        $arrow->setAttribute('href', '#' . $anchorId);
+        $arrow->setAttribute('class', 'return-arrow');
+        $arrowContainer->appendChild($arrow);
+      }
+    }
+  }
+
+  public static function setTablesClass($bodyXpath, $term)
+  {
+    $items = $bodyXpath->query('//' . $term);
+
+    foreach ($items as $item) {
+      $item->setAttribute('class', 'table');
+    }
+
+    return $items;
+  }
+
+  /**
+   * Inyecta navegación bidireccional de footnotes en un HTML string.
+   * - Agrega anclas invisibles junto a cada cita de footnote en el texto
+   * - Agrega flechas de retorno (↑) al final de cada footnote
+   * 
+   * Reutilizable desde cualquier flujo (preview, galley, etc.)
+   * 
+   * @param string $htmlString El HTML completo con citas y footnotes
+   * @return string El HTML con la navegación inyectada
+   */
+  public static function injectFootnoteNavigation(string $htmlString): string
+  {
+    $dom = new \DOMDocument('1.0', 'utf-8');
+    libxml_use_internal_errors(true);
+    $dom->loadHTML('<?xml encoding="utf-8" ?>' . $htmlString);
+    libxml_clear_errors();
+    $xpath = new \DOMXPath($dom);
+
+    // 1. Agregar ancla invisible junto a cada cita de footnote en el texto
+    //    para poder volver desde la nota al pie con la flecha ↑
+    foreach ($xpath->query('//a[contains(@class, "fn")]') as $a) {
+      $href = ltrim($a->getAttribute('href'), '#'); // e.g. "footnote-xxx"
+      $anchorId = 'citation_' . $href;              // "citation_footnote-xxx"
+
+      $anchor = $dom->createElement('a', '');
+      $anchor->setAttribute('name', $anchorId);
+      $anchor->setAttribute('id', $anchorId);
+
+      if ($a->nextSibling) {
+        $a->parentNode->insertBefore($anchor, $a->nextSibling);
+      } else {
+        $a->parentNode->appendChild($anchor);
+      }
+    }
+
+    // 2. Agregar flecha ↑ al final de cada footnote apuntando a la cita
+    foreach ($xpath->query('//div[contains(@class, "footnote-item")]') as $fn) {
+      $fnId = $fn->getAttribute('id'); // e.g. "footnote-xxx"
+      $arrow = $dom->createElement('a', ' ↑');
+      $arrow->setAttribute('href', '#citation_' . $fnId);
+      $arrow->setAttribute('class', 'return-arrow');
+      $fn->appendChild($arrow);
+    }
+
+    // Exportar y limpiar tags estructurales de DOMDocument
+    $result = $dom->saveHTML();
+    $result = str_replace('<?xml encoding="utf-8" ?>', '', $result);
+    $result = preg_replace('/<!DOCTYPE[^>]*>/i', '', $result);
+    $result = preg_replace('/<\/?(?:html|body)[^>]*>/i', '', $result);
+    $result = preg_replace('/<head[^>]*>.*?<\/head>/is', '', $result);
+
+    return $result;
+  }
 }

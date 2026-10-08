@@ -61,8 +61,12 @@ class EPUBMetadataMapper
         return $authors;
     }
 
-    private function formatAuthorName(array $authorData, string $localeKey): string
+    private function formatAuthorName($authorData, string $localeKey): string
     {
+        if (is_string($authorData)) {
+            return trim($authorData);
+        }
+
         $given  = $this->extractLocalizedValue($authorData['givenName'] ?? '', $localeKey);
         $family = $this->extractLocalizedValue($authorData['familyName'] ?? '', $localeKey);
 

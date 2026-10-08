@@ -25,9 +25,84 @@ p {
     text-indent: 0;
 }
 
-blockquote {
-    margin: 1em 2em;
+/* === Citas a bando (Blockquotes) === */
+blockquote,
+.disp-quote {
+    font-size: 0.92em;
+    border-left: 4px solid #31849b;
+    padding: 0.6em 1em;
+    margin: 1.2em 0 1.2em 1.5em;
+    background-color: #f8f9fa;
     font-style: italic;
+    line-height: 1.45;
+}
+
+blockquote p,
+.disp-quote p {
+    margin: 0.3em 0;
+}
+
+blockquote cite,
+.disp-quote cite {
+    display: block;
+    text-align: right;
+    font-size: 0.85em;
+    margin-top: 0.5em;
+    font-style: normal;
+    color: #555;
+}
+
+/* === Enlaces interactivos === */
+a {
+    color: #2b78a0;
+    text-decoration: none;
+}
+
+a.return-arrow {
+    display: inline-block;
+    font-size: 1.5em;
+    line-height: 1;
+    font-weight: bold;
+    color: #1b6d85;
+    text-decoration: none;
+    border: none;
+    background: transparent;
+    padding: 0 0.15em;
+    margin-left: 0.35em;
+    vertical-align: middle;
+}
+
+a.return-arrow:active,
+a.return-arrow:hover {
+    color: #0d4b5c;
+    background: transparent;
+}
+
+/* === Resaltado interactivo de citas y referencias (:target) === */
+.citation-item:target,
+.footnote-item:target,
+aside:target,
+li:target {
+    background-color: #ffe69c;
+    border-left: 4px solid #e5a100;
+    padding-left: 0.8em;
+    border-radius: 2px;
+}
+
+/* Y viceversa: al regresar de la referencia al texto con la flecha ↑ */
+a[id^="citation_"]:target + a,
+a[id^="citation_"]:target + sup a,
+a.citation-link:target,
+a.footnote-link:target {
+    background-color: #ffe69c;
+    outline: 2px solid #e5a100;
+    border-radius: 2px;
+}
+
+table:target,
+figure:target {
+    outline: 2px dashed #31849b;
+    background-color: #f8fbff;
 }
 
 /* === Fixes para Kindle / E-readers: Imágenes === */
@@ -45,7 +120,8 @@ figure {
     break-inside: avoid;
 }
 
-figcaption {
+figcaption,
+figure .caption {
     font-size: 0.9em;
     font-style: italic;
     margin-top: 0.5em;
@@ -79,6 +155,13 @@ th {
     font-weight: bold;
 }
 
+/* Las citas en texto a tablas (<a class="table">) no deben tener bordes */
+a.table,
+a.fig {
+    border: none;
+    display: inline;
+}
+
 /* === Citas y Referencias Bibliográficas === */
 .references-section, .ref-list {
     font-size: 0.9em;
@@ -86,7 +169,38 @@ th {
     page-break-before: auto;
 }
 
-.ref-list li {
+.ref-list li,
+.citation-list li,
+.references-section li {
     margin-bottom: 0.6em;
     word-break: break-word;
+    list-style-type: none;
+}
+
+/* === Notas al pie semánticas (<aside>) === */
+.footnotes-container {
+    margin-top: 2em;
+    border-top: 1px solid #ccc;
+    padding-top: 1em;
+}
+
+aside[epub\:type="footnote"],
+aside.footnote-item {
+    font-size: 0.88em;
+    line-height: 1.4;
+    margin: 0.8em 0;
+    padding: 0.5em 0.8em;
+    border-left: 3px solid #31849b;
+    background-color: #fafafa;
+}
+
+.footnote-label {
+    font-weight: bold;
+    color: #31849b;
+    margin-right: 0.3em;
+}
+
+sup a.footnote-link {
+    font-weight: bold;
+    padding: 0 0.15em;
 }
