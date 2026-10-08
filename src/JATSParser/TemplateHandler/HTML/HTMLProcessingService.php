@@ -8,8 +8,6 @@ abstract class HTMLProcessingService
 {
   public static function citeToLink($node, $dom, $xpath, $config)
   {
-    self::replaceCitationsContent($xpath, $config);
-
     $rawHref = urldecode($node->getAttribute('href'));
     $rawHref = str_replace('#', '', $rawHref);
     $refs = array_values(array_filter(preg_split('/\s+/', trim($rawHref))));

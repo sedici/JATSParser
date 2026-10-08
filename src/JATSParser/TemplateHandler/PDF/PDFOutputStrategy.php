@@ -37,10 +37,13 @@ class PDFOutputStrategy implements OutputStrategy {
 
 		$pdfCreationService = new PDFCreationService($publicTemplateManager, $privateTemplateManager);
 
+		$tempDir = sys_get_temp_dir() . '/mpdf';
+
 		$pdf = new Mpdf([ # Sacar los márgenes de la config de OJS (cuando exista)
 			'mode' => 'utf-8',
 			'PDFA' => true,
 			'PDFAauto' => true,
+			'tempDir' => $tempDir,
 			'margin_top' => $ojsConfiguration['margin_top'],
 			'margin_bottom' => $ojsConfiguration['margin_bottom'], 
 			'margin_left' => $ojsConfiguration['margin_left'] ?? 25,
