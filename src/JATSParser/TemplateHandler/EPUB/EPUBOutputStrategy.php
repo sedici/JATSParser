@@ -13,20 +13,7 @@ class EPUBOutputStrategy implements OutputStrategy {
     {
         libxml_use_internal_errors(true);
 
-        // Directorios de plantillas y Smarty (si se usan plantillas de portada/estructura)
-        $privateTemplatesDir = $fileMgr->getBasePath() . "/journals/$journalId/jatsParser_templates";
-        $publicTemplatesDir = $plugin->getPluginPath() . "/templates/SUMARC";
-        $cacheDir = \TemplateManager::getManager()->compile_dir;
-
-        $publicTemplateManager = new \Smarty();
-        $publicTemplateManager->setTemplateDir($publicTemplatesDir);
-        $publicTemplateManager->setCompileDir($cacheDir);
-
-        $privateTemplateManager = new \Smarty();
-        $privateTemplateManager->setTemplateDir($privateTemplatesDir);
-        $privateTemplateManager->setCompileDir($cacheDir);
-
-        $epubCreationService = new EPUBCreationService($publicTemplateManager, $privateTemplateManager);
+        $epubCreationService = new EPUBCreationService();
 
         // Cargar XML JATS original para referencias y metadatos complementarios
         $submissionFile = Repo::submissionFile()->get($fileId);
