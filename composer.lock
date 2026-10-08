@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3d086b62b6ad744282ff56ad99887dd1",
+    "content-hash": "1066737680a53f6c83121b292c78d9a0",
     "packages": [
         {
             "name": "citation-style-language/locales",
@@ -293,61 +293,6 @@
                 "source": "https://github.com/JKingweb/DrUUID/tree/3.0.0"
             },
             "time": "2017-02-09T14:17:01+00:00"
-        },
-        {
-            "name": "lumielis/phpepub",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/sedici/PHPePub.git",
-                "reference": "b31d0e8c1d47fe626e0689e1b81122732ba8f6d4"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/sedici/PHPePub/zipball/b31d0e8c1d47fe626e0689e1b81122732ba8f6d4",
-                "reference": "b31d0e8c1d47fe626e0689e1b81122732ba8f6d4",
-                "shasum": ""
-            },
-            "require": {
-                "grandt/phpresizegif": "~1.0.3",
-                "grandt/relativepath": "~1.0.1",
-                "jkingweb/druuid": "~3.0.0",
-                "php": ">=5.3.0",
-                "phpzip/phpzip": "~2.0.7"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "PHPePub\\": "src/PHPePub"
-                }
-            },
-            "license": [
-                "LGPL-2.1"
-            ],
-            "authors": [
-                {
-                    "name": "A. Grandt",
-                    "email": "php@grandt.com",
-                    "homepage": "http://grandt.com",
-                    "role": "Developer"
-                },
-                {
-                    "name": "An, Hyeong-woo",
-                    "email": "mail@mytory.net",
-                    "homepage": "https://mytory.net",
-                    "role": "Contributor"
-                }
-            ],
-            "description": "Package to create and stream e-books in the ePub 2.0 and 3.0 formats. Forked from Grandt",
-            "homepage": "https://github.com/lumielis/PHPePub",
-            "keywords": [
-                "e-book",
-                "epub"
-            ],
-            "support": {
-                "source": "https://github.com/sedici/PHPePub/tree/dev"
-            },
-            "time": "2026-10-08T11:31:28+00:00"
         },
         {
             "name": "mpdf/mpdf",
@@ -947,6 +892,61 @@
             "time": "2022-07-09T19:47:27+00:00"
         },
         {
+            "name": "sedici/phpepub",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sedici/PHPePub.git",
+                "reference": "2d5c0454a7019cee7f9edd3ee32346c741b4cc2f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sedici/PHPePub/zipball/2d5c0454a7019cee7f9edd3ee32346c741b4cc2f",
+                "reference": "2d5c0454a7019cee7f9edd3ee32346c741b4cc2f",
+                "shasum": ""
+            },
+            "require": {
+                "grandt/phpresizegif": "~1.0.3",
+                "grandt/relativepath": "~1.0.1",
+                "jkingweb/druuid": "~3.0.0",
+                "php": ">=5.3.0",
+                "phpzip/phpzip": "~2.0.7"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "PHPePub\\": "src/PHPePub"
+                }
+            },
+            "license": [
+                "LGPL-2.1"
+            ],
+            "authors": [
+                {
+                    "name": "A. Grandt",
+                    "email": "php@grandt.com",
+                    "homepage": "http://grandt.com",
+                    "role": "Developer"
+                },
+                {
+                    "name": "An, Hyeong-woo",
+                    "email": "mail@mytory.net",
+                    "homepage": "https://mytory.net",
+                    "role": "Contributor"
+                }
+            ],
+            "description": "Package to create and stream e-books in the ePub 2.0 and 3.0 formats. Forked from Grandt",
+            "homepage": "https://github.com/sedici/PHPePub",
+            "keywords": [
+                "e-book",
+                "epub"
+            ],
+            "support": {
+                "source": "https://github.com/sedici/PHPePub/tree/dev"
+            },
+            "time": "2026-10-08T11:48:53+00:00"
+        },
+        {
             "name": "setasign/fpdi",
             "version": "v2.6.3",
             "source": {
@@ -1097,7 +1097,7 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "citation-style-language/styles-distribution": 20,
-        "lumielis/phpepub": 20
+        "sedici/phpepub": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
