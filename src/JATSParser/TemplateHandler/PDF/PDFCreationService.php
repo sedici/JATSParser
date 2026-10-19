@@ -313,6 +313,8 @@ class PDFCreationService
 
   private function processBody($xpath, $dom, $htmlString, $pdf, $config, $citeProc, $path)
   {
+    PDFProcessingService::replaceCitationsContent($xpath, $config);
+
     $referencesNodes = $xpath->evaluate('//a[contains(@class, "bibr")]'); # Procesar todas las citas, incluso si son múltiples
     foreach ($referencesNodes as $node) {
       PDFProcessingService::citeToLink($node, $dom, $xpath, $config);

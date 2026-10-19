@@ -135,7 +135,6 @@ class HTMLCreationService
       }
     }
 
-    file_put_contents(__DIR__ . "/errors.txt", $error); # Ahora marco los errores de archivos faltantes en un txt. A futuro será un mensaje en OJS
     return $this->finalHtml;
   }
 
@@ -286,6 +285,8 @@ class HTMLCreationService
 
   private function processBody($xpath, $dom, $htmlString, $config, $citeProc, $path)
   {
+    HTMLProcessingService::replaceCitationsContent($xpath, $config);
+
     $referencesNodes = $xpath->evaluate('//a[contains(@class, "bibr")]'); # Procesar todas las citas, incluso si son múltiples
     foreach ($referencesNodes as $node) {
       HTMLProcessingService::citeToLink($node, $dom, $xpath, $config);
