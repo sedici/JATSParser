@@ -15,17 +15,16 @@ class PDFOutputStrategy implements OutputStrategy {
   {
     libxml_use_internal_errors(true);
 
-    $selectedTemplate = $ojsConfiguration['selected_template'];
-
-		if(!$selectedTemplate) {
-			libxml_use_internal_errors(false);
-			return; # se habló que si no se tiene una plantilla seleccionada no se debe emitir un PDF bajo ningún criterio, esto debería modificarse para que no genere un error
-		}
+    $selectedTemplate = !empty($ojsConfiguration['selected_template']) && $ojsConfiguration['selected_template'] !== 'plugins.generic.jatsParser.pdf.empty.template'
+      ? $ojsConfiguration['selected_template']
+      : 'UNLP';
 
 		$privateTemplatesDir = $fileMgr->getBasePath() . "/journals/$journalId/jatsParser_templates";
 		$publicTemplatesDir = $plugin->getPluginPath() . "/templates/SUMARC";
 
-		$cacheDir = \TemplateManager::getManager()->compile_dir;
+		$cacheDir = function_exists('app') && method_exists(app(), 'basePath')
+			? app()->basePath('cache/t_compile')
+			: (is_dir('/var/www/html/cache/t_compile') ? '/var/www/html/cache/t_compile' : sys_get_temp_dir());
 		
 		$publicTemplateManager = new \Smarty(); # Con esta instancia se pueden settear las rutas que se desee de Smarty, así no usamos la global de OJS.
 		$publicTemplateManager->setTemplateDir($publicTemplatesDir); # La ruta es .../jatsParser/templates

@@ -196,8 +196,8 @@ class PDFCreationService
     // }
 
     $licenses = $config->getLicenseConfig();
-    $licenseName = array_search($metadata['license_url'], $licenses['links']);
-    $licenseImg = $licenses['logos'][$licenseName];
+    $licenseName = !empty($metadata['license_url']) && isset($licenses['links']) ? array_search($metadata['license_url'], $licenses['links']) : false;
+    $licenseImg = ($licenseName !== false && isset($licenses['logos'][$licenseName])) ? $licenses['logos'][$licenseName] : '';
 
     $this->publicTemplateManager->assign('license_logo', $licenseImg);
     $this->publicTemplateManager->assign('authors', $metadata['authors']);

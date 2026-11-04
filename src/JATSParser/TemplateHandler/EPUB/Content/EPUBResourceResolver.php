@@ -71,7 +71,6 @@ class EPUBResourceResolver
      */
     private function resolveDiskPath(string $src, $fileMgr): ?string
     {
-        error_log("[[[[SRC]]]: " . $src);
         if (file_exists($src)) {
             return $src;
         }
